@@ -1,0 +1,3 @@
+[submodule "datajoint-python"]
+	path = datajoint-python
+	url = https://github.com/gucky92/datajoint-python.git
