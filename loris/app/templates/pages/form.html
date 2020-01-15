@@ -1,0 +1,15 @@
+{% extends 'layouts/main.html' %}
+{% block title %}{{ formtype }}{% endblock %}
+{% block content %}
+
+<div class="page-header">
+    {% from 'macros/render_form.html' import render_form %}
+    <h2>Choose an existing {{ formtype }}</h2>
+    {% with data=data, toggle_off_keys=toggle_off_keys %}
+        {% include 'macros/tables.html' %}
+    {% endwith %}
+    <h2>Setup {{ formtype }}</h2>
+    {{ render_form(form) }}
+</div>
+
+{% endblock %}

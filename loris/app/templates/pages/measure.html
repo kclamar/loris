@@ -1,0 +1,26 @@
+{% extends 'layouts/main.html' %}
+{% block title %}Home{% endblock %}
+{% block content %}
+
+<div class="page-header">
+    {% from 'macros/render_form.html' import render_form %}
+    <h1>Run Measurements</h1>
+    <ul>
+    {% for key, value in settings_complete.items() %}
+    {% if value %}
+        {% if names[key] in ['None', None]%}
+        <li fontsize="8" class="licyan"> <a href={{ url_for(key) }}>{{ key }}</a> not selected. </li>
+        {% else %}
+        <li fontsize="8" class="ligreen"> <a href={{ url_for(key) }}>{{ key }}</a> set to {{ names[key] }}. </li>
+        {% endif %}
+    {% else %}
+    <li fontsize="8" class="lired"> <a href={{ url_for(key) }}>{{ key }}</a> not set! </li>
+    {% endif %}
+    {% endfor %}
+    </ul>
+    <hr>
+    <h2>Measurement information</h2>
+    {{ render_form(form, True) }}
+</div>
+
+{% endblock %}

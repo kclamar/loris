@@ -1,0 +1,154 @@
+{% macro render_field(field, label) %}
+    <td>
+        {% if field.type in ['SelectField'] %}
+            {% if label %}
+                {{ field.label }}{{ field(class="form-control") }}
+            {% else %}
+                {{ field(class="form-control") }}
+            {% endif %}
+        {% elif field.type in ['BooleanField']%}
+            {% if label %}
+                {{ field.label }} {{ field() }}
+            {% else %}
+                {{ field() }}
+            {% endif %}
+        {% else %}
+            {% if label %}
+                {{ field.label }}
+                {{
+                    field(class="form-control",
+                    placeholder=field.label.text, autofocus=true)
+                }}
+            {% else %}
+                {{
+                    field(class="form-control",
+                    placeholder=field.label.text)
+                }}
+            {% endif %}
+        {% endif %}
+    {% if field.errors %}
+        <ul class="errors">
+            {% for error in field.errors %}
+            <li>{{ error }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+    </td>
+{% endmacro %}
+
+{% macro _render_form(form, toggle_class="fieldsetting") %}
+{% for field in form %}
+{% if (field.name != "csrf_token") and (not field.type in ['HiddenField', 'SetHiddenField']) %}
+        {% if field.type in ['FieldList'] %}
+        <tr>
+            <td>
+            <div data-toggle="{{ toggle_class }}" id="{{ field.id }}-{{ toggle_class }}">
+            <table>
+                <tr>
+                    {% if toggle_class == "subfieldset" %}
+                    <td>
+                        <b> {{ field.label }} </b>
+                    </td>
+                    {% else %}
+                    <td>
+                        <b><font size="5"> {{ field.name }} </font></b>
+                    </td>
+                    {% endif %}
+                    <td>
+                        <button id="{{ field.id }}" class="buttongreen" type="button" data-toggle="{{ toggle_class }}-add-row" data-target="#{{ field.id }}-{{ toggle_class }}">+</button>
+                    </td>
+                </tr>
+                {% for subfield in field %}
+                {% if subfield.type == 'FormField' %}
+                    <tr data-toggle="{{ toggle_class }}-entry" {% if loop.index0==0 %}style="display:none;"{% endif %}>
+                    <td>
+                    <div>
+                    <table>
+                    {{ _render_form(subfield, "subfieldset")}}
+                    <tr>
+                        <td>
+                        <button type="button" class="buttonred" data-toggle="{{ toggle_class }}-remove-row" id="{{field.id}}-{{loop.index0}}-remove">-
+                        </button>
+                        </td>
+                    </tr>
+                    </table>
+                    </div>
+                    </td>
+                    </tr>
+                {% else %}
+                    <tr data-toggle="{{ toggle_class }}-entry" {% if loop.index0==0 %}style="display:none;"{% endif %}>
+                    {{ render_field(subfield, False) }}
+                    <td>
+                        <button type="button" class="buttonred" data-toggle="{{ toggle_class }}-remove-row" id="{{field.id}}-{{loop.index0}}-remove">-
+                        </button>
+                    </td>
+                    </tr>
+                {% endif %}
+                {% endfor %}
+                <tr>
+                    <td>
+                        <button id="{{ field.id }}" class="buttongreen" type="button" data-toggle="{{ toggle_class }}-add-row" data-target="#{{ field.id }}-{{ toggle_class }}">+</button>
+                    </td>
+                </tr>
+            </table>
+            </div>
+            </td>
+        </tr>
+        {% elif field.type in ['SetFieldList'] %}
+        {% for subfield in field %}
+            {% if loop.index0 == 0 %}
+                <tr>
+                {{ render_field(subfield, True) }}
+                </tr>
+            {% else %}
+                <tr>
+                {{ render_field(subfield, False) }}
+                </tr>
+            {% endif %}
+        {% endfor %}
+        {% elif field.type in ['FormField'] %}
+            {{ _render_form(field, None)}}
+        {% else %}
+        <tr>
+            {{ render_field(field, True) }}
+        </tr>
+        {% endif %}
+{% endif %}
+{% endfor %}
+{% endmacro %}
+
+{% macro render_form(form, run_button=False) %}
+    <form novalidate method=post enctype="multipart/form-data">
+        <table  style="width:100%">
+        {{ form.csrf_token }}
+        {{ form.hidden_tag() }}
+        {{ _render_form(form) }}
+        </table>
+        <p> </p>
+        {% if not run_button %}
+            <div>
+            <tr>
+                <td align="center"><input type=submit value=Save name="submit"></td>
+                <td align="center"><input class=inputred type=submit value=Overwrite name="submit"></td>
+                <td align="center"><input class=inputblue type=submit value=Setup name="submit"></td>
+            </tr>
+            </div>
+        {% elif run_button == 'experiment' %}
+            <div>
+            <tr>
+                <td align="center"><input type=submit value=Run name="submit"></td>
+                <td align="center"><input class=inputred type=submit value=Abort name="submit"></td>
+                <td align="center"><input class=inputblue type=submit value=Test name="submit"></td>
+                <td align="center"><input class=inputblack type=submit value=Background name="submit"></td>
+            </tr>
+            </div>
+        {% else %}
+            <div>
+            <tr>
+                <td align="center"><input type=submit value=Run name="submit"></td>
+                <td align="center"><input class=inputred type=submit value=Abort name="submit"></td>
+            </tr>
+            </div>
+        {% endif %}
+    </form>
+{% endmacro %}

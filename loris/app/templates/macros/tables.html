@@ -1,0 +1,154 @@
+{% if data != "None" %}
+    <p>
+    <div>
+        Toggle Columns
+        {% for col in data['head'] %}
+        {% if loop.index0 in toggle_off_keys %}
+            <a class="toggle-vis toggleoff" data-column="{{ loop.index0 }}">
+                {{ col }}
+            </a>
+        {% else %}
+            <a class="toggle-vis" class="toggleon" data-column="{{ loop.index0 }}">
+                {{ col }}
+            </a>
+        {% endif %}
+        {% endfor %}
+    </div>
+    </p>
+    <table id="{{ data['id'] }}" class="display wrap" width="100%">
+    	<thead>
+    		<tr>
+    		{% for col in data['head'] %}
+    			<th>{{ col }}</th>
+    		{% endfor %}
+    		</tr>
+    	</thead>
+    	<tbody>
+    	{% for row in data['data'] %}
+    		<tr>
+    		{% for attr in row %}
+    			<td>{{ attr }}</td>
+    		{% endfor %}
+    		</tr>
+    	{% endfor %}
+    	</tbody>
+    	<tfoot>
+    		<tr>
+    		{% for col in data['head'] %}
+    			<th>{{ col }}</th>
+    		{% endfor %}
+    		</tr>
+    	</tfoot>
+    </table>
+    <div>
+    <p></p>
+    <tr>
+        {% if data['setup_url'] != "None" %}
+            <td align="center"><a id="setup" class=buttongreen href="#">Setup</a></td>
+        {% endif %}
+        {% if data['delete_url'] != "None" %}
+            <td align="center"><a id="delete" class=buttonred href="#">Delete</a></td>
+        {% endif %}
+        {% if data['edit_url'] != "None" %}
+            <td align="center"><a id="edit" class=buttonblue href="#">Edit</a></td>
+        {% endif %}
+    </tr>
+    </div>
+    <p></p>
+    <hr>
+
+    <script>
+    	$(document).ready(function() {
+            // Setup - add a text input to each footer cell
+            $("#{{ data['id'] }} tfoot th").each( function () {
+                var title = $(this).text();
+                $(this).html( '<input type="text" placeholder="Search '+title+'" />' );
+            } );
+            var target_string = "{{ toggle_off_keys }}".replace(/&#39;/g, "'");
+            console.log(target_string)
+            var targets =  eval(target_string);
+
+            // DataTable
+            var table = $("#{{ data['id'] }}").DataTable({
+                dom: 'Bfrtip',
+    			buttons: [
+    				{
+    					extend: 'collection',
+    					text: 'Export',
+    					buttons: [ 'pdf', 'csv', 'copy', 'excel' ]
+    				}
+                ],
+                columnDefs: [
+                    {
+                        targets: targets,
+                        visible: false
+                    }
+                ],
+                scrollX: true,
+                select: true
+                });
+
+            $("#{{data['id']}} tbody").on( 'click', 'tr', function () {
+    			if ( $(this).hasClass('selected') ) {
+    				$(this).removeClass('selected');
+    			}
+    			else {
+    				table.$('tr.selected').removeClass('selected');
+    				$(this).addClass('selected');
+    			}
+
+                //Only works because name column is first column
+                var name = table.cell(this, 0).data();
+
+                //execute url
+                if("{{ data['delete_url'] }}" != "None"){
+                    var delete_url = "{{ data['delete_url'] }}?name=" + name + "&target=" + window.location.href;
+                    $("#delete").attr("href", delete_url)
+                }
+                if("{{ data['edit_url'] }}" != "None"){
+                    var edit_url = "{{ data['edit_url'] }}?name=" + name + "&target=" + window.location.href + "&edit=True";
+                    $("#edit").attr("href", edit_url)
+                }
+                if("{{ data['setup_url'] }}" != "None"){
+                    var setup_url = "{{ data['setup_url'] }}?name=" + name + "&target=" + window.location.href;
+                    $("#setup").attr("href", setup_url)
+                }
+    		} );
+
+            // Apply the search
+    		table.columns().every( function () {
+    			var that = this;
+
+    			$( 'input', this.footer() ).on( 'keyup change', function () {
+    				if ( that.search() !== this.value ) {
+    					that
+    						.search( this.value )
+    						.draw();
+    				}
+    			} );
+    		} );
+
+
+    		$('a.toggle-vis').on( 'click', function (e) {
+    			e.preventDefault();
+
+    			// Get the column API object
+    			var column = table.column( $(this).attr('data-column') );
+
+    			// Toggle the visibility
+    			column.visible( ! column.visible() );
+
+                //Toggle Class
+                if ( $(this).hasClass('toggleoff') ) {
+    				$(this).removeClass('toggleoff');
+    				$(this).addClass('toggleon');
+    			}
+    			else {
+    				$(this).removeClass('toggleon');
+    				$(this).addClass('toggleoff');
+    			}
+    		} );
+        });
+    </script>
+
+{% endif %}
