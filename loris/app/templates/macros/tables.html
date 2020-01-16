@@ -43,9 +43,6 @@
     <div>
     <p></p>
     <tr>
-        {% if data['setup_url'] != "None" %}
-            <td align="center"><a id="setup" class=buttongreen href="#">Setup</a></td>
-        {% endif %}
         {% if data['delete_url'] != "None" %}
             <td align="center"><a id="delete" class=buttonred href="#">Delete</a></td>
         {% endif %}
@@ -98,20 +95,16 @@
     			}
 
                 //Only works because name column is first column
-                var name = table.cell(this, 0).data();
+                var _id = table.cell(this, 0).data();
 
                 //execute url
                 if("{{ data['delete_url'] }}" != "None"){
-                    var delete_url = "{{ data['delete_url'] }}?name=" + name + "&target=" + window.location.href;
+                    var delete_url = "{{ data['delete_url'] }}?_id=" + _id + "&target=" + window.location.href;
                     $("#delete").attr("href", delete_url)
                 }
                 if("{{ data['edit_url'] }}" != "None"){
-                    var edit_url = "{{ data['edit_url'] }}?name=" + name + "&target=" + window.location.href + "&edit=True";
+                    var edit_url = "{{ data['edit_url'] }}?_id=" + _id + "&target=" + window.location.href + "&edit=True";
                     $("#edit").attr("href", edit_url)
-                }
-                if("{{ data['setup_url'] }}" != "None"){
-                    var setup_url = "{{ data['setup_url'] }}?name=" + name + "&target=" + window.location.href;
-                    $("#setup").attr("href", setup_url)
                 }
     		} );
 

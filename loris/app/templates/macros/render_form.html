@@ -1,23 +1,29 @@
 {% macro render_field(field, label) %}
     <td>
-        {% if field.type in ['SelectField'] %}
+        {% if field.type in ['FileField', 'BlobFileField'] %}
             {% if label %}
-                {{ field.label }}{{ field(class="form-control") }}
+                <strong> {{ field.label }} </strong><p> {{ field()}} </p>
+            {% else %}
+                {{ field()}}
+            {% endif %}
+        {% elif field.type in ['SelectField'] %}
+            {% if label %}
+                <strong> {{ field.label }} </strong>{{ field(class="form-control") }}
             {% else %}
                 {{ field(class="form-control") }}
             {% endif %}
         {% elif field.type in ['BooleanField']%}
             {% if label %}
-                {{ field.label }} {{ field() }}
+                <strong> {{ field.label }} </strong> {{ field() }}
             {% else %}
                 {{ field() }}
             {% endif %}
         {% else %}
             {% if label %}
-                {{ field.label }}
+                <strong> {{ field.label }} </strong>
                 {{
                     field(class="form-control",
-                    placeholder=field.label.text, autofocus=true)
+                    placeholder=field.description, autofocus=true)
                 }}
             {% else %}
                 {{
@@ -36,9 +42,9 @@
     </td>
 {% endmacro %}
 
-{% macro _render_form(form, toggle_class="fieldsetting") %}
+{% macro _render_form(form, toggle_class="fieldsetting", skip=[]) %}
 {% for field in form %}
-{% if (field.name != "csrf_token") and (not field.type in ['HiddenField', 'SetHiddenField']) %}
+{% if (field.name != "csrf_token") and (not field.type in ['HiddenField', 'SetHiddenField']) and (field.id not in skip)%}
         {% if field.type in ['FieldList'] %}
         <tr>
             <td>
@@ -106,6 +112,16 @@
                 </tr>
             {% endif %}
         {% endfor %}
+        {% elif field.type in ['ParentFormField'] %}
+            <tr>
+            {{render_field(field.existing_entries, True)}}
+            <td>
+                <table>
+                <h6>Enter into Parent Table</h6>
+                {{ _render_form(field, None, skip=['existing_entries']) }}
+                </table>
+            </td>
+            </tr>
         {% elif field.type in ['FormField'] %}
             {{ _render_form(field, None)}}
         {% else %}
@@ -117,38 +133,19 @@
 {% endfor %}
 {% endmacro %}
 
-{% macro render_form(form, run_button=False) %}
+{% macro render_form(form) %}
     <form novalidate method=post enctype="multipart/form-data">
         <table  style="width:100%">
-        {{ form.csrf_token }}
         {{ form.hidden_tag() }}
         {{ _render_form(form) }}
         </table>
         <p> </p>
-        {% if not run_button %}
-            <div>
-            <tr>
-                <td align="center"><input type=submit value=Save name="submit"></td>
-                <td align="center"><input class=inputred type=submit value=Overwrite name="submit"></td>
-                <td align="center"><input class=inputblue type=submit value=Setup name="submit"></td>
-            </tr>
-            </div>
-        {% elif run_button == 'experiment' %}
-            <div>
-            <tr>
-                <td align="center"><input type=submit value=Run name="submit"></td>
-                <td align="center"><input class=inputred type=submit value=Abort name="submit"></td>
-                <td align="center"><input class=inputblue type=submit value=Test name="submit"></td>
-                <td align="center"><input class=inputblack type=submit value=Background name="submit"></td>
-            </tr>
-            </div>
-        {% else %}
-            <div>
-            <tr>
-                <td align="center"><input type=submit value=Run name="submit"></td>
-                <td align="center"><input class=inputred type=submit value=Abort name="submit"></td>
-            </tr>
-            </div>
-        {% endif %}
+        <div>
+        <tr>
+            <td align="center"><input type=submit value=Save name="submit"></td>
+            <td align="center"><input class=inputred type=submit value=Overwrite name="submit"></td>
+        </tr>
+        </div>
+        <p> </p>
     </form>
 {% endmacro %}

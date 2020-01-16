@@ -5,16 +5,10 @@ import datajoint as dj
 
 from .experimenters import Experimenter
 from .base import ManualLookup, COMMENTS, PRIMARY_NAME
-from ..attributes import Chromosome, Link, FlyIdentifier, CrossSchema
+from ..attributes import chr, link, flyidentifier, crossschema
 
 
 schema = dj.schema('subjects')
-
-# initialize custom attributes
-chr = Chromosome()
-link = Link()
-flyidentifier = FlyIdentifier()
-crossschema = CrossSchema()
 
 
 @schema

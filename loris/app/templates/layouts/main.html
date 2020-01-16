@@ -37,25 +37,36 @@
   <div id="wrap">
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
       <div class="container-fluid">
-          <a class="navbar-brand" href="#">Motyxia</a>
+          <a class="navbar-brand" href="#">Loris</a>
           <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
           </button>
           <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
-            <div class="navbar-nav">
-              <a class="nav-item nav-link" href="{{ url_for('home')}}">Home</a>
-              <a class="nav-item nav-link" href="{{ url_for('core')}}">Core Setup</a>
-              <a class="nav-item nav-link" href="{{ url_for('projector')}}">Projector Setup</a>
-              <a class="nav-item nav-link" href="{{ url_for('ao')}}">Analog Output Setup</a>
-              <a class="nav-item nav-link" href="{{ url_for('monitor')}}">Monitor Setup</a>
-              <a class="nav-item nav-link" href="{{ url_for('indicator') }}">Indicator Setup</a>
-              <a class="nav-item nav-link" href="{{ url_for('background') }}">Background Setup</a>
-              <a class="nav-item nav-link" href="{{ url_for('stimuli') }}">Stimuli Setup</a>
-              <a class="nav-item nav-link" href="{{ url_for('experiment') }}">Run Experiment</a>
-              <a class="nav-item nav-link" href="{{ url_for('measurement')}}">Run Measurement</a>
-              <a class="nav-item nav-link" href="{{ url_for('behavior')}}">Run Behavior</a>
-              <a class="nav-item nav-link" href="{{ url_for('about') }}">About</a>
-            </div>
+              <ul class="navbar-nav mr-auto">
+      <li class="nav-item">
+      <a class="nav-link" href="{{ url_for('home')}}">Home</a>
+      </li>
+      <li class="nav-item">
+      <a class="nav-link" href="{{ url_for('about') }}">About</a>
+      </li>
+      <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+          Schema
+        </a>
+        <div class="dropdown-menu", aria-labelledby="navbarDropdown">
+        {% for schema in session['schemata'] %}
+        {% if schema not in ['mysql', 'performance_schema', 'sys']%}
+        <a class="dropdown-item" href="{{ url_for('erd', schema=schema) }}">{{schema}}</a>
+        {% endif %}
+        {% endfor %}
+        </div>
+      </li>
+    </ul>
+    <form class="form-inline my-2 my-lg-0">
+      <input class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search">
+      <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
+    </form>
+
           </div>
       </div>
     </nav>
@@ -94,7 +105,7 @@
 
       <!-- Copyright -->
       <div class="footer-copyright text-center py-3">
-        Motyxia - Visual Stimuli on the Fly!
+        Loris - Neuroscience on the Fly!
       </div>
       <!-- Copyright -->
 
@@ -116,7 +127,7 @@
                   field_counter++;
                   var elem_num = parseInt(field_counter);
                   row.attr('data-id', elem_num);
-                  row.find(":input").each(function() {
+                  row.find("input").each(function() {
                       var elem_num = $(this).attr('id').match(/-[0-9]+-/)[0];
                       var elem_num = eval(elem_num.replace('-', '').replace('-', '')) + 1;
                       try {
@@ -324,6 +335,13 @@
     }
     .licyan {
         color: cyan;
+    }
+    .divbox {
+      background-color: lightgrey;
+      width: 300px;
+      border: 15px solid green;
+      padding: 50px;
+      margin: 20px;
     }
   </style>
 

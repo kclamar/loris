@@ -4,18 +4,18 @@
 import datajoint as dj
 
 from .base import PRIMARY_NAME, COMMENTS, DESCRIPTION, ManualLookup
-from ..attributes import TrueBool, ZipFolder, Link
+from ..attributes import truebool, tarfolder, link
 
 schema = dj.schema('equipment')
-
-# custom attributes
-bool = TrueBool()
-folder = ZipFolder()
-link = Link()
 
 
 @schema
 class PieceType(ManualLookup, dj.Manual):
+    pass
+
+
+@schema
+class Manufacturer(ManualLookup, dj.Manual):
     pass
 
 
@@ -32,19 +32,20 @@ class System(dj.Manual):
     -> [nullable] SystemType
     {DESCRIPTION}
     date_created : date # when was the system created
-    active = 1 : <bool> # is the system active?
+    active = 1 : <truebool> # is the system active?
     system_data = null : blob@datastore # python objects for the whole system
-    system_folder = null : <folder> # a complete folder to attach
+    system_file = null : attach@attachstore # a complete folder to attach
     {COMMENTS}
     """
 
     class Piece(dj.Part):
         definition = f"""
         -> System
-        piece_id = 1 : int
+        piece_id = 1 : int # piece identification (integer)
         ---
         -> [nullable] PieceType
-        model_name : varchar(255)
+        -> [nullable] Manufacturer
+        model_name = null : varchar(255) # standard model name by manufacturer
         {DESCRIPTION}
         link = null : <link>
         piece_data = null : blob@datastore

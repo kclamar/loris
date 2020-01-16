@@ -1,13 +1,15 @@
 """Wtf Forms
 """
 
+import os
 import numpy as np
-# from flask_wtf import FlaskForm as Form
-# from wtforms import Form as NoCsrfForm
-from wtforms import FieldList, FormField, BooleanField
 
+from wtforms import FieldList, FormField, BooleanField, FileField
+from wtforms import Form as NoCsrfForm
+from werkzeug.utils import secure_filename
 
-NONES = ['', None, 'None', 'null', 'NONE', np.nan]
+from . import NONES
+from .. import config
 
 
 class FormMixin:
@@ -92,8 +94,11 @@ class FormMixin:
         def _get_field_data(field, nan_return):
             if field.data in NONES:
                 return nan_return
-            elif field.data is np.nan:
-                return nan_return
+            elif isinstance(field, FileField):
+                filename = secure_filename(field.data.filename)
+                filepath = os.path.join(config['tmp_folder'], filename)
+                field.data.save(filepath)
+                return filepath
             else:
                 return field.data
 
@@ -107,16 +112,12 @@ class FormMixin:
         execution and saving
         """
         formatted_dict = {}
-        name = None  # if name stays None only return dict
         for field in self:
 
             key = field.short_name
 
             if key == 'csrf_token':
                 continue
-
-            elif key == '_name':
-                name = field.data
 
             elif isinstance(field, FieldList):
                 formatted_dict[key] = []
@@ -148,8 +149,16 @@ class FormMixin:
             else:
                 formatted_dict[key] = self.get_field_data(field)
 
-        if name is None:
-            return formatted_dict
+        return formatted_dict
 
-        else:
-            return formatted_dict, name
+
+class ManualLookupForm(NoCsrfForm, FormMixin):
+    """parent class for manual lookup forms for instance checking.
+    """
+    pass
+
+
+class ParentFormField(FormField):
+    """FormField for a parent class for instance checking.
+    """
+    pass
