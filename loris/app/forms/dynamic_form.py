@@ -13,10 +13,9 @@ from wtforms import Form as NoCsrfForm
 from wtforms import StringField, IntegerField, BooleanField, FloatField, \
     SelectField, FieldList, FormField, HiddenField
 
-from .dynamic_field import DynamicField
-from .formmixin import FormMixin, ParentFormField
-from ..virtual_schema import schemata
-from ..utils import draw_helper
+from loris.app.forms.dynamic_field import DynamicField
+from loris.app.forms.formmixin import FormMixin, ParentFormField
+from loris.app.utils import draw_helper, get_jsontable
 
 
 class DynamicForm:
@@ -134,26 +133,10 @@ class DynamicForm:
 
     def get_jsontable(self, edit_url=None, delete_url=None):
 
-        data = self.datatable
-        if len(data) == 0:
-            data = pd.DataFrame(
-                columns=['_id']+list(data.columns)
-            )
-        else:
-            _id = pd.Series(
-                data[self.table.primary_key].to_dict('records')
-            )
-            _id.name = '_id'
-            data = pd.concat([_id, data], axis=1)
-
-        jsontable = {}
-        jsontable['delete_url'] = str(delete_url)
-        jsontable['edit_url'] = str(edit_url)
-        jsontable['execute'] = 'True'
-        jsontable['id'] = self.table.name
-        jsontable['head'] = list(data.columns)
-        jsontable['data'] = data.values
-        return jsontable
+        return get_jsontable(
+            self.datatable, self.table.primary_key,
+            edit_url=edit_url, delete_url=delete_url, name=self.table.name
+        )
 
     def insert(self, form, **kwargs):
         """insert into datajoint table
@@ -202,6 +185,8 @@ class DynamicForm:
 
         for key, value in formatted_dict.items():
             formatted_dict[key] = self.fields[key].prepare_populate(value)
+
+        # TODO populate part tables
 
         form.populate_form(formatted_dict)
 

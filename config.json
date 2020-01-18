@@ -1,0 +1,15 @@
+{
+    "database.host": "127.0.0.1",
+    "database.user": "root",
+    "database.password": "simple",
+    "filestores": {
+        "attachstore": "/Users/matthias.christenson/attachstore",
+        "datastore": "/Users/matthias.christenson/datastore"
+    },
+    "enable_python_native_blobs": true,
+    "enable_python_pickle_blobs": true,
+    "enable_automakers": true,
+    "secret_key": "myprecious",
+    "tmp_folder": "/Users/matthias.christenson/tmp",
+    "skip_schemas": ["mysql", "sys", "performance_schema"]
+}

@@ -1,15 +1,10 @@
 """Run app for debugging
 """
 
-import datajoint as dj
+from loris import conn, config
 
-dj.config['database.host'] = '127.0.0.1'
-dj.config['database.user'] = 'root'
-dj.config['database.password'] = 'simple'
-dj.conn()
-
+conn()
 
 from loris.app.app import app
-
 
 app.run(debug=True)

@@ -15,7 +15,7 @@
     <h2>Enter data</h2>
     {{ render_form(form) }}
     <h2>Table</h2>
-    {% with data=data, toggle_off_keys=toggle_off_keys %}
+    {% with data=data, toggle_off_keys=toggle_off_keys%}
         {% include 'macros/tables.html' %}
     {% endwith %}
 </div>

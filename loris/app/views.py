@@ -5,16 +5,39 @@ from flask import render_template, request, flash, url_for, redirect, \
     send_from_directory, session
 import datajoint as dj
 
-from . import DYN_FORMS, config
-from .app import app
-from .virtual_schema import schemata
-from .forms.dynamic_form import DynamicForm
-from .utils import draw_helper
+from loris import config
+from loris.app.app import app
+from loris.app.forms.dynamic_form import DynamicForm
+from loris.app.forms.fixed import dynamic_jointablesform
+from loris.app.utils import draw_helper, get_jsontable, save_join
+
+
+def ping(f):
+    """Execute after each page refresh
+    """
+
+    def wrapper(*args, **kwargs):
+        try:
+            return f(*args, **kwargs)
+        except Exception as e:
+            return redirect(url_for('home', error=str(e)))
+
+    return wrapper
+
+
+def session_refresh():
+    config.refresh()
+    # for testing when refresh happens
+    print('refreshed!')
+    session['schemata'] = list(config['schemata'].keys())
 
 
 @app.route('/')
 def home():
-    session['schemata'] = list(schemata.keys())
+    error = request.args.get('error', None)
+    session_refresh()
+    if error is not None:
+        flash(error, 'error')
     return render_template('pages/home.html')
 
 
@@ -23,26 +46,36 @@ def about():
     return render_template('pages/about.html')
 
 
-@app.route('/tmp/<path:filename>')
+@app.route(f"{config['tmp_folder']}/<path:filename>")
 def tmpfile(filename):
     return send_from_directory(config['tmp_folder'], filename)
+
 
 @app.route('/erd/', defaults={'schema':None}, methods=['GET', 'POST'])
 @app.route('/erd/<schema>', methods=['GET', 'POST'])
 def erd(schema):
+
+    if schema == 'ERD':
+        schema = None
+
+    filename = draw_helper(schema, type='schema')
+
+    if schema is None:
+        schema = 'ERD'
+
     return render_template(
-        'pages/erd.html', filename=draw_helper(schema, type='schema'),
+        'pages/erd.html', filename=filename,
         url=url_for('erd', schema=schema),
-        schema=('ERD' if schema is None else schema)
+        schema=schema
     )
 
 
-@app.route('/delete/<schema>/<table>', defaults={'subtable': None}, methods=['GET', 'POST'])
+@app.route('/delete/<schema>/<table>',
+           defaults={'subtable': None}, methods=['GET', 'POST'])
 @app.route('/delete/<schema>/<table>/<subtable>', methods=['GET', 'POST'])
 def delete(schema, table, subtable):
     _id = eval(request.args.get('_id', "None"))
-    print(_id)
-    print(type(_id))
+    raise NotImplementedError('delete')
 
     return render_template('pages/about.html')
 
@@ -53,7 +86,7 @@ def table(schema, table, subtable):
     # get id if it exists (will be restriction)
     _id = eval(request.args.get('_id', "None"))
     # get table and create dynamic form
-    table_class = getattr(schemata[schema], table)
+    table_class = getattr(config['schemata'][schema], table)
     # get table name
     table_name = '.'.join([schema, table])
 
@@ -69,15 +102,9 @@ def table(schema, table, subtable):
     delete_url = url_for(
         'delete', schema=schema, table=table, subtable=subtable)
 
-    if table_name not in DYN_FORMS:
-        dynamicform = DynamicForm(table_class)
-        form = dynamicform.formclass()
-        DYN_FORMS[table_name] = dynamicform
-    else:
-        # update foreign keys
-        dynamicform = DYN_FORMS[table_name]
-        form = dynamicform.formclass()
-        dynamicform.update_foreign_fields(form)
+    dynamicform, form = config.get_dynamicform(
+        table_name, table_class, DynamicForm
+    )
 
     filename = dynamicform.draw_relations()
 
@@ -124,4 +151,51 @@ def table(schema, table, subtable):
         url=url_for('table', table=table, schema=schema, subtable=subtable),
         toggle_off_keys=toggle_off_keys,
         filename=filename
+    )
+
+
+@app.route('/join', methods=['GET', 'POST'])
+def join():
+
+    formclass = dynamic_jointablesform()
+    form = formclass()
+    data = "None"
+
+    if request.method == 'POST':
+        submit = request.form.get('submit', None)
+
+        form.rm_hidden_entries()
+
+        if submit is None:
+            pass
+
+        elif submit in ['Submit']:
+            if form.validate_on_submit():
+                formatted_dict = form.get_formatted()
+
+                try:
+                    tables = []
+                    for n, table_name in enumerate(formatted_dict['tables']):
+                        tables.append(formclass.tables_dict[table_name])
+
+                    joined_table = save_join(tables)
+                    if formatted_dict['restriction'] is not None:
+                        joined_table = (
+                            joined_table & formatted_dict['restriction']
+                        )
+                except dj.DataJointError as e:
+                    flash(f"{e}", 'error')
+                else:
+                    df = joined_table.fetch(format='frame').reset_index()
+                    data = get_jsontable(df, joined_table.heading.primary_key)
+                    flash(f"successfully joined tables.")
+
+        form.append_hidden_entries()
+
+    return render_template(
+        'pages/join.html',
+        form=form,
+        url=url_for('join'),
+        data=data,
+        toggle_off_keys=[0]
     )

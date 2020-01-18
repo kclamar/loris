@@ -1,0 +1,16 @@
+{% extends 'layouts/main.html' %}
+{% block title %}{{ table_name }}{% endblock %}
+{% block content %}
+
+<div class="page-header">
+    {% from 'macros/render_form.html' import submit_render_form %}
+    <h1> <a href={{url}}>Join Tables</a> <h1>
+    <h4>Join arbitrary tables that exist in the database.</h4>
+    {{ submit_render_form(form) }}
+    <h2>Joined Table</h2>
+    {% with data=data, toggle_off_keys=toggle_off_keys%}
+        {% include 'macros/tables.html' %}
+    {% endwith %}
+</div>
+
+{% endblock %}

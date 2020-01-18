@@ -1,2 +1,2 @@
-"""utility functions
+"""utility functions for database
 """

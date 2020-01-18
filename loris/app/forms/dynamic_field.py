@@ -19,9 +19,8 @@ from wtforms import BooleanField, SelectField, DateField, DateTimeField, \
 from wtforms.validators import InputRequired, Optional, NumberRange, \
     ValidationError, Length
 
-from loris.database.attributes import TarFolder
-from . import NONES
-from .formmixin import ManualLookupForm, ParentFormField
+from loris.app.forms import NONES
+from loris.app.forms.formmixin import ManualLookupForm, ParentFormField
 
 # when a variable character is a textarea field
 TEXTAREA_STARTLENGTH = 512
@@ -49,6 +48,8 @@ class Extension:
 
     def __call__(self, form, field):
         filename = field.data.filename
+        if not filename:
+            return
         extension = os.path.splitext(filename)[-1].strip('.')
         if extension not in self.ext:
             raise ValidationError(
@@ -261,6 +262,10 @@ class DynamicField:
             kwargs['description'] = self.attr.name.replace('_', ' ')
 
         nullable = self.attr.nullable or self.attr.default in NONES
+        kwargs['render_kw'] = {
+            'nullable': self.attr.nullable,
+            'primary_key': self.attr.in_key
+        }
 
         # ignore_foreign_fields assumes that a parent form is being created
         if nullable or self.ignore_foreign_fields:
@@ -421,7 +426,9 @@ class DynamicField:
                 value = value['existing_entries']
 
         if self.attr.is_blob:
-            if value.endswith('npy'):
+            if value in NONES:
+                value = None
+            elif value.endswith('npy'):
                 value = np.load(value)
             elif value.endswith('csv'):
                 value = pd.read_csv(value).to_records(False)

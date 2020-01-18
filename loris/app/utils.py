@@ -3,17 +3,74 @@
 
 import graphviz
 import os
+import pandas as pd
 import datajoint as dj
 from datajoint.schema import lookup_class_name
 from flask import render_template, request, flash, url_for, redirect
 
-from . import config
-from .virtual_schema import schemata
+from loris import config, conn
+
+
+def save_join(tables):
+    """savely join tables ignoring dependent attributes
+    """
+
+    for n, table in enumerate(tables):
+
+        if n == 0:
+            joined_table = table
+        else:
+            dep1 = joined_table.heading.secondary_attributes
+            dep2 = table.heading.secondary_attributes
+            proj = list(set(dep2) - set(dep1))
+            joined_table = joined_table * table.proj(*proj)
+
+    return joined_table
+
+
+def get_jsontable(
+    data, primary_key, edit_url=None, delete_url=None, name=None
+):
+    """get json table from dataframe
+    """
+
+    if len(data) == 0:
+        data = pd.DataFrame(
+            columns=['_id']+list(data.columns)
+        )
+    else:
+        _id = pd.Series(
+            data[primary_key].to_dict('records')
+        )
+        _id.name = '_id'
+        data = pd.concat([_id, data], axis=1)
+
+    jsontable = {}
+    jsontable['delete_url'] = str(delete_url)
+    jsontable['edit_url'] = str(edit_url)
+    jsontable['execute'] = 'True'
+    jsontable['id'] = str(name)
+    jsontable['head'] = list(data.columns)
+    jsontable['data'] = data.values
+    return jsontable
 
 
 def draw_helper(obj=None, type='table'):
-    """helper for drawing erds
     """
+    helper for drawing erds
+    """
+    # Do not redo when image exists
+    if obj is None:
+        filename = 'eerrdd'
+    elif type == 'table':
+        filename = obj.full_table_name
+    else:
+        filename = obj
+
+    filepath = os.path.join(config['tmp_folder'], filename)
+    if os.path.exists(f'{filepath}.svg'):
+        return f'{filename}.svg'
+
     # rankdir TB?
 
     # setup of graphviz
@@ -55,7 +112,7 @@ def draw_helper(obj=None, type='table'):
 
     def name_lookup(full_name):
         """ Look for a table's class name given its full name. """
-        return lookup_class_name(full_name, schemata) or full_name
+        return lookup_class_name(full_name, config['schemata']) or full_name
 
     node_attrs = {
         dj.Manual: {'fillcolor': 'green3'},
@@ -100,12 +157,8 @@ def draw_helper(obj=None, type='table'):
                 node_attrs[dj.diagram._get_tier(node_name)]
             )
             dot.edge(root_id, node_id)
-
-        filename = root_name
-
     else:
-        conn = dj.conn()
-        dependencies = conn.dependencies
+        dependencies = config['connection'].dependencies
         dependencies.load()
         for root_name in dependencies.nodes.keys():
             try:
@@ -114,7 +167,7 @@ def draw_helper(obj=None, type='table'):
             except Exception:
                 pass
             schema = root_name.replace('`', '').split('.')[0]
-            if obj is None and schema in ('mysql', 'sys', 'performance_schema'):
+            if obj is None and schema in config['skip_schemas']:
                 continue
             if obj is not None and (obj != schema):
                 continue
@@ -134,11 +187,7 @@ def draw_helper(obj=None, type='table'):
                     node_attrs[dj.diagram._get_tier(node_name)]
                 )
                 dot.edge(root_id, node_id)
-        if obj is None:
-            filename = '<erd>'
-        else:
-            filename = obj
-    filepath = os.path.join(config['tmp_folder'], filename)
+
     if os.path.exists(filepath):
         os.remove(filepath)
     dot.render(filepath)

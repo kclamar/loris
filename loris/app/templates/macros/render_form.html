@@ -1,26 +1,41 @@
+{% macro render_label(field) %}
+    <strong>
+    {% if field.render_kw['primary_key'] %}
+        <font color="Crimson">{{ field.label }}</font>
+    {% elif field.render_kw['nullable']%}
+        <font color="DarkGray">{{ field.label }}</font>
+    {% else %}
+        {{ field.label }}
+    {% endif %}
+    </strong>
+{% endmacro %}
+
 {% macro render_field(field, label) %}
     <td>
         {% if field.type in ['FileField', 'BlobFileField'] %}
             {% if label %}
-                <strong> {{ field.label }} </strong><p> {{ field()}} </p>
+                {{ render_label(field) }}&emsp;<small>({{ field.description }})</small>
+                <p> {{ field()}} </p>
             {% else %}
                 {{ field()}}
             {% endif %}
         {% elif field.type in ['SelectField'] %}
             {% if label %}
-                <strong> {{ field.label }} </strong>{{ field(class="form-control") }}
+                {{ render_label(field) }}&emsp;<small>({{ field.description }})</small>
+                {{ field(class="form-control") }}
             {% else %}
                 {{ field(class="form-control") }}
             {% endif %}
         {% elif field.type in ['BooleanField']%}
             {% if label %}
-                <strong> {{ field.label }} </strong> {{ field() }}
+                {{ render_label(field) }}&emsp;<small>({{ field.description }})</small>
+                {{ field() }}
             {% else %}
                 {{ field() }}
             {% endif %}
         {% else %}
             {% if label %}
-                <strong> {{ field.label }} </strong>
+                {{ render_label(field) }}
                 {{
                     field(class="form-control",
                     placeholder=field.description, autofocus=true)
@@ -144,6 +159,22 @@
         <tr>
             <td align="center"><input type=submit value=Save name="submit"></td>
             <td align="center"><input class=inputred type=submit value=Overwrite name="submit"></td>
+        </tr>
+        </div>
+        <p> </p>
+    </form>
+{% endmacro %}
+
+{% macro submit_render_form(form) %}
+    <form novalidate method=post enctype="multipart/form-data">
+        <table  style="width:100%">
+        {{ form.hidden_tag() }}
+        {{ _render_form(form) }}
+        </table>
+        <p> </p>
+        <div>
+        <tr>
+            <td align="center"><input type=submit value=Submit name="submit"></td>
         </tr>
         </div>
         <p> </p>

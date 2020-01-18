@@ -8,8 +8,8 @@ from wtforms import FieldList, FormField, BooleanField, FileField
 from wtforms import Form as NoCsrfForm
 from werkzeug.utils import secure_filename
 
-from . import NONES
-from .. import config
+from loris import config
+from loris.app.forms import NONES
 
 
 class FormMixin:
@@ -96,6 +96,8 @@ class FormMixin:
                 return nan_return
             elif isinstance(field, FileField):
                 filename = secure_filename(field.data.filename)
+                if filename in NONES:
+                    return nan_return
                 filepath = os.path.join(config['tmp_folder'], filename)
                 field.data.save(filepath)
                 return filepath
