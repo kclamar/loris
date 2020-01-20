@@ -3,9 +3,9 @@
 
 import datajoint as dj
 
-from .experimenters import Experimenter
-from .base import ManualLookup, COMMENTS, PRIMARY_NAME
-from ..attributes import chr, link, flyidentifier, crossschema
+from loris.database.schema.experimenters import Experimenter
+from loris.database.schema.base import ManualLookup, COMMENTS, PRIMARY_NAME
+from loris.database.attributes import chr, link, flyidentifier, crossschema
 
 
 schema = dj.schema('subjects')
@@ -13,12 +13,12 @@ schema = dj.schema('subjects')
 
 @schema
 class CellType(ManualLookup, dj.Manual):
-    pass
+    primary_comment = 'standard cell type name - e.g. dm8'
 
 
 @schema
 class FlyOrigin(ManualLookup, dj.Manual):
-    pass
+    primary_comment = 'where is the fly from? - e.g. Bloomington, Sarah'
 
 
 @schema
@@ -38,8 +38,8 @@ class FlyGenotype(dj.Manual):
     class PublicIdentifier(dj.Part):
         definition = """
         -> FlyGenotype
-        ---
         identifier : <flyidentifier> # public identifier
+        ---
         link = null : <link>
         """
 
@@ -61,7 +61,7 @@ class FlyCrosses(dj.Manual):
 @schema
 class FlyStock(dj.Manual):
     definition = f"""
-    {PRIMARY_NAME.format(name='stock_name')}
+    {PRIMARY_NAME.format(name='stock_name', comment='stock identification name')}
     ---
     date_modified : date
     -> FlyGenotype
@@ -80,7 +80,7 @@ class RearingMethod(ManualLookup, dj.Manual):
 @schema
 class FlySubject(dj.Manual):
     definition = f"""
-    {PRIMARY_NAME.format(name='subject_name')}
+    {PRIMARY_NAME.format(name='subject_name', comment='short subject name of fly')}
     ---
     -> FlyGenotype
     -> Experimenter

@@ -3,31 +3,31 @@
 
 import datajoint as dj
 
-from .base import PRIMARY_NAME, COMMENTS, DESCRIPTION, ManualLookup
-from ..attributes import truebool, tarfolder, link
+from loris.database.schema.base import PRIMARY_NAME, COMMENTS, DESCRIPTION, ManualLookup
+from loris.database.attributes import truebool, tarfolder, link
 
 schema = dj.schema('equipment')
 
 
 @schema
 class PieceType(ManualLookup, dj.Manual):
-    pass
+    primary_comment = 'type of piece - e.g. LED, dichroic'
 
 
 @schema
 class Manufacturer(ManualLookup, dj.Manual):
-    pass
+    primary_comment = 'name of manufacturer - e.g. ThorLabs, Semrock'
 
 
 @schema
 class SystemType(ManualLookup, dj.Manual):
-    pass
+    primary_comment = 'type of system - e.g. LED setup, ephys rig'
 
 
 @schema
 class System(dj.Manual):
     definition = f"""
-    {PRIMARY_NAME.format(name='system_name')}
+    {PRIMARY_NAME.format(name='system_name', comment='short-name of system')}
     ---
     -> [nullable] SystemType
     {DESCRIPTION}

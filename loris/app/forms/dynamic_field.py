@@ -19,31 +19,16 @@ from wtforms import BooleanField, SelectField, DateField, DateTimeField, \
 from wtforms.validators import InputRequired, Optional, NumberRange, \
     ValidationError, Length
 
+from loris import config
 from loris.app.forms import NONES
 from loris.app.forms.formmixin import ManualLookupForm, ParentFormField
-
-# when a variable character is a textarea field
-TEXTAREA_STARTLENGTH = 512
-# UPLOAD EXTENSIONS
-EXTENSIONS = ['csv', 'npy', 'json', 'pkl']
-ATTACH_EXTENSIONS = (
-    EXTENSIONS + [
-        'tiff', 'png', 'jpeg', 'mpg', 'hdf', 'hdf5', 'tar', 'zip',
-        'txt', 'gif', 'svg', 'tif', 'bmp', 'doc', 'docx', 'rtf',
-        'odf', 'ods', 'gnumeric', 'abw', 'xls', 'xlsx', 'ini',
-        'plist', 'xml', 'yaml', 'yml', 'py', 'js', 'php', 'rb', 'sh',
-        'tgz', 'txz', 'gz', 'bz2', 'jpe', 'jpg', 'pdf'
-    ]
-)
-# foreign key select field limit
-FK_DROPDOWN_LIMIT = 100
 
 
 class Extension:
     """Extension Validator
     """
 
-    def __init__(self, ext=EXTENSIONS):
+    def __init__(self, ext=config['extensions']):
         self.ext = ext
 
     def __call__(self, form, field):
@@ -101,6 +86,16 @@ class BlobFileField(FileField):
 
 class DynamicField:
     """Choose the right wtf field for each attribute in a datajoint Table
+
+    Parameters
+    ----------
+    table : class
+        datajoint.Table subclass representing a table in the mySQL database.
+    attribute : dj.Attribute
+        attribute in table to create a field for.
+    ignore_foreign_fields : bool
+        whether to process foreign keys to create foreign field forms or
+        simply normal fields.
     """
 
     def __init__(self, table, attribute, ignore_foreign_fields=False):
@@ -222,7 +217,7 @@ class DynamicField:
         if self.is_foreign_key and not self.ignore_foreign_fields:
             if self.foreign_is_manuallookup:
                 return self.create_manuallookup_field(kwargs)
-            elif len(self.foreign_data) <= FK_DROPDOWN_LIMIT:
+            elif len(self.foreign_data) <= config['fk_dropdown_limit']:
                 return self.create_dropdown_field(kwargs)
 
         if type == 'INTEGER':
@@ -284,6 +279,13 @@ class DynamicField:
         return kwargs
 
     def integer_field(self, kwargs):
+        # auto increment integer primary keys
+        if len(self.table()) == 0:
+            kwargs['default'] = 1
+        elif self.attr.in_key and len(self.table.heading.primary_key) == 1:
+            kwargs['default'] = np.max(
+                self.table.proj().fetch()[self.attr.name]
+            ) + 1
         return IntegerField(**kwargs)
 
     def float_field(self, kwargs):
@@ -305,7 +307,7 @@ class DynamicField:
         else:
             return
 
-        if max_length >= TEXTAREA_STARTLENGTH:
+        if max_length >= config['textarea_startlength']:
             return TextAreaField(**kwargs)
         else:
             return StringField(**kwargs)
@@ -344,7 +346,7 @@ class DynamicField:
         return BlobFileField(**kwargs)
 
     def attach_field(self, kwargs):
-        kwargs['validators'].append(Extension(ATTACH_EXTENSIONS))
+        kwargs['validators'].append(Extension(config['attach_extensions']))
         return FileField(**kwargs)
 
     def filepath_field(self, kwargs):
@@ -380,6 +382,7 @@ class DynamicField:
 
         # dynamically create form
         class FkForm(ManualLookupForm):
+            parent_table_name = to_camel_case(self.foreign_table.table_name)
             existing_entries = self.create_dropdown_field(kwargs)
 
         for name, attr in self.foreign_table.heading.attributes.items():

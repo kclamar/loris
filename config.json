@@ -11,5 +11,7 @@
     "enable_automakers": true,
     "secret_key": "myprecious",
     "tmp_folder": "/Users/matthias.christenson/tmp",
-    "skip_schemas": ["mysql", "sys", "performance_schema"]
+    "skip_schemas": ["mysql", "sys", "performance_schema"],
+    "client_id":"df0072d94a728ef4a9c84adeb8b7879b80d9ce62fc323c92081b4ddfbff9b232",
+    "client_secret":"1238d30fe448e88c411b891106e3af4d32c163577d28cdfc5f3f8ffff1894dac"
 }

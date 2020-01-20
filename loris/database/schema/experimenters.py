@@ -4,8 +4,8 @@
 
 import datajoint as dj
 
-from .base import COMMENTS
-from ..attributes import truebool
+from loris.database.schema.base import COMMENTS
+from loris.database.attributes import truebool
 
 schema = dj.schema('experimenters')
 

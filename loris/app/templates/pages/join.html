@@ -1,11 +1,14 @@
 {% extends 'layouts/main.html' %}
-{% block title %}{{ table_name }}{% endblock %}
+{% block title %}Loris.Join{% endblock %}
 {% block content %}
 
 <div class="page-header">
     {% from 'macros/render_form.html' import submit_render_form %}
     <h1> <a href={{url}}>Join Tables</a> <h1>
-    <h4>Join arbitrary tables that exist in the database.</h4>
+    <h6>
+        Join arbitrary tables that exist in the database.
+        It is not required to add a restriction.
+    </h6>
     {{ submit_render_form(form) }}
     <h2>Joined Table</h2>
     {% with data=data, toggle_off_keys=toggle_off_keys%}

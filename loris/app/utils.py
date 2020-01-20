@@ -104,7 +104,7 @@ def draw_helper(obj=None, type='table'):
             graph_attr=graph_attr
         ) as subgraph:
             subgraph.node(
-                name, label=name,
+                name, label=name.split('.')[-1],
                 URL=url_for('table', **table_names),
                 target='_top', **node_attr
             )
@@ -119,8 +119,8 @@ def draw_helper(obj=None, type='table'):
         dj.Computed: {'fillcolor': 'coral1'},
         dj.Lookup: {'fillcolor': 'azure3'},
         dj.Imported: {'fillcolor': 'cornflowerblue'},
-        dj.Part: {'fillcolor': 'azure3', 'fontsize': '8'},
-        dj.Settingstable: {'fillcolor': 'orange'},
+        dj.Part: {'fillcolor': 'azure3', 'fontsize': '6'},
+        dj.Settingstable: {'fillcolor': 'orange', 'fontsize': '6'},
         dj.AutoComputed: {'fillcolor': 'coral1'},
         dj.AutoImported: {'fillcolor': 'cornflowerblue'},
     }

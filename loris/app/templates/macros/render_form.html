@@ -132,7 +132,7 @@
             {{render_field(field.existing_entries, True)}}
             <td>
                 <table>
-                <h6>Enter into Parent Table</h6>
+                <h6>Enter into {{field.parent_table_name}}</h6>
                 {{ _render_form(field, None, skip=['existing_entries']) }}
                 </table>
             </td>

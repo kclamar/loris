@@ -5,14 +5,35 @@ import json
 import os
 import shutil
 import datajoint as dj
+from datajoint.settings import default
 
 from loris.database.attributes import custom_attributes_dict
+
+# defaults for application
+defaults = dict(
+    textarea_startlength=512,
+    # UPLOAD EXTENSIONS
+    extensions=['csv', 'npy', 'json', 'pkl'],
+    attach_extensions=(
+        ['csv', 'npy', 'json', 'pkl'] + [
+            'tiff', 'png', 'jpeg', 'mpg', 'hdf', 'hdf5', 'tar', 'zip',
+            'txt', 'gif', 'svg', 'tif', 'bmp', 'doc', 'docx', 'rtf',
+            'odf', 'ods', 'gnumeric', 'abw', 'xls', 'xlsx', 'ini',
+            'plist', 'xml', 'yaml', 'yml', 'py', 'js', 'php', 'rb', 'sh',
+            'tgz', 'txz', 'gz', 'bz2', 'jpe', 'jpg', 'pdf'
+        ]
+    ),
+    # foreign key select field limit
+    fk_dropdown_limit=200
+)
 
 
 class Config(dict):
 
     @classmethod
     def load(cls):
+        """load configuration class and perform necessary checks
+        """
 
         root_dir = os.path.split(os.path.split(__file__)[0])[0]
         config_file = os.path.join(root_dir, 'config.json')
@@ -20,11 +41,13 @@ class Config(dict):
         with open(config_file, 'r') as f:
             config = json.load(f)
 
-        return cls(config)
+        config = {**defaults, **config}
+        config = cls(config)
+        config.perform_checks()
+
+        return config
 
     def __getitem__(self, k):
-        """
-        """
 
         try:
             return super().__getitem__(k)
@@ -38,6 +61,14 @@ class Config(dict):
             elif k == 'dynamicforms':
                 self[k] = {}
                 return self[k]
+            elif k == 'automaker_tables':
+                self.refresh_automaker_tables()
+                return self[k]
+            elif k == 'settings_tables':
+                self.refresh_settings_tables()
+                return self[k]
+            elif k == 'connection':
+                return self.conn()
 
             raise e
 
@@ -64,14 +95,10 @@ class Config(dict):
                 }
             })
 
-        dj.config['database.host'] = self['database.host']
-        dj.config['database.user'] = self['database.user']
-        dj.config['database.password'] = self['database.password']
-        dj.config['enable_python_native_blobs'] = \
-            self['enable_python_native_blobs']
-        dj.config['enable_python_pickle_blobs'] = \
-            self['enable_python_pickle_blobs']
-        dj.config['enable_automakers'] = self['enable_automakers']
+        # set datajoint variable in datajoint config
+        for key in default:
+            if key in self:
+                dj.config[key] = self[key]
 
     def perform_checks(self):
         """perform various checks
@@ -81,6 +108,8 @@ class Config(dict):
             os.makedirs(self['tmp_folder'])
 
     def refresh_schema(self):
+        """refresh container of schemas
+        """
         schemata = {}
         for schema in dj.list_schemas():
             if schema in self["skip_schemas"]:
@@ -93,6 +122,8 @@ class Config(dict):
         self['schemata'] = schemata
 
     def refresh_tables(self):
+        """refresh container of tables
+        """
 
         tables = {}
 
@@ -106,18 +137,87 @@ class Config(dict):
                 if isinstance(ele, dj.user_tables.OrderedClass):
                     tables[f'{schema}.{key}'] = ele
 
+                    # get part tables
                     for part_name, part_table in ele.__dict__.items():
                         if isinstance(part_table, dj.user_tables.OrderedClass):
-                            tables[f'{schema}.{key}.{part_name}'] = part_table
+                            if issubclass(part_table, dj.Part):
+                                tables[f'{schema}.{key}.{part_name}'] = \
+                                    part_table
 
         self['tables'] = tables
 
         return tables
 
+    def refresh_settings_tables(self):
+        """refresh container of settings table
+        """
+
+        tables = {}
+
+        for table_name, table in self['tables'].items():
+            if issubclass(table, dj.Settingstable):
+                tables[table_name] = table
+
+        self['settings_tables'] = tables
+
+        return tables
+
+    def refresh_automaker_tables(self):
+        """refresh container of settings table
+        """
+
+        tables = {}
+
+        for table_name, table in self['tables'].items():
+            if issubclass(table, (dj.AutoImported, dj.AutoComputed)):
+                tables[table_name] = table
+
+        self['automaker_tables'] = tables
+
+        return tables
+
+    def tables_to_list(self):
+        """convert tables container to list for app header
+        """
+
+        tables = self['tables']
+        tables_list = []
+
+        for table_name, table in tables.items():
+            if issubclass(table, dj.Manual):
+                # ignore ManualLookup subclasses
+                if (
+                    (len(table.heading.primary_key) == 1)
+                    and (len(table.heading.secondary_attributes) == 1)
+                ):
+                    pk = table.heading.primary_key[0]
+                    sk = table.heading.secondary_attributes[0]
+                    truth = (
+                        (sk == 'comments')
+                        & (pk == table.table_name)
+                    )
+                    if truth:
+                        continue
+            else:
+                continue
+
+            tables_list.append(
+                [table_name] + table_name.split('.')
+            )
+            if len(tables_list[-1]) == 3:
+                tables_list[-1].append(None)
+
+        return tables_list
+
     def refresh_dependencies(self):
+        """refresh dependencies of database connection
+        """
+
         self['connection'].dependencies.load()
 
     def empty_tmp_folder(self):
+        """empty temporary folder
+        """
 
         for filename in os.listdir(self['tmp_folder']):
             file_path = os.path.join(self['tmp_folder'], filename)
@@ -130,13 +230,20 @@ class Config(dict):
                 print('Failed to delete %s. Reason: %s' % (file_path, e))
 
     def refresh(self):
+        """refresh all containers and empty temporary folder
+        """
+
         self.pop('dynamicforms', None)
         self.empty_tmp_folder()
         self.refresh_dependencies()
         self.refresh_schema()
         self.refresh_tables()
+        self.refresh_settings_tables()
+        self.refresh_automaker_tables()
 
     def get_dynamicform(self, table_name, table_class, dynamic_class):
+        """get the dynamic form and wtf form for application
+        """
 
         if table_name not in self['dynamicforms']:
             dynamicform = dynamic_class(table_class)
@@ -149,6 +256,3 @@ class Config(dict):
             dynamicform.update_foreign_fields(form)
 
         return dynamicform, form
-
-    # get all settings tables
-    # get all automaker tables

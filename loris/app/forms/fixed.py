@@ -28,12 +28,22 @@ def dynamic_jointablesform():
                 choices=[(key, key) for key in tables_dict],
                 validators=[InputRequired()]
             ),
-            min_entries=1
+            min_entries=1,
         )
         restriction = StringField(
-            'restrictions',
-            description='a sql restriction to apply to the joined table',
-            validators=[Optional()]
+            (
+                'restriction - '
+                '<a href="https://www.tutorialgateway.org/mysql-where-clause" '
+                'target="_blank">help</a>'
+            ),
+            description=(
+                'a sql where clause to apply to the joined '
+                'table (do not include the WHERE command)'
+            ),
+            validators=[Optional()],
+            render_kw={
+                'nullable': True
+            }
         )
 
     return JoinTablesForm

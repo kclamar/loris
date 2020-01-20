@@ -20,6 +20,15 @@ from loris.app.utils import draw_helper, get_jsontable
 
 class DynamicForm:
     """creates forms from datajoint table class
+
+    Parameters
+    ----------
+    table : class
+        a subclass of datajoint.Table that is in the database.
+    skip : list-like
+        attributes to skip when creating form.
+    formtype : class
+        WTF form class or Flask form used to make a dynamic form subclass.
     """
 
     def __init__(self, table, skip=[], formtype=Form):
