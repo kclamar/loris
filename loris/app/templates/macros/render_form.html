@@ -10,41 +10,67 @@
     </strong>
 {% endmacro %}
 
-{% macro render_field(field, label) %}
+{% macro render_field(field, label, readonly=[]) %}
     <td>
-        {% if field.type in ['FileField', 'BlobFileField'] %}
+        {% if field.type in ['FileField', 'BlobFileField', 'AttachFileField', 'DynamicFileField'] %}
             {% if label %}
                 {{ render_label(field) }}&emsp;<small>({{ field.description }})</small>
+                {% if field.short_name in readonly %}
+                <p> {{ field(readonly=true) }} </p>
+                {% else %}
                 <p> {{ field()}} </p>
+                {% endif %}
             {% else %}
+                {% if field.short_name in readonly %}
+                {{ field(readonly=true) }}
+                {% else %}
                 {{ field()}}
+                {% endif %}
             {% endif %}
         {% elif field.type in ['SelectField'] %}
             {% if label %}
                 {{ render_label(field) }}&emsp;<small>({{ field.description }})</small>
-                {{ field(class="form-control") }}
+            {% endif %}
+            {% if field.short_name in readonly %}
+            {{ field(class="form-control", readonly=true) }}
             {% else %}
-                {{ field(class="form-control") }}
+            {{ field(class="form-control") }}
             {% endif %}
         {% elif field.type in ['BooleanField']%}
             {% if label %}
                 {{ render_label(field) }}&emsp;<small>({{ field.description }})</small>
-                {{ field() }}
+            {% endif %}
+            {% if field.short_name in readonly %}
+            {{ field(readonly=true) }}
             {% else %}
-                {{ field() }}
+            {{ field() }}
             {% endif %}
         {% else %}
             {% if label %}
                 {{ render_label(field) }}
+                {% if field.short_name in readonly %}
+                {{
+                    field(class="form-control",
+                    placeholder=field.description, autofocus=true, readonly=true)
+                }}
+                {% else %}
                 {{
                     field(class="form-control",
                     placeholder=field.description, autofocus=true)
                 }}
+                {% endif %}
             {% else %}
-                {{
-                    field(class="form-control",
-                    placeholder=field.label.text)
-                }}
+            {% if field.short_name in readonly %}
+            {{
+                field(class="form-control",
+                placeholder=field.description, readonly=true)
+            }}
+            {% else %}
+            {{
+                field(class="form-control",
+                placeholder=field.description)
+            }}
+            {% endif %}
             {% endif %}
         {% endif %}
     {% if field.errors %}
@@ -57,7 +83,7 @@
     </td>
 {% endmacro %}
 
-{% macro _render_form(form, toggle_class="fieldsetting", skip=[]) %}
+{% macro _render_form(form, toggle_class="fieldsetting", skip=[], readonly=[]) %}
 {% for field in form %}
 {% if (field.name != "csrf_token") and (not field.type in ['HiddenField', 'SetHiddenField']) and (field.id not in skip)%}
         {% if field.type in ['FieldList'] %}
@@ -72,11 +98,11 @@
                     </td>
                     {% else %}
                     <td>
-                        <b><font size="5"> {{ field.name }} </font></b>
+                        <b><font size="5"> {{ field.label }} </font></b>
                     </td>
                     {% endif %}
                     <td>
-                        <button id="{{ field.id }}" class="buttongreen" type="button" data-toggle="{{ toggle_class }}-add-row" data-target="#{{ field.id }}-{{ toggle_class }}">+</button>
+                        <button id="{{ field.id }}" class="btn btn-outline-primary btn-sm" type="button" data-toggle="{{ toggle_class }}-add-row" data-target="#{{ field.id }}-{{ toggle_class }}">+</button>
                     </td>
                 </tr>
                 {% for subfield in field %}
@@ -85,10 +111,10 @@
                     <td>
                     <div>
                     <table>
-                    {{ _render_form(subfield, "subfieldset")}}
+                    {{ _render_form(subfield, "subfieldset", readonly=readonly)}}
                     <tr>
                         <td>
-                        <button type="button" class="buttonred" data-toggle="{{ toggle_class }}-remove-row" id="{{field.id}}-{{loop.index0}}-remove">-
+                        <button type="button" class="btn btn-outline-danger btn-sm" data-toggle="{{ toggle_class }}-remove-row" id="{{field.id}}-{{loop.index0}}-remove">-
                         </button>
                         </td>
                     </tr>
@@ -98,9 +124,9 @@
                     </tr>
                 {% else %}
                     <tr data-toggle="{{ toggle_class }}-entry" {% if loop.index0==0 %}style="display:none;"{% endif %}>
-                    {{ render_field(subfield, False) }}
+                    {{ render_field(subfield, False, readonly=readonly) }}
                     <td>
-                        <button type="button" class="buttonred" data-toggle="{{ toggle_class }}-remove-row" id="{{field.id}}-{{loop.index0}}-remove">-
+                        <button type="button" class="btn btn-outline-danger btn-sm" data-toggle="{{ toggle_class }}-remove-row" id="{{field.id}}-{{loop.index0}}-remove">-
                         </button>
                     </td>
                     </tr>
@@ -108,7 +134,7 @@
                 {% endfor %}
                 <tr>
                     <td>
-                        <button id="{{ field.id }}" class="buttongreen" type="button" data-toggle="{{ toggle_class }}-add-row" data-target="#{{ field.id }}-{{ toggle_class }}">+</button>
+                        <button id="{{ field.id }}" class="btn btn-outline-primary btn-sm" type="button" data-toggle="{{ toggle_class }}-add-row" data-target="#{{ field.id }}-{{ toggle_class }}">+</button>
                     </td>
                 </tr>
             </table>
@@ -119,36 +145,73 @@
         {% for subfield in field %}
             {% if loop.index0 == 0 %}
                 <tr>
-                {{ render_field(subfield, True) }}
+                {{ render_field(subfield, True, readonly=readonly) }}
                 </tr>
             {% else %}
                 <tr>
-                {{ render_field(subfield, False) }}
+                {{ render_field(subfield, False, readonly=readonly) }}
                 </tr>
             {% endif %}
         {% endfor %}
         {% elif field.type in ['ParentFormField'] %}
             <tr>
-            {{render_field(field.existing_entries, True)}}
+            {{ render_field(field.existing_entries, True, readonly=readonly) }}
             <td>
                 <table>
                 <h6>Enter into {{field.parent_table_name}}</h6>
-                {{ _render_form(field, None, skip=['existing_entries']) }}
+                {{ _render_form(field, None, skip=['existing_entries'], readonly=readonly) }}
                 </table>
             </td>
             </tr>
         {% elif field.type in ['FormField'] %}
-            {{ _render_form(field, None)}}
+            {{ _render_form(field, None, readonly=readonly)}}
         {% else %}
         <tr>
-            {{ render_field(field, True) }}
+            {{ render_field(field, True, readonly=readonly) }}
         </tr>
         {% endif %}
 {% endif %}
 {% endfor %}
 {% endmacro %}
 
-{% macro render_form(form) %}
+{% macro render_form(form, readonly=[]) %}
+    <form novalidate method=post enctype="multipart/form-data">
+        <table  style="width:100%">
+        {{ form.hidden_tag() }}
+        {{ _render_form(form, readonly=readonly) }}
+        </table>
+        <p> </p>
+        <div>
+        <tr>
+            {% if readonly %}
+            <td align="center"><input class="btn btn-outline-primary" type=submit value=Edit name="submit"></td>
+            {% else %}
+            <td align="center"><input class="btn btn-outline-success" type=submit value=Save name="submit"></td>
+            <td align="center"><input class="btn btn-outline-warning" type=submit value=Overwrite name="submit"></td>
+            {% endif %}
+        </tr>
+        </div>
+        <p> </p>
+    </form>
+{% endmacro %}
+
+{% macro edit_render_form(form, readonly=[]) %}
+    <form novalidate method=post enctype="multipart/form-data">
+        <table  style="width:100%">
+        {{ form.hidden_tag() }}
+        {{ _render_form(form, readonly=readonly) }}
+        </table>
+        <p> </p>
+        <div>
+        <tr>
+            <td align="center"><input class="btn btn-outline-primary" type=submit value=Edit name="submit"></td>
+        </tr>
+        </div>
+        <p> </p>
+    </form>
+{% endmacro %}
+
+{% macro register_render_form(form) %}
     <form novalidate method=post enctype="multipart/form-data">
         <table  style="width:100%">
         {{ form.hidden_tag() }}
@@ -157,8 +220,9 @@
         <p> </p>
         <div>
         <tr>
-            <td align="center"><input type=submit value=Save name="submit"></td>
-            <td align="center"><input class=inputred type=submit value=Overwrite name="submit"></td>
+            <td align="center">
+                <input class="btn btn-outline-primary" type=submit value=Register name="submit">
+            </td>
         </tr>
         </div>
         <p> </p>
@@ -174,7 +238,7 @@
         <p> </p>
         <div>
         <tr>
-            <td align="center"><input type=submit value=Submit name="submit"></td>
+            <td align="center"><input class="btn btn-outline-primary" type=submit value=Submit name="submit"></td>
         </tr>
         </div>
         <p> </p>

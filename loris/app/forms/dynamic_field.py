@@ -8,80 +8,25 @@ import pandas as pd
 import numpy as np
 import pickle
 import json
+import uuid
 
 from datajoint.declare import match_type
 from datajoint import FreeTable
 from datajoint.table import lookup_class_name
 from datajoint.utils import to_camel_case
 from wtforms import BooleanField, SelectField, DateField, DateTimeField, \
-    StringField, FloatField, IntegerField, FileField, FormField, \
+    StringField, FloatField, IntegerField, FormField, \
     TextAreaField, FieldList, DecimalField
 from wtforms.validators import InputRequired, Optional, NumberRange, \
-    ValidationError, Length
+    ValidationError, Length, UUID, URL, Email
+from werkzeug.datastructures import FileStorage
 
 from loris import config
+from loris.utils import is_manuallookup
 from loris.app.forms import NONES
-from loris.app.forms.formmixin import ManualLookupForm, ParentFormField
-
-
-class Extension:
-    """Extension Validator
-    """
-
-    def __init__(self, ext=config['extensions']):
-        self.ext = ext
-
-    def __call__(self, form, field):
-        filename = field.data.filename
-        if not filename:
-            return
-        extension = os.path.splitext(filename)[-1].strip('.')
-        if extension not in self.ext:
-            raise ValidationError(
-                f"File {filename} is not of extension: {self.ext}, "
-                f"but extension {extension}."
-            )
-
-
-class FilePath:
-
-    def __call__(self, form, field):
-
-        data = field.data
-        if not os.path.exists(data):
-            raise ValidationError(
-                f'Filepath {data} does not exist.'
-            )
-
-
-class ParentValidator:
-
-    def __init__(self, primary_key):
-        self.primary_key = primary_key
-
-    def __call__(self, form, field):
-        """
-        """
-
-        data = getattr(form, self.primary_key).data
-
-        if field.data == '<new>':
-            if data in NONES:
-                raise ValidationError(
-                    'Must specify new foreign primary key '
-                    'if <add new entry> is selected.'
-                )
-
-        else:
-            if data not in NONES:
-                raise ValidationError(
-                    'If specifying new foreign primary key '
-                    'need to set select field to <add new entry>'
-                )
-
-
-class BlobFileField(FileField):
-    pass
+from loris.app.forms.formmixin import ManualLookupForm, ParentFormField, \
+    DynamicFileField, DictField, ListField, ParentValidator, JsonSerializableValidator, \
+    AttachFileField, BlobFileField, Extension
 
 
 class DynamicField:
@@ -104,6 +49,9 @@ class DynamicField:
         self._attribute = attribute
         self._foreign_table = self.get_foreign_table()
         self._ignore_foreign_fields = ignore_foreign_fields
+
+        # set default values
+        self.is_uuid = False
 
     @property
     def ignore_foreign_fields(self):
@@ -182,9 +130,7 @@ class DynamicField:
     def foreign_is_manuallookup(self):
         if not self.is_foreign_key:
             return False
-        primary_key = self.foreign_table.heading.primary_key
-        secondary = self.foreign_table.heading.secondary_attributes
-        return (len(primary_key) == 1) & (len(secondary) <= 1)
+        return is_manuallookup(self.foreign_table)
 
     def create_field(self):
         """create field for dynamic form
@@ -328,6 +274,8 @@ class DynamicField:
         """
         choices = sql_type[sql_type.find('(')+1:sql_type.rfind(')')].split(',')
         choices = [ele.strip().strip('"').strip("'") for ele in choices]
+        if self.attr.nullable:
+            choices = ['NULL'] + choices
         kwargs['choices'] = [(ele, ele) for ele in choices]
         return SelectField(**kwargs)
 
@@ -347,7 +295,7 @@ class DynamicField:
 
     def attach_field(self, kwargs):
         kwargs['validators'].append(Extension(config['attach_extensions']))
-        return FileField(**kwargs)
+        return AttachFileField(**kwargs)
 
     def filepath_field(self, kwargs):
         # TODO implement
@@ -355,8 +303,11 @@ class DynamicField:
         return
 
     def uuid_field(self, kwargs):
-        # TODO implement
-        return
+        self.is_uuid = True
+        kwargs['validators'].append(Length(36, 36))
+        kwargs['validators'].append(UUID())
+        kwargs['default'] = str(uuid.uuid4())
+        return StringField(**kwargs)
 
     def adapted_field(self, kwargs):
         """creates an adapted field type
@@ -366,10 +317,23 @@ class DynamicField:
             attr_type = self.attr.adapter.attribute_type
         except NotImplementedError:
             attr_type = self.attr.sql_type
-        # need to code each new custom adapter that changes object type
-        # if isinstance(self.attr.adapter, TarFolder):
-        #     # TODO MultiFileField
-        #     return
+
+        attr_type_name = self.attr.type.strip('<>')
+        adapter = config['custom_attributes'].get(attr_type_name, None)
+
+        if adapter is None:
+            pass
+        elif attr_type_name == 'liststring':
+            kwargs['validators'].append(JsonSerializableValidator)
+            return ListField(**kwargs)
+        elif attr_type_name == 'dictstring':
+            kwargs['validators'].append(JsonSerializableValidator)
+            return DictField(**kwargs)
+        elif attr_type_name == 'link':
+            kwargs['validators'].append(URL(False))
+        elif attr_type_name == 'email':
+            kwargs['validators'].append(Email())
+
         return self._create_field(attr_type, kwargs)
 
     def create_manuallookup_field(self, kwargs):
@@ -453,14 +417,37 @@ class DynamicField:
                 'existing_entries': value
             }
 
+        if self.attr.is_blob and value is not None:
+            # create filepath
+            filepath = os.path.join(
+                config['tmp_folder'],
+                str(uuid.uuid4()) + '.pkl'
+            )
+            with open(filepath, 'wb') as f:
+                pickle.dump(value, f, protocol=pickle.HIGHEST_PROTOCOL)
+
+            return filepath
+
         return value
 
-    def update_foreign_field(self, form):
+    def update_field(self, form):
 
         if self.foreign_is_manuallookup:
             formfield = getattr(form, self.name)
             formfield.existing_entries.choices = self.get_foreign_choices()
 
-        if self.is_foreign_key:
+            # update field if necessary
+            self._update_field(formfield)
+
+        elif self.is_foreign_key:
             field = getattr(form, self.name)
             field.choices = self.get_foreign_choices()
+
+        else:
+            self._update_field(form)
+
+    def _update_field(self, form):
+
+        if self.is_uuid:
+            field = getattr(form, self.name)
+            field.default = str(uuid.uuid4())

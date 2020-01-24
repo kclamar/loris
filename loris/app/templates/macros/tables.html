@@ -44,10 +44,13 @@
     <p></p>
     <tr>
         {% if data['delete_url'] != "None" %}
-            <td align="center"><a id="delete" class=buttonred href="#">Delete</a></td>
+            <td align="center"><a id="delete" class="btn btn-outline-danger" href="#">Delete</a></td>
         {% endif %}
         {% if data['edit_url'] != "None" %}
-            <td align="center"><a id="edit" class=buttonblue href="#">Edit</a></td>
+            <td align="center"><a id="edit" class="btn btn-outline-primary" href="#">Edit</a></td>
+        {% endif %}
+        {% if data['overwrite_url'] != "None" %}
+            <td align="center"><a id="overwrite" class="btn btn-outline-warning" href="#">Overwrite</a></td>
         {% endif %}
     </tr>
     </div>
@@ -105,6 +108,10 @@
                 if("{{ data['edit_url'] }}" != "None"){
                     var edit_url = "{{ data['edit_url'] }}?_id=" + _id + "&target=" + window.location.href + "&edit=True";
                     $("#edit").attr("href", edit_url)
+                }
+                if("{{ data['overwrite_url'] }}" != "None"){
+                    var overwrite_url = "{{ data['overwrite_url'] }}?_id=" + _id + "&target=" + window.location.href + "&overwrite=True";
+                    $("#overwrite").attr("href", overwrite_url)
                 }
     		} );
 

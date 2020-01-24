@@ -9,8 +9,8 @@ NEURAL_RECORDING = f"""
     recording_id : smallint # integer id number
     ---
     -> recordings.RecordingType
-    recording_filename = null : varchar(255) # filename to identify recording, if necessary
-    recording_file = null : attach@attachstore # file of recording, if available
+    recording_file = null : <attachplaceholder> # file of recording, if available
+    protocol_file = null : <attachplaceholder> # file of protocol, if available
     recording_time = CURRENT_TIMESTAMP : timestamp # time of recording
     recording_temperature = null : float # recording temperature in Celsius
     -> recordings.RecordingSolution

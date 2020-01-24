@@ -4,7 +4,7 @@
 import datajoint as dj
 
 from loris.database.schema import subjects, anatomy, equipment, recordings
-from loris.database.attributes import truebool
+from loris.database.attributes import truebool, attachplaceholder
 from loris.database.schema.base import COMMENTS, NEURAL_RECORDING, ManualLookup
 
 
@@ -36,12 +36,12 @@ class TwoPhotonRecording(dj.Manual):
 
 @schema
 class RawTwoPhotonData(dj.AutoImported):
-    definition = f"""
+    definition = """
     -> TwoPhotonRecording
     ---
     rate : float # in Hz
-    raw_timestamps : blob@datastore # in seconds
-    raw_movie : blob@datastore
+    timestamps : blob@datastore # in seconds
+    movie : blob@datastore
     imaging_offset = null : float #offset of image acquisition in s
     vout_data = null : blob@datastore
     absolute_time_vout = null : float #offset of voltage output in s
@@ -56,7 +56,39 @@ class RawTwoPhotonData(dj.AutoImported):
     laser_wavelength = null : float # in nm
     dwell_time = null : float # in s
     microns_per_pixel = null : blob # x, y, z um/px
-    twophoton_metadata = null : blob # metadata relating to the whole movie
-    frames_metadata = null : blob@datastore # metadata associated to each frame
-    {COMMENTS}
+    metadata = null : blob@datastore # metadata associated to movie
     """
+
+
+@schema
+class MotionCorrectedData(dj.AutoComputed):
+    definition = """
+    -> RawTwoPhotonData
+    ---
+    rate : float # in Hz
+    timestamps : blob@datastore # in seconds
+    movie : blob@datastore
+    metadata = null : blob@datastore # additional data to describe movie
+    """
+
+
+@schema
+class ExtractedData(dj.AutoComputed):
+    definition = """
+    -> MotionCorrectedData
+    ---
+    metadata = null : blob@datastore # additional data to describe extracted data
+    """
+
+    class Roi(dj.Part):
+        definition = """
+        -> ExtractedData
+        cell_id : int
+        ---
+        label = null : varchar(51) # label for Roi
+        mask : blob@datastore # array of roi mask (boolean or weighted)
+        rate : float # in Hz
+        timestamps : blob@datastore # in seconds
+        signal : blob@datastore
+        metadata = null : blob@datastore # additional data to describe mask
+        """

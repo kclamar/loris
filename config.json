@@ -1,7 +1,9 @@
 {
+    "_datajoint_comment": "datajoint-specific keys",
     "database.host": "127.0.0.1",
     "database.user": "root",
     "database.password": "simple",
+    "database.port": 3306,
     "filestores": {
         "attachstore": "/Users/matthias.christenson/attachstore",
         "datastore": "/Users/matthias.christenson/datastore"
@@ -9,9 +11,18 @@
     "enable_python_native_blobs": true,
     "enable_python_pickle_blobs": true,
     "enable_automakers": true,
+
+    "_app_comment": "app-specific keys",
     "secret_key": "myprecious",
     "tmp_folder": "/Users/matthias.christenson/tmp",
     "skip_schemas": ["mysql", "sys", "performance_schema"],
-    "client_id":"df0072d94a728ef4a9c84adeb8b7879b80d9ce62fc323c92081b4ddfbff9b232",
-    "client_secret":"1238d30fe448e88c411b891106e3af4d32c163577d28cdfc5f3f8ffff1894dac"
+
+    "_client_comment": "keys for GitHub authorization",
+    "client_id":"e6c56597ef33e2242b31",
+    "client_secret":"1f0321236894e6756fd2c149e26a49b1b258583b",
+    
+    "_ssh_comment": "keys for SSH tunneling of MySQL database. See: https://sshtunnel.readthedocs.io/en/latest/",
+    "ssh_address": null,
+    "ssh_username": "gucky92",
+    "ssh_pkey": "~/.ssh/id_rsa"
 }

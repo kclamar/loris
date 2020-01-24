@@ -1,0 +1,16 @@
+{% extends 'layouts/main.html' %}
+{% block title %}Loris.LoginError{% endblock %}
+{% block content %}
+
+<div class="page-header">
+  <h2>Hello! It seems like you are having trouble accessing our system!</h2>
+</div>
+
+<h5>
+    This error popped up while trying to log into our system:<br>
+    <strong><font color="orangered">{{ message }}</font></strong>
+</h5>
+
+<img src="/static/img/slow_loris.jpg">
+
+{% endblock %}

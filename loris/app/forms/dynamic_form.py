@@ -15,7 +15,7 @@ from wtforms import StringField, IntegerField, BooleanField, FloatField, \
 
 from loris.app.forms.dynamic_field import DynamicField
 from loris.app.forms.formmixin import FormMixin, ParentFormField
-from loris.app.utils import draw_helper, get_jsontable
+from loris.app.utils import draw_helper, get_jsontable, save_join
 
 
 class DynamicForm:
@@ -44,9 +44,9 @@ class DynamicForm:
         """
 
         self._datatable = None
+        self._joined_datatable_container = {}
         self._formclass = None
         self._restriction = None
-        self._drawn = False
         self.fields = {}
         self.part_fields = {}
 
@@ -69,6 +69,10 @@ class DynamicForm:
     @property
     def table(self):
         return self._table
+
+    @property
+    def joined_datatable_container(self):
+        return self._joined_datatable_container
 
     @property
     def datatable(self):
@@ -106,10 +110,11 @@ class DynamicForm:
 
         for part_table in self.table.part_tables:
             # TODO aliased part tables
-            dynamicform = DynamicForm(
+            dynamicform = self.__class__(
                 part_table, skip=self.table.primary_key,
                 formtype=NoCsrfForm
             )
+            dynamicform.restriction = self.restriction
             self.part_fields[part_table.name] = dynamicform
             fieldlist = FieldList(
                 FormField(
@@ -140,34 +145,103 @@ class DynamicForm:
         return table.proj(*self.non_blobs).fetch(
             format='frame', apply_adapter=False).reset_index()
 
-    def get_jsontable(self, edit_url=None, delete_url=None):
+    def get_joined_datatable(self, tables, name=None):
+        """join tables with self.table and return fetched joined
+        table with primary key list.
+        """
+
+        if name in self.joined_datatable_container:
+            return self.joined_datatable_container[name]
+
+        joined_table = save_join([self.table]+tables)
+
+        if self.restriction is not None:
+            joined_table = joined_table & self.restriction
+
+        datatable = joined_table.proj(
+            *joined_table.heading.non_blobs
+        ).fetch(
+            format='frame', apply_adapter=False
+        ).reset_index()
+
+        if name is not None:
+            self.joined_datatable_container[name] = \
+                datatable, joined_table.primary_key
+
+        return datatable, joined_table.primary_key
+
+    def get_jsontable(
+        self, edit_url=None, delete_url=None, overwrite_url=None,
+        join_tables=None,
+        joined_name=None
+    ):
+
+        if join_tables is not None:
+            table, primary_key = self.get_joined_datatable(
+                join_tables, joined_name
+            )
+        else:
+            table = self.datatable
+            primary_key = self.table.primary_key
 
         return get_jsontable(
-            self.datatable, self.table.primary_key,
-            edit_url=edit_url, delete_url=delete_url, name=self.table.name
+            table, primary_key,
+            edit_url=edit_url, delete_url=delete_url,
+            overwrite_url=overwrite_url, name=self.table.name
         )
 
-    def insert(self, form, **kwargs):
+    def insert(self, form, _id=None, **kwargs):
         """insert into datajoint table
+
+        Parameters
+        ----------
+        form : wtf.form from dynamicform.formclass
+        _id : dict
+            restriction for single entry (for save updating)
+        kwargs : dict
+            arguments passed to datajoint Table.insert function
         """
 
         formatted_dict = form.get_formatted()
 
-        primary_dict = self._insert(formatted_dict, **kwargs)
+        primary_dict = self._insert(formatted_dict, _id, **kwargs)
 
         for part_name, part_form in self.part_fields.items():
             f_dicts = formatted_dict[part_name]
             if f_dicts is None:
                 continue
             for f_dict in f_dicts:
+                if _id is None:
+                    _part_id = None
+                else:
+                    # update with part entry that exist
+                    _part_primary = {
+                        key: value for key, value in f_dict.items()
+                        if (
+                            key in part_form.table.primary_key
+                            and key not in self.table.primary_key
+                        )
+                    }
+                    _part_id = {**_id, **_part_primary}
+                # try insertion
                 try:
-                    part_form._insert(f_dict, primary_dict, **kwargs)
+                    part_form._insert(f_dict, _part_id, primary_dict, **kwargs)
                 except dj.DataJointError as e:
-                    (self.table & primary_dict).delete(force=True)
-                    raise e
+                    raise dj.DataJointError(
+                        *e.args,
+                        (
+                            'Error occured while entering data into part '
+                            'table; master table entry already exists, and'
+                            ' possibly some part table entries.'
+                        )
+                    )
+                    # (self.table & primary_dict).delete(force=True)
+                    # raise e
 
-    def _insert(self, formatted_dict, primary_dict=None, **kwargs):
-        """formatted dict
+        return primary_dict
+
+    def _insert(self, formatted_dict, _id=None, primary_dict=None, **kwargs):
+        """insert helper function
         """
 
         insert_dict = {}
@@ -176,41 +250,94 @@ class DynamicForm:
             if key in self.fields:
                 insert_dict[key] = self.fields[key].format_value(value)
 
-        if primary_dict is not None:
-            insert_dict.update(primary_dict)
+        if _id is None:
+            truth = True
+        else:
+            restricted_table = self.table & _id
+            if len(restricted_table) == 0:
+                truth = True
+            truth = False
 
-        self.table.insert1(insert_dict, **kwargs)
+        if truth:
+            if primary_dict is not None:
+                insert_dict.update(primary_dict)
 
-        return {
-            key: value for key, value in insert_dict.items()
-            if key in self.table.primary_key
-        }
+            self.table.insert1(insert_dict, **kwargs)
 
-    def populate_form(self, restriction, form):
+            return {
+                key: value for key, value in insert_dict.items()
+                if key in self.table.primary_key
+            }
+        else:  # editing entries savely
+            # remove primary keys
+            insert_dict = {
+                key: value for key, value in insert_dict.items()
+                if (
+                    key not in self.table.primary_key
+                    # skip updating non-specified files
+                    # TODO
+                    and not (
+                        value is None
+                        and (
+                            self.fields[key].attr.is_blob
+                            or self.fields[key].attr.is_attachment
+                        )
+                    )
+                )
+            }
+            restricted_table.save_updates(
+                insert_dict, reload=False
+            )
+
+    def populate_form(
+        self, restriction, form, is_edit='False', **kwargs
+    ):
+
+        readonly = []
 
         formatted_dict = (
             self.table & restriction
-        ).proj(*self.non_blobs).fetch1()
+        ).proj(*self.non_blobs).fetch1()  # proj non_blobs?
 
         for key, value in formatted_dict.items():
             formatted_dict[key] = self.fields[key].prepare_populate(value)
 
-        # TODO populate part tables
+            if is_edit == 'True' and key in self.table.primary_key:
+                readonly.append(key)
+
+        # populate part tables
+        for part_table in self.table.part_tables:
+            part_formatted_list_dict = (
+                part_table & restriction
+            ).proj(*part_table.heading.non_blobs).fetch(as_dict=True)  # proj non_blobs?
+            formatted_dict[part_table.name] = []
+            for part_formatted_dict in part_formatted_list_dict:
+                formatted_dict[part_table.name].append({})
+                for key, value in part_formatted_dict.items():
+                    if key in self.part_fields[part_table.name].fields:
+                        formatted_dict[part_table.name][-1][key] = \
+                            self.part_fields[
+                                part_table.name
+                            ].fields[key].prepare_populate(value)
+
+                        if is_edit == 'True' and key in part_table.primary_key:
+                            readonly.append(key)
+
+        # update with kwargs
+        formatted_dict.update(kwargs)
 
         form.populate_form(formatted_dict)
+        return readonly
 
-    def update_foreign_fields(self, form):
+    def update_fields(self, form):
         """update foreign fields with new information
         """
 
         for field in self.fields.values():
-            field.update_foreign_field(form)
+            field.update_field(form)
 
     def draw_relations(self):
         """draw relations
         """
-
-        if self._drawn:
-            return
 
         return draw_helper(self.table)

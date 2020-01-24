@@ -8,6 +8,8 @@ import shutil
 import numpy as np
 import datajoint as dj
 
+from loris.database.utils import Placeholder, ProcessMixin
+
 
 class TrueBool(dj.AttributeAdapter):
 
@@ -20,6 +22,46 @@ class TrueBool(dj.AttributeAdapter):
 
     def get(self, value):
         return bool(value)
+
+
+class ListString(dj.AttributeAdapter):
+
+    attribute_type = 'varchar(4000)'
+
+    def put(self, obj):
+        if obj is None:
+            return
+        if isinstance(obj, str):
+            try:
+                obj = eval(obj)
+            except Exception:
+                pass
+        assert isinstance(obj, (list, tuple)), \
+            f'object must be list or tuple for liststring type: {type(obj)}'
+        return str(obj)
+
+    def get(self, value):
+        return eval(value)
+
+
+class ListDict(dj.AttributeAdapter):
+
+    attribute_type = 'varchar(4000)'
+
+    def put(self, obj):
+        if obj is None:
+            return
+        if isinstance(obj, str):
+            try:
+                obj = eval(obj)
+            except Exception:
+                pass
+        assert isinstance(obj, (dict)), \
+            f'object must be dict for listdict type: {type(obj)}'
+        return str(obj)
+
+    def get(self, value):
+        return eval(value)
 
 
 class Chromosome(dj.AttributeAdapter):
@@ -144,12 +186,47 @@ class TarFolder(dj.AttributeAdapter):
         return unpacked_file
 
 
+class AttachProcess(dj.AttributeAdapter, ProcessMixin):
+
+    attribute_type = 'attach@attachstore'
+
+    def put(self, obj):
+        return self.put_process(obj)
+
+    def get(self, value):
+        return self.get_process(value)
+
+
+class AttachPlaceholder(dj.AttributeAdapter, ProcessMixin):
+
+    attribute_type = 'attach@attachstore'
+
+    def put(self, obj):
+        """perform checks before putting and archive folder
+        """
+
+        if obj is None:
+            return
+
+        obj = self.put_process(obj)
+        return Placeholder(obj).write()
+
+    def get(self, value):
+        """unpack zip file
+        """
+        return self.get_process(Placeholder.read(value))
+
+
 chr = Chromosome()
 link = Link()
 flyidentifier = FlyIdentifier()
 crossschema = CrossSchema()
 truebool = TrueBool()
 tarfolder = TarFolder()
+liststring = ListString()
+listdict = ListDict()
+attachprocess = AttachProcess()
+attachplaceholder = AttachPlaceholder()
 
 custom_attributes_dict = {
     'chr': chr,
@@ -157,5 +234,9 @@ custom_attributes_dict = {
     'flyidentifier': flyidentifier,
     'crossschema': crossschema,
     'truebool': truebool,
-    'tarfolder': tarfolder
+    'tarfolder': tarfolder,
+    'liststring': liststring,
+    'listdict': listdict,
+    'attachprocess': attachprocess,
+    'attachplaceholder': attachplaceholder
 }

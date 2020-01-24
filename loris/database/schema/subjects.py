@@ -45,7 +45,7 @@ class FlyGenotype(dj.Manual):
 
 
 @schema
-class FlyCrosses(dj.Manual):
+class FlyCross(dj.Manual):
     definition = f"""
     cross_id : int auto_increment
     ---
@@ -59,28 +59,34 @@ class FlyCrosses(dj.Manual):
 
 
 @schema
+class StockGroup(ManualLookup, dj.Manual):
+    primary_comment = 'stock group name - e.g. RBF'
+
+
+@schema
 class FlyStock(dj.Manual):
     definition = f"""
-    {PRIMARY_NAME.format(name='stock_name', comment='stock identification name')}
+    stock_id : int auto_increment
     ---
-    date_modified : date
     -> FlyGenotype
+    -> Experimenter
+    date_modified : date
     status = null : enum('dead', 'missing', 'instock', 'inpersonal', 'quarantine', 'recovery')
     -> [nullable] FlyOrigin
-    -> [nullable] FlyCrosses
+    -> [nullable] FlyCross
     {COMMENTS}
     """
 
 
 @schema
 class RearingMethod(ManualLookup, dj.Manual):
-    pass
+    primary_comment = 'how the fly was raised - e.g. 25C, darkness'
 
 
 @schema
 class FlySubject(dj.Manual):
     definition = f"""
-    {PRIMARY_NAME.format(name='subject_name', comment='short subject name of fly')}
+    subject_id : int auto_increment
     ---
     -> FlyGenotype
     -> Experimenter

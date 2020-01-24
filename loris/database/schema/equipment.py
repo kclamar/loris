@@ -27,7 +27,7 @@ class SystemType(ManualLookup, dj.Manual):
 @schema
 class System(dj.Manual):
     definition = f"""
-    {PRIMARY_NAME.format(name='system_name', comment='short-name of system')}
+    system_id : int auto_increment
     ---
     -> [nullable] SystemType
     {DESCRIPTION}

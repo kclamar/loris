@@ -4,11 +4,14 @@
 import graphviz
 import os
 import pandas as pd
+import uuid
+import glob
 import datajoint as dj
 from datajoint.schema import lookup_class_name
 from flask import render_template, request, flash, url_for, redirect
 
 from loris import config, conn
+from loris.utils import is_manuallookup
 
 
 def save_join(tables):
@@ -29,7 +32,8 @@ def save_join(tables):
 
 
 def get_jsontable(
-    data, primary_key, edit_url=None, delete_url=None, name=None
+    data, primary_key, edit_url=None, delete_url=None,
+    overwrite_url=None, name=None
 ):
     """get json table from dataframe
     """
@@ -48,6 +52,7 @@ def get_jsontable(
     jsontable = {}
     jsontable['delete_url'] = str(delete_url)
     jsontable['edit_url'] = str(edit_url)
+    jsontable['overwrite_url'] = str(overwrite_url)
     jsontable['execute'] = 'True'
     jsontable['id'] = str(name)
     jsontable['head'] = list(data.columns)
@@ -55,7 +60,7 @@ def get_jsontable(
     return jsontable
 
 
-def draw_helper(obj=None, type='table'):
+def draw_helper(obj=None, type='table', only_essentials=False):
     """
     helper for drawing erds
     """
@@ -67,12 +72,20 @@ def draw_helper(obj=None, type='table'):
     else:
         filename = obj
 
+    filename = filename + str(only_essentials)
+
     filepath = os.path.join(config['tmp_folder'], filename)
-    if os.path.exists(f'{filepath}.svg'):
-        return f'{filename}.svg'
+    filepaths = glob.glob(filepath + '*' + '.svg')
+    if len(filepaths) == 1:
+        return os.path.split(filepaths[0])[-1]
+
+    print(filename)
+    # add random string (for rendering purposes on browsers)
+    random_string = str(uuid.uuid4())
+    filename += random_string
+    filepath += random_string
 
     # rankdir TB?
-
     # setup of graphviz
     graph_attr = {'size': '12, 12', 'rankdir': 'LR', 'splines': 'ortho'}
     node_attr = {
@@ -113,6 +126,25 @@ def draw_helper(obj=None, type='table'):
     def name_lookup(full_name):
         """ Look for a table's class name given its full name. """
         return lookup_class_name(full_name, config['schemata']) or full_name
+
+    def is_essential(name):
+        truth = dj.diagram._get_tier(name) in [
+            dj.Manual, dj.Computed, dj.Lookup,
+            dj.Imported, dj.AutoComputed, dj.AutoImported
+        ]
+
+        if truth:
+            try:
+                schema, table = name_lookup(name).split('.')
+                table = getattr(
+                    config['schemata'][schema],
+                    table
+                )
+                truth = not is_manuallookup(table)
+            except (KeyError, ValueError):
+                print('did not check essential table')
+
+        return truth
 
     node_attrs = {
         dj.Manual: {'fillcolor': 'green3'},
@@ -171,6 +203,8 @@ def draw_helper(obj=None, type='table'):
                 continue
             if obj is not None and (obj != schema):
                 continue
+            if only_essentials and not is_essential(root_name):
+                continue
 
             root_id = add_node(
                 name_lookup(root_name),
@@ -181,6 +215,8 @@ def draw_helper(obj=None, type='table'):
                 if dj.diagram._get_tier(node_name) is dj.diagram._AliasNode:
                     # renamed attribute
                     node_name = list(dependencies.out_edges(node_name))[0][1]
+                if only_essentials and not is_essential(node_name):
+                    continue
 
                 node_id = add_node(
                     name_lookup(node_name),

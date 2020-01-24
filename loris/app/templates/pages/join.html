@@ -4,13 +4,13 @@
 
 <div class="page-header">
     {% from 'macros/render_form.html' import submit_render_form %}
-    <h1> <a href={{url}}>Join Tables</a> <h1>
+    <h2> <a href={{url}}>Join Tables</a> <h2>
     <h6>
         Join arbitrary tables that exist in the database.
         It is not required to add a restriction.
     </h6>
     {{ submit_render_form(form) }}
-    <h2>Joined Table</h2>
+    <h4>Joined Table</h4>
     {% with data=data, toggle_off_keys=toggle_off_keys%}
         {% include 'macros/tables.html' %}
     {% endwith %}

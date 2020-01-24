@@ -13,9 +13,8 @@ schema = dj.schema('experimenters')
 @schema
 class Experimenter(dj.Manual):
     definition = f"""
-    experimenter : varchar(31) #short user-name
+    experimenter : varchar(31) # git user-name
     ---
-    experimenter_initials : char(3) # three letter experimenter initials
     first_name : varchar(63)
     last_name : varchar(127)
     email : varchar(255)
@@ -30,7 +29,7 @@ class Experimenter(dj.Manual):
         contact_name : varchar(255)
         ---
         relation : varchar(63)
-        phone : varchar(31)
+        phone : varchar(16)
         email = null : varchar(255)
         {COMMENTS}
         """

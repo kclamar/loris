@@ -4,10 +4,14 @@
 import json
 import os
 import shutil
+import inspect
+from collections import defaultdict
 import datajoint as dj
 from datajoint.settings import default
+from sshtunnel import SSHTunnelForwarder, HandlerSSHTunnelForwarderError
 
 from loris.database.attributes import custom_attributes_dict
+from loris.utils import is_manuallookup
 
 # defaults for application
 defaults = dict(
@@ -24,7 +28,8 @@ defaults = dict(
         ]
     ),
     # foreign key select field limit
-    fk_dropdown_limit=200
+    fk_dropdown_limit=200,
+    stock_prefix='RBF'
 )
 
 
@@ -43,9 +48,59 @@ class Config(dict):
 
         config = {**defaults, **config}
         config = cls(config)
+        config['custom_attributes'] = custom_attributes_dict
         config.perform_checks()
 
         return config
+
+    def connect_ssh(self):
+        """ssh tunneling
+
+        see: https://sshtunnel.readthedocs.io/en/latest/
+        """
+
+        if self.get('server', None) is not None:
+            return self['server']
+
+        elif self.get('ssh_address', None) is not None:
+            # inti kwargs for init
+            remote_bind_address = (
+                self['database.host'], self['database.port']
+            )
+            kwargs = {
+                'remote_bind_address': remote_bind_address,
+                'local_bind_address': remote_bind_address
+            }
+
+            # get signature
+            signature = inspect.signature(SSHTunnelForwarder)
+
+            for key, param in signature.parameters.items():
+                if param.name in self:
+                    kwargs[param.name] = self[param.name]
+
+            print('parameters for ssh tunneling:')
+            print(kwargs)
+
+            # initialize server
+            server = SSHTunnelForwarder(**kwargs)
+            self['server'] = server
+
+            # start server
+            try:
+                server.start()
+            except HandlerSSHTunnelForwarderError:
+                server.restart()
+
+            return self['server']
+
+    def disconnect_ssh(self):
+        """ssh tunneling
+        """
+
+        if self.get('server', None) is not None:
+            self['server'].stop()
+            self['server'] = None
 
     def __getitem__(self, k):
 
@@ -69,6 +124,8 @@ class Config(dict):
                 return self[k]
             elif k == 'connection':
                 return self.conn()
+            elif k == 'server':
+                return self.connect_ssh()
 
             raise e
 
@@ -76,6 +133,7 @@ class Config(dict):
         """connect to database with hostname, username, and password.
         """
         self.datajoint_configuration()
+        self.connect_ssh()
         self['connection'] = dj.conn(*args, **kwargs)
         return self['connection']
 
@@ -96,9 +154,11 @@ class Config(dict):
             })
 
         # set datajoint variable in datajoint config
-        for key in default:
+        for key, ele in default.items():
             if key in self:
                 dj.config[key] = self[key]
+            else:
+                self[key] = ele
 
     def perform_checks(self):
         """perform various checks
@@ -181,33 +241,28 @@ class Config(dict):
         """
 
         tables = self['tables']
-        tables_list = []
+        manualtables_dict = defaultdict(list)
+        autotables_list = []
 
         for table_name, table in tables.items():
             if issubclass(table, dj.Manual):
+                auto_class = False
                 # ignore ManualLookup subclasses
-                if (
-                    (len(table.heading.primary_key) == 1)
-                    and (len(table.heading.secondary_attributes) == 1)
-                ):
-                    pk = table.heading.primary_key[0]
-                    sk = table.heading.secondary_attributes[0]
-                    truth = (
-                        (sk == 'comments')
-                        & (pk == table.table_name)
-                    )
-                    if truth:
-                        continue
+                if is_manuallookup(table):
+                    continue
+            elif issubclass(table, (dj.AutoImported, dj.AutoComputed)):
+                auto_class = True
             else:
                 continue
 
-            tables_list.append(
-                [table_name] + table_name.split('.')
-            )
-            if len(tables_list[-1]) == 3:
-                tables_list[-1].append(None)
+            table_list = [table_name] + table_name.split('.') + [None]
 
-        return tables_list
+            if auto_class:
+                autotables_list.append(table_list)
+            else:
+                manualtables_dict[table_list[1]].append(table_list[2])
+
+        return manualtables_dict, autotables_list
 
     def refresh_dependencies(self):
         """refresh dependencies of database connection
@@ -241,18 +296,25 @@ class Config(dict):
         self.refresh_settings_tables()
         self.refresh_automaker_tables()
 
-    def get_dynamicform(self, table_name, table_class, dynamic_class):
+    def get_dynamicform(
+        self, table_name, table_class, dynamic_class, **kwargs
+    ):
         """get the dynamic form and wtf form for application
         """
 
-        if table_name not in self['dynamicforms']:
+        name = dynamic_class.__name__
+
+        if name not in self['dynamicforms']:
+            self['dynamicforms'][name] = {}
+
+        if table_name not in self['dynamicforms'][name]:
             dynamicform = dynamic_class(table_class)
-            form = dynamicform.formclass()
-            self['dynamicforms'][table_name] = dynamicform
+            form = dynamicform.formclass(**kwargs)
+            self['dynamicforms'][name][table_name] = dynamicform
         else:
             # update foreign keys
-            dynamicform = self['dynamicforms'][table_name]
-            form = dynamicform.formclass()
-            dynamicform.update_foreign_fields(form)
+            dynamicform = self['dynamicforms'][name][table_name]
+            form = dynamicform.formclass(**kwargs)
+            dynamicform.update_fields(form)
 
         return dynamicform, form
