@@ -6,15 +6,45 @@ import datajoint as dj
 from loris import config
 
 
+def change_password(username, password, connection='%'):
+    """Change the password for a user. Requires administration access or
+    being the user.
+    """
+    # establish connection
+    conn = config['connection']
+    # make sure all privileges have been flushed
+    conn.query("FLUSH PRIVILEGES;")
+    # change password
+    conn.query("SET PASSWORD FOR %s@%s = %s;", (username, connection, password))
+    #
+    conn.query("FLUSH PRIVILEGES;")
+
+
+def dropuser(username, connection='%'):
+    """Drop a user from the database. Requires administration access.
+    """
+    # establish connection
+    conn = config['connection']
+    # flush privileges
+    conn.query("FLUSH PRIVILEGES;")
+    # drop user
+    conn.query("DROP USER %s@%s;", (username, connection))
+    #
+    conn.query("FLUSH PRIVILEGES;")
+
+
 def grantuser(
     username,
     connection='%',
-    password='dr0s0phila',
+    password=None,
     adduser=False
 ):
     """Add a user to the database. Requires admin/granting access.
     It also adds a user-specific schema
     """
+
+    if password is None:
+        password = config['standard_password']
 
     # establish connection
     conn = config['connection']

@@ -15,12 +15,27 @@
     "_app_comment": "app-specific keys",
     "secret_key": "myprecious",
     "tmp_folder": "/Users/matthias.christenson/tmp",
-    "skip_schemas": ["mysql", "sys", "performance_schema"],
+    "skip_schemas": ["mysql", "sys", "performance_schema", "tutorial"],
+    "user_schema": "experimenters",
+    "user_table": "Experimenter",
+    "user_name": "experimenter",
+    "user_active": "active",
+    "standard_password": "dr0s0phila",
+    "administrator_info" : {
+        "experimenter": "gucky92",
+        "first_name": "Matthias",
+        "last_name": "Christenson",
+        "email": "matchristenson@gmail.com",
+        "phone": "000-000-0000",
+        "date_joined": "2020-01-24",
+        "active": true
+    },
+    "administrators": ["gucky92"],
 
     "_client_comment": "keys for GitHub authorization",
     "client_id":"e6c56597ef33e2242b31",
     "client_secret":"1f0321236894e6756fd2c149e26a49b1b258583b",
-    
+
     "_ssh_comment": "keys for SSH tunneling of MySQL database. See: https://sshtunnel.readthedocs.io/en/latest/",
     "ssh_address": null,
     "ssh_username": "gucky92",

@@ -38,7 +38,7 @@ def form_template(
     edit = request.args.get('edit', "False")
     dynamicformclass = DynamicForm
 
-    kwargs['experimenter'] = session['user']
+    kwargs[config['user_name']] = session['user']
     dynamicform, form = config.get_dynamicform(
         table_name, table_class, dynamicformclass, **kwargs
     )

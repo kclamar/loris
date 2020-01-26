@@ -1,0 +1,11 @@
+{% extends 'layouts/main.html' %}
+{% block title %}Loris.Login{% endblock %}
+{% block content %}
+
+<div class="page-header">
+    {% from 'macros/render_form.html' import login_render_form %}
+    <h2> <a href="{{ url_for('login') }}">Login</a></h2>
+    {{ login_render_form(form) }}
+</div>
+
+{% endblock %}

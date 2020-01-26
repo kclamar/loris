@@ -38,7 +38,7 @@
             {% endif %}
         {% elif field.type in ['BooleanField']%}
             {% if label %}
-                {{ render_label(field) }}&emsp;<small>({{ field.description }})</small>
+                {{ render_label(field) }}&emsp;<small>({{ field.description }})</small>&emsp;
             {% endif %}
             {% if field.short_name in readonly %}
             {{ field(readonly=true) }}
@@ -222,6 +222,42 @@
         <tr>
             <td align="center">
                 <input class="btn btn-outline-primary" type=submit value=Register name="submit">
+            </td>
+        </tr>
+        </div>
+        <p> </p>
+    </form>
+{% endmacro %}
+
+{% macro login_render_form(form) %}
+    <form novalidate method=post enctype="multipart/form-data">
+        <table  style="width:100%">
+        {{ form.hidden_tag() }}
+        {{ _render_form(form) }}
+        </table>
+        <p> </p>
+        <div>
+        <tr>
+            <td align="center">
+                <input class="btn btn-outline-primary" type=submit value=Login name="submit">
+            </td>
+        </tr>
+        </div>
+        <p> </p>
+    </form>
+{% endmacro %}
+
+{% macro change_render_form(form) %}
+    <form novalidate method=post enctype="multipart/form-data">
+        <table  style="width:100%">
+        {{ form.hidden_tag() }}
+        {{ _render_form(form) }}
+        </table>
+        <p> </p>
+        <div>
+        <tr>
+            <td align="center">
+                <input class="btn btn-outline-primary" type=submit value=Change name="submit">
             </td>
         </tr>
         </div>

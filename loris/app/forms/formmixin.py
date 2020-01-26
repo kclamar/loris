@@ -5,7 +5,8 @@ import os
 import numpy as np
 import json
 
-from wtforms import FieldList, FormField, BooleanField, StringField, TextAreaField
+from wtforms import FieldList, FormField, BooleanField, StringField, \
+TextAreaField, SelectField
 from wtforms import Form as NoCsrfForm
 from flask_wtf.file import FileField
 from werkzeug.utils import secure_filename

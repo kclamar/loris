@@ -12,9 +12,9 @@ import datajoint as dj
 from datajoint.table import lookup_class_name
 from wtforms import Form as NoCsrfForm
 from wtforms import StringField, IntegerField, BooleanField, FloatField, \
-    SelectField, FieldList, FormField, HiddenField, TextAreaField
+    SelectField, FieldList, FormField, HiddenField, TextAreaField, PasswordField
 from wtforms.validators import InputRequired, Optional, NumberRange, \
-    ValidationError, Length, UUID, URL, Email
+    ValidationError, Length, UUID, URL, Email, EqualTo
 
 from loris import config
 from loris.app.forms.formmixin import FormMixin, DynamicFileField, \
@@ -33,6 +33,41 @@ RESTRICTION_LABEL = (
     '<a href="https://www.tutorialgateway.org/mysql-where-clause" '
     'target="_blank">help</a>'
 )
+
+
+class LoginForm(Form, FormMixin):
+    user_name = StringField(
+        'user name',
+        description='SQL database username',
+        validators=[InputRequired()]
+    )
+    password = PasswordField(
+        'password',
+        description='user password',
+        validators=[InputRequired()]
+    )
+
+
+class PasswordForm(Form, FormMixin):
+    old_password = PasswordField(
+        'old password',
+        description='old password',
+        validators=[InputRequired()]
+    )
+    new_password = PasswordField(
+        'new password',
+        description='new password',
+        validators=[InputRequired()]
+    )
+    repeat_password = PasswordField(
+        'repeat password',
+        description='repeat password',
+        validators=[
+            Length(min=10),
+            InputRequired(),
+            EqualTo('new_password', message='Passwords must match')
+        ],
+    )
 
 
 def dynamic_jointablesform():

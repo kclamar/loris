@@ -20,7 +20,7 @@ class Experimenter(dj.Manual):
     email : varchar(255)
     phone : varchar(16)
     date_joined : date
-    active : <truebool> # active member of the lab
+    active = 0 : <truebool> # active member of the lab
     """
 
     class EmergencyContact(dj.Part):

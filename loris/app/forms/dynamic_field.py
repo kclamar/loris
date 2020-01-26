@@ -280,14 +280,15 @@ class DynamicField:
         return SelectField(**kwargs)
 
     def bool_field(self, kwargs):
-        if kwargs['default']:
-            kwargs['default'] = 1
+        if kwargs['default'] is None:
+            kwargs['default'] = False
+        elif kwargs['default']:
+            kwargs['default'] = True
         else:
-            kwargs['default'] = 0
-        return SelectField(
-            **kwargs, choices=[(1, True), (0, False)],
-            coerce=bool
-        )
+            kwargs['default'] = False
+        # input always optional
+        kwargs['validators'][0] = Optional()
+        return BooleanField(**kwargs)
 
     def blob_field(self, kwargs):
         kwargs['validators'].append(Extension())

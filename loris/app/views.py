@@ -5,64 +5,96 @@ from flask import render_template, request, flash, url_for, redirect, \
     send_from_directory, session
 from functools import wraps
 from flask_dance.contrib.github import github
+from flask_login import current_user, login_user, login_required, logout_user
 import datajoint as dj
 import pandas as pd
 
 from loris import config
 from loris.app.app import app
 from loris.app.templates import form_template
-from loris.app.errors import LoginError
 from loris.app.forms.dynamic_form import DynamicForm
-from loris.app.forms.fixed import dynamic_jointablesform, dynamic_settingstableform
+from loris.app.forms.fixed import (
+    dynamic_jointablesform, dynamic_settingstableform, LoginForm,
+    PasswordForm
+)
 from loris.app.utils import draw_helper, get_jsontable, save_join
-from loris.database.users import grantuser
+from loris.app.login import User
+from loris.database.users import grantuser, change_password
 
 
-def ping(f):
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if current_user.is_authenticated:
+        return redirect(url_for('home'))
 
-    @wraps(f)
-    def wrapper(*args, **kwargs):
+    form = LoginForm()
 
-        if not github.authorized:
-            return redirect(url_for("github.login"))
+    if form.validate_on_submit():
+        user = User(form.user_name.data)
+        if not user.user_exists or not user.check_password(form.password.data):
+            flash('Invalid username or password', 'error')
+        elif not user.is_active:
+            flash(f'User {user.user_name} is inactive', 'error')
+        elif form.password.data == config['standard_password']:
+            flash('Please change your password', 'warning')
+            login_user(user)
+            return redirect(url_for('change', user=user.user_name))
+        else:
+            login_user(user)
+            redirect_url = request.args.get('target', None)
+            if redirect_url is None:
+                return redirect(url_for('home'))
+            else:
+                return redirect(redirect_url)
 
-        if ('ok' not in session) or ('authorized' not in session):
-            # session authorized
-            resp = github.get("/user")
-            session['ok'] = resp.ok
-            # raise error here already
-            if not session['ok']:
-                session['user'] = None
-                session['authorized'] = False
-                raise LoginError(2)
+    return render_template(
+        'pages/login.html',
+        form=form,
+    )
 
-            # get experimenter class
-            Experimenter = getattr(
-                config['schemata']['experimenters'],
-                'Experimenter'
-            )
 
-            # user of session
-            user = resp.json()['login']
-            session['authorized'] = (
-                user
-                in Experimenter.proj().fetch()['experimenter']
-            )
-            session['user'] = user
+@app.route("/logout")
+@login_required
+def logout():
+    logout_user()
+    config.disconnect_ssh()
+    return redirect(url_for('login'))
 
-        if not session['ok']:
-            raise LoginError(2)
 
-        elif not session['authorized']:
-            raise LoginError(1)
+@app.route("/change")
+@login_required
+def change():
+    """change password
+    """
 
-        return f(*args, **kwargs)
+    form = PasswordForm()
 
-    return wrapper
+    if form.validate_on_submit():
+
+        user = User(current_user.user_name)
+        if not user.user_exists or not user.check_password(form.old_password.data):
+            flash('Old password incorrect', 'error')
+        elif form.old_password.data == form.new_password.data:
+            flash('New and old password match', 'error')
+        else:
+            change_password(current_user.user_name, form.new_password.data)
+            flash('Successfully changed password and logged in')
+            login_user(user)
+
+            redirect_url = request.args.get('target', None)
+            if redirect_url is None:
+                return redirect(url_for('home'))
+            else:
+                return redirect(redirect_url)
+
+    return render_template(
+        'pages/change.html',
+        form=form
+    )
 
 
 @app.route('/')
-@ping
+@login_required
 def home():
     # refresh session
     app.session_refresh()
@@ -72,34 +104,37 @@ def home():
     )
 
 
-@app.route("/logout")
-def logout():
-    config.disconnect_ssh()
-    return render_template('pages/logout.html')
-
-
 @app.route('/refresh')
-@ping
+@login_required
 def refresh():
     app.session_refresh()
     return render_template('pages/refresh.html')
 
 
 @app.route('/about')
-@ping
+@login_required
 def about():
     return render_template('pages/about.html')
 
 
 @app.route('/register', methods=['GET', 'POST'])
-@ping
+@login_required
 def register():
 
-    Experimenter = getattr(config['schemata']['experimenters'], 'Experimenter')
+    user_class = getattr(
+        config['schemata'][config['user_schema']],
+        config['user_table'])
 
     dynamicform, form = config.get_dynamicform(
-        'experimenters.Experimenter',
-        Experimenter, DynamicForm
+        f'{config["user_schema"]}.{config["user_table"]}',
+        user_class, DynamicForm
+    )
+
+    # edit_url = url_for('edit_user',)
+    # delete_url = url_for('delete_user')
+
+    data = dynamicform.get_jsontable(
+        # edit_url, delete_url,
     )
 
     if request.method == 'POST':
@@ -116,12 +151,8 @@ def register():
                 else:
                     dynamicform.reset()
                     formatted_dict = form.get_formatted()
-                    connection = '{host}:{port}'.format(
-                        **config['connection'].conn_info
-                    )
                     grantuser(
-                        formatted_dict['experimenter'],
-                        connection=connection,
+                        formatted_dict[config['user_name']],
                         adduser=True
                     )
                     flash("User created.", 'success')
@@ -135,14 +166,14 @@ def register():
 
 
 @app.route(f"{config['tmp_folder']}/<path:filename>")
-@ping
+@login_required
 def tmpfile(filename):
     return send_from_directory(config['tmp_folder'], filename)
 
 
 @app.route('/erd/', defaults={'schema': None}, methods=['GET', 'POST'])
 @app.route('/erd/<schema>', methods=['GET', 'POST'])
-@ping
+@login_required
 def erd(schema):
 
     only_essentials = eval(request.args.get('only_essentials', 'False'))
@@ -161,7 +192,7 @@ def erd(schema):
 @app.route('/delete/<schema>/<table>',
            defaults={'subtable': None}, methods=['GET', 'POST'])
 @app.route('/delete/<schema>/<table>/<subtable>', methods=['GET', 'POST'])
-@ping
+@login_required
 def delete(schema, table, subtable):
 
     redirect_url = request.args.get('target', None)
@@ -235,7 +266,7 @@ def delete(schema, table, subtable):
 
 
 @app.route('/setup/<schema>/<table>', methods=['GET', 'POST'])
-@ping
+@login_required
 def setup(schema, table):
 
     form = dynamic_settingstableform()()
@@ -279,7 +310,7 @@ def setup(schema, table):
 
 @app.route('/table/<schema>/<table>', defaults={'subtable': None}, methods=['GET', 'POST'])
 @app.route('/table/<schema>/<table>/<subtable>', methods=['GET', 'POST'])
-@ping
+@login_required
 def table(schema, table, subtable):
     subtable = request.args.get('subtable', subtable)
     edit_url = url_for(
@@ -294,7 +325,7 @@ def table(schema, table, subtable):
 
 @app.route('/edit/<schema>/<table>', defaults={'subtable': None}, methods=['GET', 'POST'])
 @app.route('/edit/<schema>/<table>/<subtable>', methods=['GET', 'POST'])
-@ping
+@login_required
 def edit(schema, table, subtable):
     subtable = request.args.get('subtable', subtable)
     edit_url = url_for(
@@ -309,19 +340,19 @@ def edit(schema, table, subtable):
 
 
 @app.route('/run/<schema>/<table>', methods=['GET', 'POST'])
-@ping
+@login_required
 def run(schema, table):
     return render_template('pages/home.html', user=session['user'])
 
 
 @app.route('/plot/<schema>/<table>', methods=['GET', 'POST'])
-@ping
+@login_required
 def plot(schema, table):
     return render_template('pages/home.html', user=session['user'])
 
 
 @app.route('/genotype', methods=['GET', 'POST'])
-@ping
+@login_required
 def genotype():
     schema = 'subjects'
     table = 'FlyGenotype'
@@ -335,7 +366,7 @@ def genotype():
 
 
 @app.route('/stock', methods=['GET', 'POST'])
-@ping
+@login_required
 def stock():
     schema = 'subjects'
     table = 'FlyStock'
@@ -365,7 +396,7 @@ def stock():
 
 
 @app.route('/cross', methods=['GET', 'POST'])
-@ping
+@login_required
 def cross():
     schema = 'subjects'
     table = 'FlyCross'
@@ -381,7 +412,7 @@ def cross():
 
 
 @app.route('/join', methods=['GET', 'POST'])
-@ping
+@login_required
 def join():
 
     formclass = dynamic_jointablesform()

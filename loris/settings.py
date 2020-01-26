@@ -29,7 +29,10 @@ defaults = dict(
     ),
     # foreign key select field limit
     fk_dropdown_limit=200,
-    stock_prefix='RBF'
+    # stock_prefix='RBF', 
+    user_schema="experimenters",
+    user_table="Experimenter",
+    user_name="experimenter"
 )
 
 

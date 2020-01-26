@@ -53,6 +53,7 @@
         <li><a class="dropdown-item" href="{{ url_for('erd', only_essentials=True) }}">Simple ERD</a></li>
         <li><a class="dropdown-item" href="{{ url_for('join') }}">Join Tables</a></li>
         <li><a class="dropdown-item" href="{{ url_for('register') }}">Register User</a></li>
+        <li><a class="dropdown-item" href="{{ url_for('change') }}">Change Password</a></li>
         <li><a class="dropdown-item" href="{{ url_for('refresh')}}">Refresh Database</a></li>
         </ul>
       </li>
@@ -209,10 +210,8 @@
                   field_counter++;
                   var elem_num = parseInt(field_counter);
                   row.attr('data-id', elem_num);
-                  console.log(row.find("input"));
 
                   row.find("input").each(function() {
-                      console.log($(this).attr('id'));
                       var attr = $(this).attr("readonly");
                       if (typeof attr !== typeof undefined && attr !== false) {
                           $(this).removeAttr("readonly");
@@ -227,7 +226,6 @@
                           var elem_num = eval(elem_num.replace('-', '')) + 1;
                           var elem_double = false;
                       }
-                      console.log(elem_num);
                       try {
                         if(elem_double) {
                             var id = $(this).attr('name').replace('-' + (elem_num - 1) + '-', '-' + (elem_num) + '-');
@@ -242,20 +240,24 @@
                              var id = $(this).attr('id').replace('-' + (elem_num - 1), '-' + (elem_num));
                         }
                       }
-                      $(this).attr('name', id).attr('id', id).val('').removeAttr("checked");
+                      var checkbox = $(this).attr('type');
+                      if (checkbox == "checkbox") {
+                          $(this).attr('name', id).attr('id', id).removeAttr("checked");
+                      } else {
+                          // change name, id, and value of field to none
+                          $(this).attr('name', id).attr('id', id).val('').removeAttr("checked");
+                      }
                       try {
                           // test
                           var subfieldtarget = $(this).attr('data-target').replace(
                               '-' + (elem_num - 1) + '-', '-' + (elem_num) + '-');
                           $(this).attr('data-target', subfieldtarget);
-                          console.log(this);
                       }
                       catch(err) {}
                   });
 
                   try {
                       row.find("select").each(function() {
-                          console.log($(this).attr('id'));
                           var attr = $(this).attr("readonly");
                           if (typeof attr !== typeof undefined && attr !== false) {
                               $(this).removeAttr("readonly");
@@ -270,7 +272,6 @@
                               var elem_num = eval(elem_num.replace('-', '')) + 1;
                               var elem_double = false;
                           }
-                          console.log(elem_num);
                           try {
                             if(elem_double) {
                                 var id = $(this).attr('name').replace('-' + (elem_num - 1) + '-', '-' + (elem_num) + '-');
@@ -291,7 +292,6 @@
                               var subfieldtarget = $(this).attr('data-target').replace(
                                   '-' + (elem_num - 1) + '-', '-' + (elem_num) + '-');
                               $(this).attr('data-target', subfieldtarget);
-                              console.log(this);
                           }
                           catch(err) {}
                       });
@@ -299,7 +299,6 @@
 
 
                   row.find("div[data-toggle=subfieldset]").each( function() {
-                      console.log('here here');
                       var id = $(this).attr('id').replace('-' + (elem_num - 1) + '-', '-' + (elem_num) + '-');
                       $(this).attr('id', id);
                   });
@@ -328,6 +327,7 @@
               }); //End remove row
           });
       });
+      // subfieldset probably not needed
       $(function pageLoad() {
           $("div[data-toggle=subfieldset]").each(function() {
               // requires id to end with "list" as a name
@@ -368,7 +368,13 @@
                           var id = $(this).attr('id').replace(
                               before, after);
                       }
-                      $(this).attr('name', id).attr('id', id).val('').removeAttr("checked");
+                      var checkbox = $(this).attr('type');
+                      if (checkbox == "checkbox") {
+                          $(this).attr('name', id).attr('id', id).removeAttr("checked");
+                      } else {
+                          // change name, id, and value of field to none
+                          $(this).attr('name', id).attr('id', id).val('').removeAttr("checked");
+                      }
                   });
                   row.show();
                   oldrow.after(row);

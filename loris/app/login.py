@@ -1,0 +1,74 @@
+"""Login classes
+"""
+
+from flask_login import UserMixin
+import datajoint as dj
+
+from loris import config
+
+
+class User(UserMixin):
+
+    def __init__(self, user_name):
+        self.table = getattr(
+            config['schemata'][config['user_schema']],
+            config['user_table']
+        )
+
+        self.user_name = user_name
+
+        self.restriction = {config['user_name']: self.user_name}
+
+        self.restricted_table = self.table & self.restriction
+
+        if len(self.restricted_table) > 1:
+            raise Exception('more than a single user entry')
+
+        self._entry = None
+
+    @property
+    def entry(self):
+
+        if self._entry is None:
+            if config['user_active'] is None:
+                self._entry = self.restricted_table.proj(
+                    config['user_name'],
+                ).fetch1()
+
+            else:
+                self._entry = self.restricted_table.proj(
+                    config['user_name'],
+                    config['user_active'],
+                ).fetch1()
+
+        return self._entry
+
+    @property
+    def user_exists(self):
+        return len(self.restricted_table)
+
+    def get_id(self):
+        return str(self.user_name)
+
+    @property
+    def is_active(self):
+        if config['user_active'] is None:
+            return True
+        return bool(self.entry[config['user_active']])
+
+    @property
+    def is_authenticated(self):
+        return self.is_active
+
+    def check_password(self, password):
+        # check password in mysql database
+        try:
+            dj.conn(
+                None, self.user_name, password,
+                reset=True
+            )
+            success = True
+        except Exception:
+            success = False
+        config.conn(reset=True)
+        return success
