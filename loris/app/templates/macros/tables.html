@@ -106,11 +106,11 @@
                     $("#delete").attr("href", delete_url)
                 }
                 if("{{ data['edit_url'] }}" != "None"){
-                    var edit_url = "{{ data['edit_url'] }}?_id=" + _id + "&target=" + window.location.href + "&edit=True";
+                    var edit_url = "{{ data['edit_url'] }}?_id=" + _id + "&edit=True";
                     $("#edit").attr("href", edit_url)
                 }
                 if("{{ data['overwrite_url'] }}" != "None"){
-                    var overwrite_url = "{{ data['overwrite_url'] }}?_id=" + _id + "&target=" + window.location.href + "&overwrite=True";
+                    var overwrite_url = "{{ data['overwrite_url'] }}?_id=" + _id + "&overwrite=True";
                     $("#overwrite").attr("href", overwrite_url)
                 }
     		} );
