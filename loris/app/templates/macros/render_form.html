@@ -195,11 +195,11 @@
     </form>
 {% endmacro %}
 
-{% macro register_render_form(form) %}
+{% macro register_render_form(form, readonly=[]) %}
     <form novalidate method=post enctype="multipart/form-data">
         <table  style="width:100%">
         {{ form.hidden_tag() }}
-        {{ _render_form(form) }}
+        {{ _render_form(form, readonly=readonly) }}
         </table>
         <p> </p>
         <div>

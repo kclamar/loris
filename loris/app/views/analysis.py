@@ -29,6 +29,8 @@ def setup(schema, table):
     """setup a setting to run analysis
     """
 
+    # TODO post method
+
     form = dynamic_settingstableform()()
 
     table_name = '.'.join([schema, table])

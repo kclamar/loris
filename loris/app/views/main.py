@@ -138,15 +138,6 @@ def register():
         user_class, DynamicForm
     )
 
-    edit_url = url_for(
-        'edit', schema=config['user_schema'], table=config['user_table'])
-    delete_url = url_for(
-        'delete', schema=config['user_schema'], table=config['user_table'])
-
-    data = dynamicform.get_jsontable(
-        edit_url, delete_url,
-    )
-
     if request.method == 'POST':
         submit = request.form.get('submit', None)
 
@@ -169,6 +160,15 @@ def register():
 
         form.append_hidden_entries()
 
+    edit_url = url_for(
+        'table', schema=config['user_schema'], table=config['user_table'])
+    delete_url = url_for(
+        'delete', schema=config['user_schema'], table=config['user_table'])
+
+    data = dynamicform.get_jsontable(
+        edit_url, delete_url,
+    )
+
     return render_template(
         'pages/register.html',
         form=form,
@@ -190,15 +190,6 @@ def registergroup():
         group_class, DynamicForm
     )
 
-    edit_url = url_for(
-        'edit', schema=config['group_schema'], table=config['group_table'])
-    delete_url = url_for(
-        'delete', schema=config['group_schema'], table=config['group_table'])
-
-    data = dynamicform.get_jsontable(
-        edit_url, delete_url,
-    )
-
     if request.method == 'POST':
         submit = request.form.get('submit', None)
 
@@ -212,15 +203,19 @@ def registergroup():
                     flash(f"{e}", 'error')
                 else:
                     dynamicform.reset()
-                    # formatted_dict = form.get_formatted()
-                    # TODO create schema
-                    # grantuser(
-                    #     formatted_dict[config['user_name']],
-                    #     adduser=True
-                    # )
+                    config.create_group_schemas()
                     flash("Project group created", 'success')
 
         form.append_hidden_entries()
+
+    edit_url = url_for(
+        'table', schema=config['group_schema'], table=config['group_table'])
+    delete_url = url_for(
+        'delete', schema=config['group_schema'], table=config['group_table'])
+
+    data = dynamicform.get_jsontable(
+        edit_url, delete_url,
+    )
 
     return render_template(
         'pages/group.html',
@@ -228,6 +223,80 @@ def registergroup():
         data=data,
         toggle_off_keys=[0]
     )
+
+
+@app.route('/assigngroup', methods=['GET', 'POST'])
+@login_required
+def assigngroup():
+    """setup a group
+    """
+
+    if current_user.user_name not in config['administrators']:
+        flash("Only administrators are allowed to assign groups", "warning")
+        return redirect(url_for('home'))
+
+    # only assign yourself to a group
+    kwargs = {
+        config['user_name']: current_user.user_name
+    }
+
+    # if current_user.user_name in config['administrators']:
+    #     readonly = []
+    # else:
+    #     readonly = [config['user_name']]
+
+    group_class = config.assigned_table
+
+    dynamicform, form = config.get_dynamicform(
+        f'{config["assignedgroup_schema"]}.{config["assignedgroup_table"]}',
+        group_class, DynamicForm, **kwargs
+    )
+
+    if request.method == 'POST':
+        submit = request.form.get('submit', None)
+
+        form.rm_hidden_entries()
+
+        if submit == 'Register':
+            if form.validate_on_submit():
+                try:
+                    formatted_dict = dynamicform.insert(form)
+                except dj.DataJointError as e:
+                    flash(f"{e}", 'error')
+                else:
+                    dynamicform.reset()
+                    config.create_group_schemas()
+                    config.refresh_permissions()
+                    user = formatted_dict[config['user_name']]
+                    group = formatted_dict[config['group_name']]
+                    flash(
+                        f"Project {group} now includes user {user}",
+                        'success'
+                    )
+
+        form.append_hidden_entries()
+
+    edit_url = url_for(
+        'table',
+        schema=config["assignedgroup_schema"],
+        table=config["assignedgroup_table"])
+    delete_url = url_for(
+        'delete',
+        schema=config["assignedgroup_schema"],
+        table=config["assignedgroup_table"])
+
+    data = dynamicform.get_jsontable(
+        edit_url, delete_url,
+    )
+
+    return render_template(
+        'pages/assigngroup.html',
+        form=form,
+        data=data,
+        toggle_off_keys=[0],
+        readonly=readonly
+    )
+
 
 
 @app.route(f"{config['tmp_folder']}/<path:filename>")

@@ -318,6 +318,13 @@ class Config(dict):
         """
         return list(set(self.groups) & set(self['schemata']))
 
+    def create_group_schemas(self):
+        """create all missing schemas
+        """
+
+        for group in self.groups:
+            dj.schema(group, connection=self['connection'])
+
     @property
     def assigned_table(self):
         """assigned table (matching groups and users)
@@ -368,6 +375,20 @@ class Config(dict):
                 "assined user group table should only have "
                 "singular entries for given user and group."
             )
+
+    def refresh_permissions(self):
+        """refresh permissions of users
+        """
+
+        for user in self.users:
+            for schema in self.schemas_of_user(user):
+                conn = self['connection']
+                conn.query("FLUSH PRIVILEGES;")
+                conn.query(
+                    f"GRANT ALL PRIVILEGES ON {schema}.* to %s@%s;",
+                    (user, '%')
+                )
+                conn.query("FLUSH PRIVILEGES;")
 
     def refresh_settings_tables(self):
         """refresh container of settings table
@@ -456,6 +477,7 @@ class Config(dict):
         self.refresh_tables()
         self.refresh_settings_tables()
         self.refresh_automaker_tables()
+        self.refresh_permissions()
 
     def get_dynamicform(
         self, table_name, table_class, dynamic_class, **kwargs

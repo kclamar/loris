@@ -10,7 +10,7 @@
 <!-- /meta -->
 
 <!-- favicon -->
-<link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+<link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}">
 
 <!-- scripts -->
 <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/dt/jszip-2.5.0/dt-1.10.18/b-1.5.2/b-flash-1.5.2/b-html5-1.5.2/datatables.min.css"/>
@@ -41,7 +41,9 @@
   <div id="wrap">
     <nav class="navbar sticky-top navbar-expand-lg navbar-light bg-light">
       <div class="container-fluid">
-          <a class="navbar-brand" href="{{ url_for('home') }}">Loris</a>
+         <a class="navbar-brand" href="{{ url_for('home') }}">
+              <img src="/static/img/loris.pdf" height=30 />
+         </a>
           <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarContent" aria-controls="navbars" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
           </button>
@@ -56,6 +58,8 @@
         <li><a class="dropdown-item" href="{{ url_for('erd', only_essentials=True) }}">Simple ERD</a></li>
         <li><a class="dropdown-item" href="{{ url_for('join') }}">Join Tables</a></li>
         <li><a class="dropdown-item" href="{{ url_for('register') }}">Register User</a></li>
+        <li><a class="dropdown-item" href="{{ url_for('assigngroup') }}">Create/Assign Group Project</a></li>
+        <li><a class="dropdown-item" href="{{ url_for('declare') }}">Create/Declare a Table</a></li>
         <li><a class="dropdown-item" href="{{ url_for('change') }}">Change Password</a></li>
         <li><a class="dropdown-item" href="{{ url_for('refresh')}}">Refresh Database</a></li>
         </ul>

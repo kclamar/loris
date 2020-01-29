@@ -1,0 +1,16 @@
+{% extends 'layouts/main.html' %}
+{% block title %}Loris.Register{% endblock %}
+{% block content %}
+
+<div class="page-header">
+    {% from 'macros/render_form.html' import register_render_form %}
+    <h2> <a href="{{ url_for('assigngroup') }}">Create and Assign a Group Project</a></h2>
+    {{ register_render_form(form, readonly=readonly) }}
+    <hr>
+    <h4>Existing Affiliations</h4>
+    {% with data=data, toggle_off_keys=toggle_off_keys%}
+        {% include 'macros/tables.html' %}
+    {% endwith %}
+</div>
+
+{% endblock %}

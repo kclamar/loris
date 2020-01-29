@@ -35,6 +35,8 @@ def declare():
     """declare a table
     """
 
+    # TODO post method
+
     form = dynamic_tablecreationform(
         current_user.user_name
     )()
