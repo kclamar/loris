@@ -32,7 +32,7 @@
                 {{ render_label(field) }}&emsp;<small>({{ field.description }})</small>
             {% endif %}
             {% if field.short_name in readonly %}
-            {{ field(class="form-control", readonly=true) }}
+            {{ field(class="form-control", readonly=true, disabled=true) }}
             {% else %}
             {{ field(class="form-control") }}
             {% endif %}
@@ -183,28 +183,12 @@
         <p> </p>
         <div>
         <tr>
-            {% if readonly %}
+            {% if request.args.get('edit', 'False') == 'True' %}
             <td align="center"><input class="btn btn-outline-primary" type=submit value=Edit name="submit"></td>
             {% else %}
             <td align="center"><input class="btn btn-outline-success" type=submit value=Save name="submit"></td>
             <td align="center"><input class="btn btn-outline-warning" type=submit value=Overwrite name="submit"></td>
             {% endif %}
-        </tr>
-        </div>
-        <p> </p>
-    </form>
-{% endmacro %}
-
-{% macro edit_render_form(form, readonly=[]) %}
-    <form novalidate method=post enctype="multipart/form-data">
-        <table  style="width:100%">
-        {{ form.hidden_tag() }}
-        {{ _render_form(form, readonly=readonly) }}
-        </table>
-        <p> </p>
-        <div>
-        <tr>
-            <td align="center"><input class="btn btn-outline-primary" type=submit value=Edit name="submit"></td>
         </tr>
         </div>
         <p> </p>
@@ -275,6 +259,23 @@
         <div>
         <tr>
             <td align="center"><input class="btn btn-outline-primary" type=submit value=Submit name="submit"></td>
+        </tr>
+        </div>
+        <p> </p>
+    </form>
+{% endmacro %}
+
+
+{% macro declare_render_form(form) %}
+    <form novalidate method=post enctype="multipart/form-data">
+        <table  style="width:100%">
+        {{ form.hidden_tag() }}
+        {{ _render_form(form) }}
+        </table>
+        <p> </p>
+        <div>
+        <tr>
+            <td align="center"><input class="btn btn-outline-primary" type=submit value=Declare name="submit"></td>
         </tr>
         </div>
         <p> </p>

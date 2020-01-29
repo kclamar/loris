@@ -7,6 +7,7 @@
     <h2> <a href={{url}}>{{table_name}}</a> <h2>
     <h4>Enter Genotype Information</h4>
     {{ render_form(form, readonly=readonly) }}
+    <hr>
     <h4>Table</h4>
     {% with data=data, toggle_off_keys=toggle_off_keys%}
         {% include 'macros/tables.html' %}

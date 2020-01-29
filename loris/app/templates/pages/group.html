@@ -4,10 +4,10 @@
 
 <div class="page-header">
     {% from 'macros/render_form.html' import register_render_form %}
-    <h2> <a href="{{ url_for('register') }}">Register User</a></h2>
+    <h2> <a href="{{ url_for('registergroup') }}">Register Project Group</a></h2>
     {{ register_render_form(form) }}
     <hr>
-    <h4>Existing Users</h4>
+    <h4>Existing Projects</h4>
     {% with data=data, toggle_off_keys=toggle_off_keys%}
         {% include 'macros/tables.html' %}
     {% endwith %}

@@ -20,6 +20,11 @@
     "user_table": "Experimenter",
     "user_name": "experimenter",
     "user_active": "active",
+    "group_schema": "experimenters",
+    "group_table": "ExperimentalProject",
+    "group_name": "experimental_project",
+    "assignedgroup_schema": "experimenters",
+    "assignedgroup_table": "AssignedExperimentalProject",
     "standard_password": "dr0s0phila",
     "administrator_info" : {
         "experimenter": "gucky92",

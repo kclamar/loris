@@ -5,20 +5,19 @@ from flask_login import UserMixin
 import datajoint as dj
 
 from loris import config
+from loris.settings import Config
 
 
 class User(UserMixin):
 
     def __init__(self, user_name):
-        self.table = getattr(
-            config['schemata'][config['user_schema']],
-            config['user_table']
-        )
+        self.table = config.user_table
 
         self.user_name = user_name
 
         self.restriction = {config['user_name']: self.user_name}
 
+        print(self.restriction)
         self.restricted_table = self.table & self.restriction
 
         if len(self.restricted_table) > 1:
@@ -72,3 +71,13 @@ class User(UserMixin):
             success = False
         config.conn(reset=True)
         return success
+
+    def get_user_config(self, password):
+        """create user specific config file
+        """
+
+        user_config = Config.load()
+        user_config['database.user'] = self.user_name
+        user_config['database.password'] = password
+        user_config.conn(reset=True)
+        return user_config

@@ -14,8 +14,85 @@ from loris import config, conn
 from loris.utils import is_manuallookup
 
 
+def user_has_permission(table, user, skip_tables=None):
+    """test if user is allowed to delete an entry or perform another action
+    on a datajoint.Table
+    """
+
+    if user in config['administrators']:
+        return True
+
+    if table.database in config.groups_of_user(user):
+        return True
+
+    if skip_tables is None:
+        skip_tables = []
+
+    # always add table name
+    skip_tables.append(table.full_table_name)
+
+    if not table.connection.dependencies:
+        table.connection.dependencies.load()
+
+    ancestors = table.ancestors()
+
+    if config.user_table.full_table_name in ancestors:
+        if config['user_name'] in table.heading:
+            user_only = table & {config['user_name']: user}
+            return len(user_only) == len(table)
+        else:
+            for parent_name, parent_info in table.parents().items():
+                if parent_name in skip_tables:
+                    continue
+                if parent_info['aliased']:
+                    grandparents = table.connection.dependencies.parents(
+                        parent_name
+                    )
+                    # only a single one should exist if aliased
+                    parent_name = list(grandparents.keys())[0]
+
+                # get parent table
+                parent_table = config.get_table(parent_name)
+
+                # project only necessary keys
+                to_rename = {
+                    ele: key
+                    for key, ele in parent_info['attr_map'].items()
+                }
+                restricted_table = parent_table & table.proj(**to_rename)
+
+                if not user_has_permission(
+                    restricted_table, user, skip_tables
+                ):
+                    return False
+
+    # checks if children have a parent table that is dependent on user table
+    for child_name, child_info in table.children().items():
+        if child_name in skip_tables:
+            continue
+        if child_info['aliased']:
+            grandchildren = table.connection.dependencies.children(
+                child_name
+            )
+            # only a single one should exist if aliased
+            child_name = list(grandchildren.keys())[0]
+
+        # get child table
+        child_table = config.get_table(child_name)
+
+        # restrict only with necessary keys
+        restricted_table = child_table & table.proj(**child_info['attr_map'])
+
+        if not user_has_permission(
+            restricted_table, user, skip_tables
+        ):
+            return False
+
+    return True
+
+
 def save_join(tables):
-    """savely join tables ignoring dependent attributes
+    """savely join tables ignoring dependent attributes that match.
     """
 
     for n, table in enumerate(tables):

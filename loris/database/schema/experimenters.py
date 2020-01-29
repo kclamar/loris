@@ -4,7 +4,7 @@
 
 import datajoint as dj
 
-from loris.database.schema.base import COMMENTS
+from loris.database.schema.base import COMMENTS, ManualLookup
 from loris.database.attributes import truebool
 
 schema = dj.schema('experimenters')
@@ -33,3 +33,16 @@ class Experimenter(dj.Manual):
         email = null : varchar(255)
         {COMMENTS}
         """
+
+
+@schema
+class ExperimentalProject(ManualLookup, dj.Manual):
+    primary_comment = 'name of experimental project'
+
+
+@schema
+class AssignedExperimentalProject(dj.Manual):
+    definition = """
+    -> Experimenter
+    -> ExperimentalProject
+    """

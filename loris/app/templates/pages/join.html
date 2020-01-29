@@ -10,6 +10,7 @@
         It is not required to add a restriction.
     </h6>
     {{ submit_render_form(form) }}
+    <hr>
     <h4>Joined Table</h4>
     {% with data=data, toggle_off_keys=toggle_off_keys%}
         {% include 'macros/tables.html' %}

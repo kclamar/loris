@@ -4,6 +4,7 @@
 import datajoint as dj
 
 from loris.database.schema.base import PRIMARY_NAME, COMMENTS, DESCRIPTION, ManualLookup
+from loris.database.schema.experimenters import Experimenter
 from loris.database.attributes import truebool, tarfolder, link
 
 schema = dj.schema('equipment')
@@ -29,6 +30,7 @@ class System(dj.Manual):
     definition = f"""
     system_id : int auto_increment
     ---
+    -> Experimenter
     -> [nullable] SystemType
     {DESCRIPTION}
     date_created : date # when was the system created

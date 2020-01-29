@@ -19,7 +19,7 @@ from wtforms.validators import InputRequired, Optional, NumberRange, \
 from loris import config
 from loris.app.forms.formmixin import FormMixin, DynamicFileField, \
     DictField, ListField, JsonSerializableValidator, RestrictionField, \
-    OptionalJsonSerializableValidator, Extension
+    OptionalJsonSerializableValidator, Extension, CamelCaseValidator
 
 
 RESTRICTION_DESCRIPTION = (
@@ -70,6 +70,56 @@ class PasswordForm(Form, FormMixin):
     )
 
 
+class PartTableCreationForm(NoCsrfForm, FormMixin):
+    table = StringField(
+        'part table name',
+        description='camel-case name of part table',
+        validators=[
+            InputRequired(),
+            CamelCaseValidator()
+        ]
+    )
+    definition = TextAreaField(
+        'definition',
+        description='datajoint definition of a part table',
+        validators=[
+            InputRequired(),
+        ]
+    )
+
+
+def dynamic_tablecreationform(user_name):
+
+    class TableCreationForm(Form, FormMixin):
+        schema = SelectField(
+            'schema',
+            description='schema',
+            choices=[(key, key) for key in config.schemas_of_user(user_name)],
+            default=user_name
+        )
+        table = StringField(
+            'table name',
+            description='camel-case name of table',
+            validators=[
+                InputRequired(),
+                CamelCaseValidator()
+            ]
+        )
+        definition = TextAreaField(
+            'definition',  # TODO add link
+            description='datajoint definition of table',
+            validators=[
+                InputRequired(),
+            ]
+        )
+        part_table = FieldList(
+            FormField(PartTableCreationForm),
+            min_entries=1
+        )
+
+    return TableCreationForm
+
+
 def dynamic_jointablesform():
 
     class JoinTablesForm(Form, FormMixin):
@@ -77,6 +127,7 @@ def dynamic_jointablesform():
         tables = FieldList(
             SelectField(
                 'tables',
+                description='tables',
                 choices=[(key, key) for key in tables_dict],
                 validators=[InputRequired()]
             ),

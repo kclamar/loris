@@ -2,7 +2,6 @@
 """
 
 from flask import Flask, session, request, redirect
-from flask_dance.contrib.github import make_github_blueprint, github
 from flask_login import LoginManager
 from dash import Dash
 import dash_html_components as html
@@ -22,11 +21,6 @@ class LorisApp(Flask):
 
 app = LorisApp(__name__)
 app.secret_key = config['secret_key']
-blueprint = make_github_blueprint(
-    client_id=config['client_id'],
-    client_secret=config['client_secret'],
-)
-app.register_blueprint(blueprint, url_prefix="/login")
 
 login_manager = LoginManager(app)
 

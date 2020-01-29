@@ -1,0 +1,11 @@
+{% extends 'layouts/main.html' %}
+{% block title %}Loris.Declare{% endblock %}
+{% block content %}
+
+<div class="page-header">
+    {% from 'macros/render_form.html' import declare_render_form %}
+    <h2> <a href="{{ url }}">Declare a Table</a></h2>
+    {{ declare_render_form(form) }}
+</div>
+
+{% endblock %}

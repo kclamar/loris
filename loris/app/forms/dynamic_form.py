@@ -255,7 +255,9 @@ class DynamicForm:
         else:
             restricted_table = self.table & _id
             if len(restricted_table) == 0:
-                truth = True
+                raise dj.DataJointError(
+                    f'Entry {_id} does not exist; cannot update.'
+                )
             truth = False
 
         if truth:

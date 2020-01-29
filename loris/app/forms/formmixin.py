@@ -4,6 +4,7 @@
 import os
 import numpy as np
 import json
+import re
 
 from wtforms import FieldList, FormField, BooleanField, StringField, \
 TextAreaField, SelectField
@@ -12,6 +13,7 @@ from flask_wtf.file import FileField
 from werkzeug.utils import secure_filename
 from wtforms.validators import InputRequired, Optional, NumberRange, \
     ValidationError, Length, UUID, URL, Email
+import datajoint as dj
 
 from loris import config
 from loris.app.forms import NONES
@@ -121,6 +123,21 @@ class RestrictionField(StringField):
 
 class DynamicFileField(FileField):
     pass  # TODO
+
+
+class CamelCaseValidator:
+
+    def __init__(self, name='table name'):
+
+        self.name = name
+
+    def __call__(self, form, field):
+
+        if not re.match(r'[A-Z][a-zA-Z0-9]*', field.data):
+            raise ValidationError(
+                f'{self.name} must be alphanumeric in CamelCase, '
+                'begin with a capital letter.'
+            )
 
 
 class Extension:

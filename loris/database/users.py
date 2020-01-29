@@ -72,3 +72,5 @@ def grantuser(
         conn.query(privilege, (username, connection))
 
     conn.query("FLUSH PRIVILEGES;")
+
+    return schema

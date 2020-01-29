@@ -8,6 +8,7 @@ import inspect
 from collections import defaultdict
 import datajoint as dj
 from datajoint.settings import default
+from datajoint.utils import to_camel_case
 from sshtunnel import SSHTunnelForwarder, HandlerSSHTunnelForwarderError
 
 from loris.database.attributes import custom_attributes_dict
@@ -29,10 +30,14 @@ defaults = dict(
     ),
     # foreign key select field limit
     fk_dropdown_limit=200,
-    # stock_prefix='RBF', 
     user_schema="experimenters",
     user_table="Experimenter",
-    user_name="experimenter"
+    user_name="experimenter",
+    group_schema="experimenters",
+    group_table="ExperimentalProject",
+    group_name="experimental_project",
+    assignedgroup_schema="experimenters",
+    assignedgroup_table="AssignedExperimentalProject",
 )
 
 
@@ -126,7 +131,7 @@ class Config(dict):
                 self.refresh_settings_tables()
                 return self[k]
             elif k == 'connection':
-                return self.conn()
+                return self.conn(reset=True)
             elif k == 'server':
                 return self.connect_ssh()
 
@@ -177,12 +182,54 @@ class Config(dict):
         for schema in dj.list_schemas():
             if schema in self["skip_schemas"]:
                 continue
+            # TODO error messages
             schemata[schema] = dj.create_virtual_module(
-                schema, schema, connection=self.conn(),
+                schema, schema, connection=self['connection'],
                 add_objects=custom_attributes_dict
             )
 
         self['schemata'] = schemata
+
+    def get_table(self, full_table_name):
+        """get table from schemata
+        """
+
+        schema, table_name = full_table_name.replace('`', '').split('.')
+
+        schema_module = self['schemata'].get(schema, None)
+
+        if schema_module is None:
+            raise Exception(
+                f'schema {schema} not in database; refresh database'
+            )
+
+        table_name = table_name.strip('_#')
+        table_name_list = table_name.split('__')
+        if len(table_name_list) == 1:
+            table_name = to_camel_case(table_name)
+            try:
+                return getattr(schema_module, table_name)
+            except AttributeError:
+                raise Exception(
+                    f'table {table_name} not in schema {schema}; '
+                    'refresh database'
+                )
+        else:
+            assert len(table_name_list) == 2, \
+                f'invalid table name {table_name}.'
+            table_name = to_camel_case(table_name_list[0])
+            part_table_name = to_camel_case(table_name_list[1])
+            try:
+                return getattr(
+                    getattr(schema_module, table_name),
+                    part_table_name
+                )
+            except AttributeError:
+                raise Exception(
+                    f'table {table_name} not in schema {schema} '
+                    f'or part table {part_table_name} not in table {table_name}'
+                    '; refresh database'
+                )
 
     def refresh_tables(self):
         """refresh container of tables
@@ -210,6 +257,117 @@ class Config(dict):
         self['tables'] = tables
 
         return tables
+
+    @property
+    def user_table(self):
+        """return the user table
+        """
+
+        return getattr(
+            self['schemata'][self['user_schema']],
+            self['user_table'])
+
+    @property
+    def users(self):
+        """get a list of all users
+        """
+        users = list(
+            self.user_table.proj(self['user_name']).fetch()[self['user_name']]
+        )
+
+        # insert administrator if not users exist and create
+        # administrator schema
+        # administrator must exist in SQL database
+        # TODO check if user exists in SQL
+        if not users:
+            self.user_table.insert1(self['administrator_info'])
+            dj.schema(self['administrator_info'][self['user_name']])
+
+        return users
+
+    @property
+    def user_tables(self):
+        """return a list of user tables
+        """
+        return list(set(self.users) & set(self['schemata']))
+
+    @property
+    def group_table(self):
+        """return the group table
+        """
+
+        return getattr(
+            self['schemata'][self['group_schema']],
+            self['group_table'])
+
+    @property
+    def groups(self):
+        """get a list of all groups
+        """
+        groups = list(
+            self.group_table.proj(
+                self['group_name']
+            ).fetch()[self['group_name']]
+        )
+
+        return groups
+
+    @property
+    def group_tables(self):
+        """return a list of group tables
+        """
+        return list(set(self.groups) & set(self['schemata']))
+
+    @property
+    def assigned_table(self):
+        """assigned table (matching groups and users)
+        """
+
+        return getattr(
+            self['schemata'][self['assignedgroup_schema']],
+            self['assignedgroup_table'])
+
+    def groups_of_user(self, user):
+        """groups user belongs to (includes user name)
+        """
+
+        groups = [user]
+
+        table = self.assigned_table & {
+            self['user_name'] : user
+        }
+        groups.extend(
+            list(table.proj(self['group_name']).fetch()[self['group_name']])
+        )
+
+        return groups
+
+    def schemas_of_user(self, user):
+        """schemas user belongs to (should be the same as groups_of_user),
+        if each group has an associated schema.
+        """
+
+        groups = self.groups_of_user(user)
+        return list(set(groups) & set(self['schemata']))
+
+    def user_in_group(self, user, group):
+        """is user in group
+        """
+
+        table = self.assigned_table & {
+            self['user_name'] : user,
+            self['group_name'] : group
+        }
+
+        if len(table) == 1:
+            return True
+        elif len(table) == 0:
+            return False
+        else:
+            raise Exception(
+                "assined user group table should only have "
+                "singular entries for given user and group."
+            )
 
     def refresh_settings_tables(self):
         """refresh container of settings table
