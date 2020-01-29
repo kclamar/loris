@@ -240,10 +240,10 @@ def assigngroup():
         config['user_name']: current_user.user_name
     }
 
-    # if current_user.user_name in config['administrators']:
-    #     readonly = []
-    # else:
-    #     readonly = [config['user_name']]
+    if current_user.user_name in config['administrators']:
+        readonly = []
+    else:
+        readonly = [config['user_name']]
 
     group_class = config.assigned_table
 
