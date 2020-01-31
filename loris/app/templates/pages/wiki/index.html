@@ -1,0 +1,57 @@
+{% extends "pages/wiki/base.html" %}
+
+{% block title %}Page Index{% endblock title %}
+
+{% block content %}
+<h4>Page Index</h4>
+{% if pages %}
+	<table class="display wrap" width="100%" id=Pages>
+		<thead>
+			<tr>
+				<th>Title</th>
+				<th>URL</th>
+				<th>Tags</th>
+			</tr>
+		</thead>
+		<tbody>
+			{% for page in pages %}
+				<tr>
+					<td><a href="{{ url_for('wikidisplay', url=page.url) }}">{{ page.title }}</a></td>
+					<td><a href="{{ url_for('wikidisplay', url=page.url) }}">{{ page.url }}</a></td>
+					<td>{{ page.tags }}</td>
+				</tr>
+			{% endfor %}
+		</tbody>
+	</table>
+{% else %}
+	<p>There are no pages yet.</p>
+{% endif %}
+{% endblock content %}
+
+{% block sidebar %}
+
+<br>
+<hr>
+<a role="button" class="btn btn-outline-primary" href="{{ url_for('wikicreate') }}">New Page</a>
+<a role="button" class="btn btn-outline-secondary" href="{{ url_for('wikitags') }}">Tag List</a>
+<a role="button" class="btn btn-outline-info" href="{{ url_for('wikisearch') }}">Search</a>
+{% endblock sidebar %}
+
+{% block postscripts -%}
+{{ super() }}
+$(document).ready(function() {
+	// DataTable
+	$("#Pages").DataTable({
+		dom: 'Bfrtip',
+		buttons: [
+			{
+				extend: 'collection',
+				text: 'Export',
+				buttons: [ 'pdf', 'csv', 'copy', 'excel' ]
+			}
+		],
+		scrollX: true,
+		select: true
+	});
+});
+{% endblock postscripts -%}

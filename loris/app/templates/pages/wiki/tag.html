@@ -1,0 +1,46 @@
+{% extends "pages/wiki/base.html" %}
+
+{% block title %}Pages tagged {{ tag }}{% endblock title %}
+
+{% block content %}
+<h4>Pages tagged {{ tag }}</h4>
+{% if pages %}
+	<table class="display wrap" width="100%" id=Tag>
+		<thead>
+			<tr>
+				<th>Title</th>
+				<th>URL</th>
+			</tr>
+		</thead>
+		<tbody>
+			{% for page in pages %}
+				<tr>
+					<td><a href="{{ url_for('wikidisplay', url=page.url) }}">{{ page.title }}</a></td>
+					<td><a href="{{ url_for('wikidisplay', url=page.url) }}">{{ page.url }}</a></td>
+				</tr>
+			{% endfor %}
+		</tbody>
+	</table>
+{% else %}
+	<p>There are no pages tagged {{ tag }}.</p>
+{% endif %}
+{% endblock content %}
+
+{% block postscripts -%}
+{{ super() }}
+$(document).ready(function() {
+	// DataTable
+	$("#Tag").DataTable({
+		dom: 'Bfrtip',
+		buttons: [
+			{
+				extend: 'collection',
+				text: 'Export',
+				buttons: [ 'pdf', 'csv', 'copy', 'excel' ]
+			}
+		],
+		scrollX: true,
+		select: true
+	});
+});
+{% endblock postscripts -%}

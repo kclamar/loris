@@ -8,3 +8,4 @@ from .analysis import *
 from .database import *
 from .erd import *
 from .entries import *
+from .wiki import *

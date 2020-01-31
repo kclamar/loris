@@ -132,6 +132,18 @@
         {% endfor %}
         </ul>
       </li>
+      <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown7" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+          Wiki
+        </a>
+        <ul class="dropdown-menu", aria-labelledby="navbarDropdown7">
+            <li><a class="dropdown-item" href="{{ url_for('wikihome') }}">Home</a></li>
+            <li><a class="dropdown-item" href="{{ url_for('wikiindex') }}">Index</a></li>
+            <li><a class="dropdown-item" href="{{ url_for('wikitags') }}">Tags</a></li>
+            <li><a class="dropdown-item" href="{{ url_for('wikisearch') }}">Search</a></li>
+            <li><a class="dropdown-item" href="{{ url_for('wikicreate') }}">New Page</a></li>
+        </ul>
+      </li>
       <a class="nav-item nav-link" href="{{ url_for('about')}}">About</a>
     </ul>
     <form class="form-inline my-2 my-lg-0">
@@ -184,6 +196,7 @@
 
     {% block content %}{% endblock %}
 
+    {% block sidebar %}{% endblock sidebar %}
     </main>
 
   </div>
@@ -421,6 +434,10 @@
 
           });
         });
+  </script>
+  <script type="text/javascript">
+      {% block postscripts %}
+      {% endblock postscripts %}
   </script>
 
   <style>

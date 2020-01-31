@@ -14,7 +14,10 @@
     <td>
         {% if field.type in ['FileField', 'BlobFileField', 'AttachFileField', 'DynamicFileField'] %}
             {% if label %}
-                {{ render_label(field) }}&emsp;<small>({{ field.description }})</small>
+                {{ render_label(field) }}
+                {% if field.description%}
+                    &emsp;<small>({{ field.description }})</small>&emsp;
+                {% endif %}
                 {% if field.short_name in readonly %}
                 <p> {{ field(readonly=true) }} </p>
                 {% else %}
@@ -29,7 +32,10 @@
             {% endif %}
         {% elif field.type in ['SelectField'] %}
             {% if label %}
-                {{ render_label(field) }}&emsp;<small>({{ field.description }})</small>
+                {{ render_label(field) }}
+                {% if field.description%}
+                    &emsp;<small>({{ field.description }})</small>&emsp;
+                {% endif %}
             {% endif %}
             {% if field.short_name in readonly %}
             {{ field(class="form-control", readonly=true, disabled=true) }}
@@ -38,7 +44,10 @@
             {% endif %}
         {% elif field.type in ['BooleanField']%}
             {% if label %}
-                {{ render_label(field) }}&emsp;<small>({{ field.description }})</small>&emsp;
+                {{ render_label(field) }}
+                {% if field.description%}
+                    &emsp;<small>({{ field.description }})</small>&emsp;
+                {% endif %}
             {% endif %}
             {% if field.short_name in readonly %}
             {{ field(readonly=true) }}
@@ -259,6 +268,24 @@
         <div>
         <tr>
             <td align="center"><input class="btn btn-outline-primary" type=submit value=Submit name="submit"></td>
+        </tr>
+        </div>
+        <p> </p>
+    </form>
+{% endmacro %}
+
+
+{% macro submitcancel_render_form(form) %}
+    <form novalidate method=post enctype="multipart/form-data">
+        <table  style="width:100%">
+        {{ form.hidden_tag() }}
+        {{ _render_form(form) }}
+        </table>
+        <p> </p>
+        <div>
+        <tr>
+            <td align="center"><input class="btn btn-outline-success" type=submit value=Submit name="submit"></td>
+            <td align="center"><input class="btn btn-outline-danger" type=submit value=Cancel name="submit"></td>
         </tr>
         </div>
         <p> </p>

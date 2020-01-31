@@ -1,0 +1,15 @@
+{% extends "pages/wiki/base.html" %}
+
+{% block title %}Create a new page{% endblock title %}
+{% block content %}
+<div class="page-header">
+    {% from 'macros/render_form.html' import submit_render_form %}
+    <h3> <a href=#>Create a new page</a> <h3>
+    <h6> Create a new wiki page by first specifying a redirect url (e.g. home). </h6>
+    {{ submit_render_form(form) }}
+</div>
+{% endblock content %}
+
+{% block sidebar %}
+<p class="alert alert-success">Thank you for creating new content!</p>
+{% endblock sidebar %}

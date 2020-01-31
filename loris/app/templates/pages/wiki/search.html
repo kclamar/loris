@@ -1,0 +1,30 @@
+{% extends "pages/wiki/base.html" %}
+
+{% block title %}
+{% if search %}
+	Results for "{{ search }}"
+{% else %}
+	Search
+{% endif %}
+{% endblock title %}
+
+{% block content %}
+{% from 'macros/render_form.html' import submit_render_form %}
+<div class="page-header">
+	<h4>Search the Wiki</h4>
+	{{ submit_render_form(form) }}
+</div>
+
+{% if search %}
+	{% if results %}
+	<hr>
+		<ul>
+			{% for result in results %}
+				<li><a href="{{ url_for('wikidisplay', url=result.url) }}"><strong>{{ result.title }}</strong></a></li>
+			{% endfor %}
+		</ul>
+	{% else %}
+		<p>No results for your search.</p>
+	{% endif %}
+{% endif %}
+{% endblock content %}

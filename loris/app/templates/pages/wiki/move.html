@@ -1,0 +1,14 @@
+{% extends "pages/wiki/base.html" %}
+
+{% block title %}Move a page{% endblock title %}
+{% block content %}
+{% from 'macros/render_form.html' import submit_render_form %}
+<div class="page-header">
+	<h4>Search the Wiki</h4>
+	{{ submit_render_form(form) }}
+</div>
+{% endblock content %}
+
+{% block sidebar %}
+<p class="alert alert-warning">Be careful, the old url will be invalid immediately!</p>
+{% endblock sidebar %}
