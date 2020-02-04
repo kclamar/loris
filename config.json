@@ -37,6 +37,8 @@
     },
     "administrators": ["gucky92"],
     "wiki_folder": "/Users/matthias.christenson/wiki",
+    "autoscript_folder": "/Users/matthias.christenson/Documents/loris/autoscripts",
+    "autoscript_tables": ["imaging.TwoPhotonRecording"],
 
     "_client_comment": "keys for GitHub authorization",
     "client_id":"e6c56597ef33e2242b31",

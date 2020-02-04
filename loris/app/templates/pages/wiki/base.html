@@ -1,3 +1,28 @@
 {% extends 'layouts/main.html' %}
 
 {% from "pages/wiki/helpers.html" import input %}
+
+{% block extraheader %}
+<div>
+<div class="btn-group">
+<a role="button" class="btn btn-outline-secondary" href="{{ url_for('wikihome') }}">Home</a>
+</div>
+{% for key, value in index_dict.items() %}
+{% if key != "home" %}
+<div class="btn-group">
+<a role="button" class="btn btn-outline-secondary" href="{{ url_for('wikidisplay', url=key) }}">{{ key }}</a>
+<button type="button" class="btn btn-outline-secondary dropdown-toggle dropdown-toggle-split" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+    <span class="sr-only">Toggle Dropdown</span>
+</button>
+<div class="dropdown-menu">
+    {% for ikey, ivalue in value.items() %}
+    <a class="dropdown-item" href="{{ url_for('wikidisplay', url=(key + '/' + ikey)) }}">{{ ikey }}</a>
+    {% endfor %}
+</div>
+</div>
+{% endif %}
+{% endfor %}
+</div>
+<hr>
+<br>
+{% endblock extraheader %}

@@ -19,7 +19,10 @@ from loris import config
 from loris.app.forms import NONES
 
 
-class ListField(StringField):
+class EvalJsonField(StringField):
+
+    startswith = None
+    endswith = None
 
     def process_data(self, value):
         return super().process_data(str(value))
@@ -30,10 +33,13 @@ class ListField(StringField):
         if data in NONES:
             return ''
         else:
-            if data.startswith('[') and data.endswith(']'):
+            if (
+                data.startswith(self.startswith)
+                and data.endswith(self.endswith)
+            ):
                 return data
             else:
-                return f'[{data}]'
+                return f'{self.startswith}{data}{self.endswith}'
 
     @property
     def eval_data(self):
@@ -51,36 +57,16 @@ class ListField(StringField):
             return super().__getattribute__(name)
 
 
-class DictField(TextAreaField):
+class ListField(EvalJsonField):
 
-    def process_data(self, value):
-        return super().process_data(str(value))
+    startswith = '['
+    endswith = ']'
 
-    @property
-    def noneval_data(self):
-        data = super().__getattribute__('data')
-        if data in NONES:
-            return ''
-        else:
-            if data.startswith('{') and data.endswith('}'):
-                return data
-            else:
-                return '{' + data + '}'
 
-    @property
-    def eval_data(self):
-        data = self.noneval_data
-        if data in NONES:
-            return data
-        else:
-            return json.loads(data)
+class DictField(EvalJsonField):
 
-    def __getattribute__(self, name):
-        # dirty trick to get evaluated data
-        if name == 'data':
-            return self.eval_data
-        else:
-            return super().__getattribute__(name)
+    startswith = '{'
+    endswith = '}'
 
 
 class RestrictionField(StringField):

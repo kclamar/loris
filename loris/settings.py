@@ -39,6 +39,7 @@ defaults = dict(
     assignedgroup_schema="experimenters",
     assignedgroup_table="AssignedExperimentalProject",
 )
+AUTOSCRIPT_CONFIG = 'config.json'
 
 
 class Config(dict):
@@ -169,11 +170,14 @@ class Config(dict):
                 self[key] = ele
 
     def perform_checks(self):
-        """perform various checks
+        """perform various checks (create directories if they don't exist)
         """
 
         if not os.path.exists(self['tmp_folder']):
             os.makedirs(self['tmp_folder'])
+
+        if not os.path.exists(self['autoscript_folder']):
+            os.makedirs(self['autoscript_folder'])
 
     def refresh_schema(self):
         """refresh container of schemas
@@ -185,7 +189,8 @@ class Config(dict):
             # TODO error messages
             schemata[schema] = dj.create_virtual_module(
                 schema, schema, connection=self['connection'],
-                add_objects=custom_attributes_dict
+                add_objects=custom_attributes_dict,
+                create_tables=True
             )
 
         self['schemata'] = schemata
@@ -350,9 +355,12 @@ class Config(dict):
         return groups
 
     def schemas_of_user(self, user):
-        """schemas user belongs to (should be the same as groups_of_user),
-        if each group has an associated schema.
+        """schemas user belongs to (should be the same as groups_of_user except
+        when administrator), if each group has an associated schema.
         """
+
+        if user in self['administrators']:
+            return list(self['schemata'])
 
         groups = self.groups_of_user(user)
         return list(set(groups) & set(self['schemata']))
@@ -471,6 +479,7 @@ class Config(dict):
         """
 
         self.pop('dynamicforms', None)
+        self.pop('autoscriptforms', None)
         self.empty_tmp_folder()
         self.refresh_dependencies()
         self.refresh_schema()
@@ -501,3 +510,36 @@ class Config(dict):
             dynamicform.update_fields(form)
 
         return dynamicform, form
+
+    def get_autoscriptforms(
+        self, autoscript_filepath, table_name, form_creator, **kwargs
+    ):
+
+        if 'autoscriptforms' not in self:
+            self['autoscriptforms'] = {}
+        if table_name not in self['autoscriptforms']:
+            self['autoscriptforms'][table_name] = {}
+
+        if autoscript_filepath in self['autoscriptforms'][table_name]:
+            pass
+        else:
+            filepath = os.path.join(
+                autoscript_filepath, AUTOSCRIPT_CONFIG
+            )
+            with open(filepath, 'r') as f:
+                config = json.load(f)
+
+            include_insert = not config['autoscript_inserts']
+            buttons = config['scripts']
+            forms = {}
+            post_process_dict = {}
+            for key, value in config['forms'].items():
+                form, post_process = form_creator(value, **kwargs)
+                forms[key] = form()
+                post_process_dict[key] = post_process
+
+            self['autoscriptforms'][table_name][autoscript_filepath] = (
+                forms, post_process_dict, buttons, include_insert
+            )
+
+        return self['autoscriptforms'][table_name][autoscript_filepath]

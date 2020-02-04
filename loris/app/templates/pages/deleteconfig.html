@@ -1,0 +1,17 @@
+{% extends 'layouts/main.html' %}
+{% block title %}Loris.ConfigDelete{% endblock %}
+{% block content %}
+
+<div class="page-header">
+<h2> Continue? <h2>
+</div>
+<h6>
+    {{ message }}
+</h6>
+<form method="POST">
+<tr>
+<td align="center"><input class="btn btn-outline-danger" type="submit" value=Delete name="submit"></td>
+<td align="center"><input class="btn btn-outline-primary" type="submit" value=Cancel name="submit"></td>
+</tr>
+</form>
+{% endblock %}

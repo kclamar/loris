@@ -15,23 +15,29 @@ from loris.app.wiki.current_wiki import current_wiki
 @login_required
 def wikihome():
     page = current_wiki.get('home')
+    app.config['index_dict'] = current_wiki.index_dict()
     if page:
         return wikidisplay('home')
-    return render_template('pages/wiki/home.html')
+    return render_template('pages/wiki/home.html',
+                           index_dict=app.config.get('index_dict', {}))
 
 
 @app.route('/wikiindex/')
 @login_required
 def wikiindex():
     pages = current_wiki.index()
-    return render_template('pages/wiki/index.html', pages=pages)
+    return render_template(
+        'pages/wiki/index.html',
+        pages=pages, index_dict=app.config.get('index_dict', {}))
 
 
 @app.route('/wiki/<path:url>/')
 @login_required
 def wikidisplay(url):
     page = current_wiki.get_or_404(url)
-    return render_template('pages/wiki/page.html', page=page)
+    return render_template(
+        'pages/wiki/page.html',
+        page=page, index_dict=app.config.get('index_dict', {}))
 
 
 @app.route('/wikicreate/', methods=['GET', 'POST'])
@@ -41,7 +47,9 @@ def wikicreate():
     if form.validate_on_submit():
         return redirect(url_for(
             'wikiedit', url=form.clean_url(form.url.data)))
-    return render_template('pages/wiki/create.html', form=form)
+    return render_template(
+        'pages/wiki/create.html', form=form,
+        index_dict=app.config.get('index_dict', {}))
 
 
 @app.route('/wikiedit/<path:url>/', methods=['GET', 'POST'])
@@ -60,7 +68,9 @@ def wikiedit(url):
         page.save()
         flash(f'Wiki page "{page.title}" was saved', 'success')
         return redirect(url_for('wikidisplay', url=url))
-    return render_template('pages/wiki/editor.html', form=form, page=page)
+    return render_template(
+        'pages/wiki/editor.html', form=form,
+        page=page, index_dict=app.config.get('index_dict', {}))
 
 
 @app.route('/wikipreview/', methods=['POST'])
@@ -81,7 +91,9 @@ def wikimove(url):
         newurl = form.url.data
         current_wiki.move(url, newurl)
         return redirect(url_for('wikidisplay', url=newurl))
-    return render_template('pages/wiki/move.html', form=form, page=page)
+    return render_template(
+        'pages/wiki/move.html', form=form,
+        page=page, index_dict=app.config.get('index_dict', {}))
 
 
 @app.route('/wikidelete/<path:url>/')
@@ -97,14 +109,18 @@ def wikidelete(url):
 @login_required
 def wikitags():
     tags = current_wiki.get_tags()
-    return render_template('pages/wiki/tags.html', tags=tags)
+    return render_template(
+        'pages/wiki/tags.html',
+        tags=tags, index_dict=app.config.get('index_dict', {}))
 
 
 @app.route('/wikitag/<string:name>/')
 @login_required
 def wikitag(name):
     tagged = current_wiki.index_by_tag(name)
-    return render_template('pages/wiki/tag.html', pages=tagged, tag=name)
+    return render_template(
+        'pages/wiki/tag.html', pages=tagged,
+        tag=name, index_dict=app.config.get('index_dict', {}))
 
 
 @app.route('/wikisearch/', methods=['GET', 'POST'])
@@ -114,5 +130,9 @@ def wikisearch():
     if form.validate_on_submit():
         results = current_wiki.search(form.term.data, form.ignore_case.data)
         return render_template('pages/wiki/search.html', form=form,
-                               results=results, search=form.term.data)
-    return render_template('pages/wiki/search.html', form=form, search=None)
+                               results=results, search=form.term.data,
+                               index_dict=app.config.get('index_dict', {}))
+    return render_template(
+        'pages/wiki/search.html', form=form, search=None,
+        index_dict=app.config.get('index_dict', {})
+        )

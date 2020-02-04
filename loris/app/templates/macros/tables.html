@@ -46,6 +46,9 @@
         {% if data['delete_url'] != "None" %}
             <td align="center"><a id="delete" class="btn btn-outline-danger" href="#">Delete</a></td>
         {% endif %}
+        {% if data['load_url'] != "None" %}
+            <td align="center"><a id="load" class="btn btn-outline-primary" href="#">Load</a></td>
+        {% endif %}
         {% if data['edit_url'] != "None" %}
             <td align="center"><a id="edit" class="btn btn-outline-primary" href="#">Edit</a></td>
         {% endif %}
@@ -104,6 +107,10 @@
                 if("{{ data['delete_url'] }}" != "None"){
                     var delete_url = "{{ data['delete_url'] }}?_id=" + _id + "&target=" + window.location.href;
                     $("#delete").attr("href", delete_url)
+                }
+                if("{{ data['load_url'] }}" != "None"){
+                    var load_url = "{{ data['load_url'] }}?_id=" + _id;
+                    $("#load").attr("href", load_url)
                 }
                 if("{{ data['edit_url'] }}" != "None"){
                     var edit_url = "{{ data['edit_url'] }}?_id=" + _id + "&edit=True";

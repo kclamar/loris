@@ -89,6 +89,23 @@ class Wiki(object):
                     pages.append(page)
         return sorted(pages, key=lambda x: x.title.lower())
 
+    def index_dict(self):
+        """
+        Builds nested directionary of all available pages
+        """
+
+        index_dict = {}
+
+        for page in self.index():
+            page = page.url.split('/')
+            current_dict = index_dict
+            for subpage in page:
+                if subpage not in current_dict:
+                    current_dict[subpage] = {}
+                current_dict = current_dict[subpage]
+
+        return index_dict
+
     def index_by(self, key):
         """
             Get an index based on the given key.

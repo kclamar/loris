@@ -1,0 +1,32 @@
+{
+    "autoscript_inserts": false,
+    "scripts": {
+        "Run": ["run.py", ["form_name", "form_name2"]],
+        "Test": ["test.py", ["form_name"]]
+    },
+    "forms": {
+        "form_name" : {
+            "a" : ["dict", {}],
+            "b" : ["list", null],
+            "c" : ["float", null],
+            "d" : "int",
+            "e" : "bool",
+            "gg": ["folder---/Users/matthias.christenson/wiki---file", null],
+            "i" : "str",
+            "j" : [["1234", "adf", "asdf"], null],
+            "_descriptions": {
+                "a" : "something"
+            }
+        },
+        "form_name2" : {
+            "a": "dict",
+            "b": {
+                "c": "int",
+                "_iterate": false,
+                "_descriptions": {
+                    "c": "haha"
+                }
+            }
+        }
+    }
+}

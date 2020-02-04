@@ -23,7 +23,7 @@
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">No</button>
-        <button href="{{ url_for('wikidelete', url=page.url) }}" type="button" class="btn btn-outline-danger">Yes, delete</button>
+        <a role="button" class="btn btn-outline-danger" href="{{ url_for('wikidelete', url=page.url) }}">Yes, delete</a>
       </div>
     </div>
   </div>

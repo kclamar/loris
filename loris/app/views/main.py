@@ -40,13 +40,9 @@ def login():
         elif form.password.data == config['standard_password']:
             flash('Please change your password', 'warning')
             login_user(user)
-            # user_configs[user.user_name] = user.get_user_config(
-            #     form.password.data)
             return redirect(url_for('change', user=user.user_name))
         else:
             login_user(user)
-            # user_configs[user.user_name] = user.get_user_config(
-            #     form.password.data)
             redirect_url = request.args.get('target', None)
             if redirect_url is None:
                 return redirect(url_for('home'))
@@ -236,6 +232,7 @@ def assigngroup():
         return redirect(url_for('home'))
 
     # only assign yourself to a group
+    # TODO what should the authorization behavior be?
     kwargs = {
         config['user_name']: current_user.user_name
     }

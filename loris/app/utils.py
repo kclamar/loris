@@ -110,12 +110,14 @@ def save_join(tables):
 
 def get_jsontable(
     data, primary_key, edit_url=None, delete_url=None,
-    overwrite_url=None, name=None
+    overwrite_url=None, name=None, load_url=None
 ):
     """get json table from dataframe
     """
 
-    if len(data) == 0:
+    if primary_key is None:
+        pass
+    elif len(data) == 0:
         data = pd.DataFrame(
             columns=['_id']+list(data.columns)
         )
@@ -129,6 +131,7 @@ def get_jsontable(
     jsontable = {}
     jsontable['delete_url'] = str(delete_url)
     jsontable['edit_url'] = str(edit_url)
+    jsontable['load_url'] = str(load_url)
     jsontable['overwrite_url'] = str(overwrite_url)
     jsontable['execute'] = 'True'
     jsontable['id'] = str(name)

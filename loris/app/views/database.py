@@ -35,11 +35,22 @@ def declare():
     """declare a table
     """
 
-    # TODO post method
-
     form = dynamic_tablecreationform(
         current_user.user_name
     )()
+
+    if request.method == 'POST':
+
+        form.rm_hidden_entries()
+
+        if form.validate_on_submit():
+            try:
+                form.declare_table()
+                flash('Table was declared successfully', 'success')
+            except dj.DataJointError as e:
+                flash(f"{e}", 'error')
+
+        form.append_hidden_entries()
 
     return render_template(
         'pages/declare.html',

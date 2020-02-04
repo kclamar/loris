@@ -4,6 +4,7 @@
 import pandas as pd
 import numpy as np
 import os
+import glob
 import graphviz
 from flask_wtf import FlaskForm as Form
 from wtforms import Form as NoCsrfForm
@@ -48,6 +49,14 @@ class LoginForm(Form, FormMixin):
     )
 
 
+class SettingsNameForm(NoCsrfForm, FormMixin):
+    settings_name = StringField(
+        'settings name',
+        description='save configuration under this name',
+        validators=[InputRequired()]
+    )
+
+
 class PasswordForm(Form, FormMixin):
     old_password = PasswordField(
         'old password',
@@ -71,7 +80,7 @@ class PasswordForm(Form, FormMixin):
 
 
 class PartTableCreationForm(NoCsrfForm, FormMixin):
-    table = StringField(
+    table_name = StringField(
         'part table name',
         description='camel-case name of part table',
         validators=[
@@ -88,6 +97,32 @@ class PartTableCreationForm(NoCsrfForm, FormMixin):
     )
 
 
+def dynamic_autoscriptform():
+
+    class AutoscriptForm(Form, FormMixin):
+        autoscript = SelectField(
+            'autoscript',
+            description='autoscript',
+            choices=[
+                (ele, os.path.split(ele)[-1])
+                for ele in
+                glob.glob(os.path.join(config['autoscript_folder'], '*'))
+            ],
+            validators=[InputRequired()]
+        )
+        experiment = SelectField(
+            'experiment',
+            description='experiment',
+            choices=[
+                (ele, ele)
+                for ele in
+                config['autoscript_tables']
+            ]
+        )
+
+    return AutoscriptForm
+
+
 def dynamic_tablecreationform(user_name):
 
     class TableCreationForm(Form, FormMixin):
@@ -97,13 +132,28 @@ def dynamic_tablecreationform(user_name):
             choices=[(key, key) for key in config.schemas_of_user(user_name)],
             default=user_name
         )
-        table = StringField(
+        table_name = StringField(
             'table name',
             description='camel-case name of table',
             validators=[
                 InputRequired(),
                 CamelCaseValidator()
             ]
+        )
+        table_type = SelectField(
+            'table type',
+            description='type of table',
+            validators=[
+                InputRequired()
+            ],
+            choices=[
+                (ele, ele)
+                for ele in [
+                    'Manual', 'Imported', 'Computed',
+                    'AutoImported', 'AutoComputed'
+                ]
+            ],
+            default='Manual'
         )
         definition = TextAreaField(
             'definition',  # TODO add link
@@ -112,10 +162,60 @@ def dynamic_tablecreationform(user_name):
                 InputRequired(),
             ]
         )
-        part_table = FieldList(
+        part_tables = FieldList(
             FormField(PartTableCreationForm),
             min_entries=1
         )
+
+        @staticmethod
+        def dynamic_table_class(table_name, table_type, definition_string):
+            """dynamically create datajoint table
+            """
+
+            class TableClass(getattr(dj, table_type)):
+                definition = definition_string
+                name = table_name
+
+            return TableClass
+
+        def declare_table(self):
+            """Create table
+            """
+            formatted_dict = self.get_formatted()
+
+            schema = config['schemata'][formatted_dict['schema']].schema
+
+            table_class = self.dynamic_table_class(
+                formatted_dict['table_name'],
+                formatted_dict['table_type'],
+                formatted_dict['definition'])
+
+            if formatted_dict['part_tables'] is not None:
+                for part_table in formatted_dict['part_tables']:
+                    part_table_class = self.dynamic_table_class(
+                        part_table['table_name'],
+                        'Part',
+                        part_table['definition']
+                    )
+
+                    setattr(
+                        table_class,
+                        part_table['table_name'],
+                        part_table_class
+                    )
+
+            # get complete context and declare table
+            context = {
+                **config['schemata'],
+                **(config['schemata'][formatted_dict['schema']].__dict__
+                   if schema.context is None else schema.context)
+            }
+
+            setattr(
+                config['schemata'][formatted_dict['schema']],
+                formatted_dict['table_name'],
+                schema(table_class, context=context)
+            )
 
     return TableCreationForm
 
@@ -150,7 +250,7 @@ class ModuleForm(NoCsrfForm, FormMixin):
     python_file = DynamicFileField(
         'python file',
         description='python file to upload with function',
-        validators=[Optional(), Extension({'.py'})]
+        validators=[Optional(), Extension(['py'])]
     )
     python_module = StringField(
         'python module',

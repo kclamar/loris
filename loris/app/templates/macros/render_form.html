@@ -94,7 +94,7 @@
 
 {% macro _render_form(form, toggle_class="fieldsetting", skip=[], readonly=[]) %}
 {% for field in form %}
-{% if (field.name != "csrf_token") and (not field.type in ['HiddenField', 'SetHiddenField']) and (field.id not in skip)%}
+{% if (not "csrf_token" in field.name) and (not field.type in ['HiddenField', 'SetHiddenField']) and (field.id not in skip)%}
         {% if field.type in ['FieldList'] %}
         <tr>
             <td>
@@ -173,7 +173,7 @@
             </td>
             </tr>
         {% elif field.type in ['FormField'] %}
-            {{ _render_form(field, None, readonly=readonly)}}
+            {{ _render_form(field, readonly=readonly)}}
         {% else %}
         <tr>
             {{ render_field(field, True, readonly=readonly) }}
@@ -203,6 +203,144 @@
         <p> </p>
     </form>
 {% endmacro %}
+
+
+{% macro simple_render_form(form, readonly=[]) %}
+        <table  style="width:100%">
+        {{ _render_form(form, readonly=readonly) }}
+        </table>
+{% endmacro %}
+
+
+{% macro auto_render_form(form, ultra_form, data, toggle_off_keys, buttons, include_insert, enter_show, readonly=[]) %}
+<div id="accordion">
+  <div class="card">
+    <div class="card-header" id="headingOne">
+      <h5 class="mb-0">
+        <button class="btn btn-outline-primary collapsed" data-toggle="collapse" data-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
+          Load Your Experiment
+        </button>
+      </h5>
+    </div>
+
+    <div id="collapseOne" class="collapse" aria-labelledby="headingOne" data-parent="#accordion">
+      <div class="card-body">
+          <form novalidate method=post enctype="multipart/form-data">
+              <table  style="width:100%">
+              {{ form.hidden_tag() }}
+              {{ _render_form(form, readonly=readonly) }}
+              </table>
+              <p> </p>
+              <div>
+              <tr>
+                  <td align="center"><input class="btn btn-outline-primary" type=submit value=Load name="submit"></td>
+              </tr>
+              </div>
+              <p> </p>
+          </form>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-header" id="headingOne1">
+      <h5 class="mb-0">
+        <button class="btn btn-outline-danger collapsed" data-toggle="collapse" data-target="#collapseOne1" aria-expanded="false" aria-controls="collapseOne1">
+          Abort Running Subprocess
+        </button>
+      </h5>
+    </div>
+
+    <div id="collapseOne1" class="collapse" aria-labelledby="headingOne1" data-parent="#accordion">
+      <div class="card-body">
+          <form novalidate method=post enctype="multipart/form-data">
+              <div>
+              <tr>
+                  <td align="center"><input class="btn btn-outline-danger" type=submit value=Abort name="submit"></td>
+              </tr>
+              </div>
+          </form>
+      </div>
+    </div>
+  </div>
+  {% if ultra_form != "None" %}
+  <div class="card">
+    <div class="card-header" id="headingTwoTwo">
+      <h5 class="mb-0">
+        <button class="btn btn-outline-primary collapsed {{ enter_show[0] }}" data-toggle="collapse" data-target="#collapseTwoTwo" aria-expanded="{{ enter_show[1] }}" aria-controls="collapseTwoTwo">
+          Setup Your Experiment
+        </button>
+      </h5>
+    </div>
+    <div id="collapseTwoTwo" class="collapse {{ enter_show[0] }}" aria-labelledby="headingTwoTwo" data-parent="#accordion">
+      <div class="card-body">
+          <p>
+            <button class="btn btn-outline-secondary" type="button" data-toggle="collapse" data-target="#ExperimentForm" aria-expanded="false" aria-controls="ExperimentForm">{{ ultra_form.table_name }}</button>
+            {% for iname in ultra_form.autoscript_forms %}
+            <button class="btn btn-outline-secondary" type="button" data-toggle="collapse" data-target="#{{iname}}" aria-expanded="false" aria-controls="{{iname}}">{{ iname }}</button>
+            {% endfor %}
+          </p>
+          <form novalidate method=post enctype="multipart/form-data">
+              {{ ultra_form.hidden_tag() }}
+          <div class="row">
+              <div class="col">
+                  <div class="collapse multi-collapse" id="ExperimentForm">
+                      <div class="card card-body">
+                        {{ simple_render_form(ultra_form.experiment_form.form, readonly=readonly) }}
+                      </div>
+                    </div>
+                </div>
+                {% for iname in ultra_form.autoscript_forms %}
+                <div class="col">
+                    <div class="collapse multi-collapse" id="{{iname}}">
+                        <div class="card card-body">
+                            {{ simple_render_form(ultra_form[iname].form, readonly=readonly) }}
+                        </div>
+                      </div>
+                  </div>
+                  {% endfor %}
+            </div>
+            {{ simple_render_form(ultra_form.settingsname_form.form) }}
+            <p> </p>
+            <div>
+            <tr>
+                <td align="center"><input class="btn btn-outline-success" type=submit value=Save name="submit"></td>
+                {% for button in buttons %}
+                <td align="center"><input class="btn btn-outline-secondary" type=submit value="{{button}}" name="submit"></td>
+                {% endfor %}
+                {% if include_insert %}
+                <td align="center"><input class="btn btn-outline-info" type=submit value=Insert name="submit"></td>
+                <td align="center"><input class="btn btn-outline-warning" type=submit value=Overwrite name="submit"></td>
+                {% endif %}
+            </tr>
+            </div>
+            <p> </p>
+            </form>
+
+      </div>
+    </div>
+  </div>
+  {% endif %}
+  {% if ultra_form != "None" %}
+  <div class="card">
+    <div class="card-header" id="headingThree">
+      <h5 class="mb-0">
+        <button class="btn btn-outline-primary collapsed" data-toggle="collapse" data-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+         Saved Configurations
+        </button>
+      </h5>
+    </div>
+    <div id="collapseThree" class="collapse" aria-labelledby="headingThree" data-parent="#accordion">
+      <div class="card-body">
+          {% with data=data, toggle_off_keys=toggle_off_keys%}
+              {% include 'macros/tables.html' %}
+          {% endwith %}
+      </div>
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endmacro %}
+
 
 {% macro register_render_form(form, readonly=[]) %}
     <form novalidate method=post enctype="multipart/form-data">

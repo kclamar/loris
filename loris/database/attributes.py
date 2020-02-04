@@ -4,6 +4,7 @@
 import re
 import os
 import shutil
+import json
 
 import numpy as np
 import datajoint as dj
@@ -33,15 +34,15 @@ class ListString(dj.AttributeAdapter):
             return
         if isinstance(obj, str):
             try:
-                obj = eval(obj)
+                obj = json.loads(obj)
             except Exception:
                 pass
         assert isinstance(obj, (list, tuple)), \
             f'object must be list or tuple for liststring type: {type(obj)}'
-        return str(obj)
+        return json.dumps(obj)
 
     def get(self, value):
-        return eval(value)
+        return json.loads(value)
 
 
 class ListDict(dj.AttributeAdapter):
@@ -53,15 +54,15 @@ class ListDict(dj.AttributeAdapter):
             return
         if isinstance(obj, str):
             try:
-                obj = eval(obj)
+                obj = json.loads(obj)
             except Exception:
                 pass
         assert isinstance(obj, (dict)), \
             f'object must be dict for listdict type: {type(obj)}'
-        return str(obj)
+        return json.dumps(obj)
 
     def get(self, value):
-        return eval(value)
+        return json.loads(value)
 
 
 class Chromosome(dj.AttributeAdapter):
@@ -212,7 +213,7 @@ class AttachPlaceholder(dj.AttributeAdapter, ProcessMixin):
         return Placeholder(obj).write()
 
     def get(self, value):
-        """unpack zip file
+        """get file
         """
         return self.get_process(Placeholder.read(value))
 

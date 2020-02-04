@@ -13,5 +13,10 @@ class RecordingType(ManualLookup, dj.Manual):
 
 
 @schema
+class ProtocolType(ManualLookup, dj.Manual):
+    primary_comment = 'type of protocol - e.g. Dreye, MARGO, Motyxia'
+
+
+@schema
 class RecordingSolution(ManualLookup, dj.Manual):
     primary_comment = 'type of solution - e.g. saline, saline + OA'

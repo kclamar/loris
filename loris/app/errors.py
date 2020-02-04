@@ -5,6 +5,7 @@ import traceback
 from flask import flash, render_template
 from loris.app.app import app
 
+
 @app.errorhandler(Exception)
 def error(e):
     error_traceback = traceback.format_exc().splitlines()

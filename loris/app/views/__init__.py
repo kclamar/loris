@@ -9,3 +9,4 @@ from .database import *
 from .erd import *
 from .entries import *
 from .wiki import *
+from .autoscripts import *
