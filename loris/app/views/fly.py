@@ -70,7 +70,24 @@ def cross():
     )
 
 
+@app.route('/entersubject', methods=['GET', 'POST'])
+@login_required
+def entersubject():
+    schema = 'subjects'
+    table = 'FlySubject'
+    subtable = None
+    edit_url = url_for('entersubject')
+    overwrite_url = url_for('entersubject')
+
+    return form_template(
+        schema, table, subtable, edit_url, overwrite_url, page='entersubject',
+        join_tables=[getattr(config['schemata'][schema], 'FlyGenotype')],
+        joined_name='subjectgenotype'
+    )
+
+
 # TODO
 # joined tables (stock + genotype)
 # joined tables (cross + genotype)
 # joined tables (stock + cross + genotype) ?
+# joined tables (subject + genotype)

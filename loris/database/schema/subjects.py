@@ -4,16 +4,12 @@
 import datajoint as dj
 
 from loris.database.schema.experimenters import Experimenter
+from loris.database.schema.anatomy import CellType
 from loris.database.schema.base import ManualLookup, COMMENTS, PRIMARY_NAME
 from loris.database.attributes import chr, link, flyidentifier, crossschema
 
 
 schema = dj.schema('subjects')
-
-
-@schema
-class CellType(ManualLookup, dj.Manual):
-    primary_comment = 'standard cell type name - e.g. dm8'
 
 
 @schema

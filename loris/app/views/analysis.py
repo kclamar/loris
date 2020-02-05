@@ -37,8 +37,8 @@ def setup(schema, table):
     url = url_for(
         'setup', schema=schema, table=table
     )
-    overwrite_url = url_for(
-        'setup', schema=schema, table=table)
+    # overwrite_url = url_for(
+    #     'setup', schema=schema, table=table)
     delete_url = url_for(
         'delete', schema=schema, table=table
     )
@@ -54,9 +54,45 @@ def setup(schema, table):
 
     # json table
     data = get_jsontable(
-        df, table_class.primary_key, overwrite_url=overwrite_url,
+        df, table_class.primary_key,
+        # overwrite_url=overwrite_url,
         delete_url=delete_url
     )
+
+    # TODO populate form
+
+    if request.method == 'POST':
+        submit = request.form.get('submit', None)
+
+        form.rm_hidden_entries()
+
+        if submit in ['Save', 'Overwrite']:
+
+            if form.validate_on_submit():
+                kwargs = {}
+                if submit == 'Overwrite':
+                    kwargs['replace'] = True
+
+                try:
+                    formatted_dict = form.get_formatted()
+                    table_class.insert1(
+                        formatted_dict, **kwargs
+                    )
+                except dj.DataJointError as e:
+                    flash(f"{e}", 'error')
+                else:
+                    flash(f"Data {submit} succeeded.", 'success')
+                    return redirect(
+                        url_for(
+                            'setup',
+                            table=table,
+                            schema=schema,
+                            # overwrite='True',
+                            # _id=str(_id)
+                        )
+                    )
+
+        form.append_hidden_entries()
 
     return render_template(
         'pages/setup.html',

@@ -156,8 +156,13 @@ def dynamic_tablecreationform(user_name):
             default='Manual'
         )
         definition = TextAreaField(
-            'definition',  # TODO add link
-            description='datajoint definition of table',
+            (
+                'definition - '
+                '<a href="https://tutorials.datajoint.io/'
+                'beginner/building-first-pipeline/python/'
+                'first-table.html" target="_blank">help</a>'
+            ),
+            description=('datajoint definition of table'),
             validators=[
                 InputRequired(),
             ]
@@ -410,12 +415,14 @@ def dynamic_settingstableform():
         def get_formatted(self):
 
             formatted = super().get_formatted()
+            print(formatted)
 
-            formatted['fetch_tables'] = {
-                key: value
-                for table_dict in formatted['fetch_tables']
-                for key, value in table_dict.items()
-            }
+            if formatted['fetch_tables'] is not None:
+                formatted['fetch_tables'] = {
+                    key: value
+                    for table_dict in formatted['fetch_tables']
+                    for key, value in table_dict.items()
+                }
 
             return formatted
 

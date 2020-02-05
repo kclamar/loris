@@ -55,6 +55,10 @@ def grantuser(
     #create user
     if adduser:
         conn.query(
+            "DROP USER IF EXISTS %s@%s;",
+            (username, connection)
+        )
+        conn.query(
             "CREATE USER %s@%s IDENTIFIED BY %s;",
             (username, connection, password)
         )

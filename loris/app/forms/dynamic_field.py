@@ -130,7 +130,7 @@ class DynamicField:
     def foreign_is_manuallookup(self):
         if not self.is_foreign_key:
             return False
-        return is_manuallookup(self.foreign_table)
+        return True # TODO test is_manuallookup(self.foreign_table)
 
     def create_field(self):
         """create field for dynamic form
@@ -160,11 +160,17 @@ class DynamicField:
         if kwargs is None:
             kwargs = self.get_init_kwargs()
 
-        if self.is_foreign_key and not self.ignore_foreign_fields:
-            if self.foreign_is_manuallookup:
-                return self.create_manuallookup_field(kwargs)
-            elif len(self.foreign_data) <= config['fk_dropdown_limit']:
-                return self.create_dropdown_field(kwargs)
+        if (
+            self.is_foreign_key
+            and not self.ignore_foreign_fields
+            and self.foreign_is_manuallookup
+        ):
+            return self.create_manuallookup_field(kwargs)
+        elif (
+            self.is_foreign_key
+            and len(self.foreign_data) <= config['fk_dropdown_limit']
+        ):
+            return self.create_dropdown_field(kwargs)
 
         if type == 'INTEGER':
             return self.integer_field(kwargs)
@@ -209,7 +215,7 @@ class DynamicField:
         }
 
         # ignore_foreign_fields assumes that a parent form is being created
-        if nullable or self.ignore_foreign_fields:
+        if nullable or (self.ignore_foreign_fields and self.attr.in_key):
             kwargs['default'] = None
         else:
             kwargs['default'] = self.attr.default
@@ -226,7 +232,9 @@ class DynamicField:
 
     def integer_field(self, kwargs):
         # auto increment integer primary keys
-        if len(self.table()) == 0:
+        if self.ignore_foreign_fields and self.attr.in_key:
+            pass
+        elif len(self.table()) == 0:
             kwargs['default'] = 1
         elif self.attr.in_key and len(self.table.heading.primary_key) == 1:
             kwargs['default'] = np.max(
@@ -263,10 +271,12 @@ class DynamicField:
         """
 
         if sql_type == 'datetime':
-            kwargs['default'] = datetime.datetime.today()
+            if not (self.ignore_foreign_fields and self.attr.in_key):
+                kwargs['default'] = datetime.datetime.today()
             return DateTimeField(format='%Y-%m-%d %H:%M', **kwargs)
         elif sql_type == 'date':
-            kwargs['default'] = datetime.date.today()
+            if not (self.ignore_foreign_fields and self.attr.in_key):
+                kwargs['default'] = datetime.date.today()
             return DateField(format='%Y-%m-%d', **kwargs)
 
     def enum_field(self, kwargs, sql_type):
@@ -388,25 +398,44 @@ class DynamicField:
         if self.foreign_is_manuallookup:
             if value['existing_entries'] == '<new>':
                 value.pop('existing_entries')
-                self.foreign_table.insert1(value)
+                self.foreign_table.insert1(
+                    self.foreign_table_format_value(value)
+                )
                 value = value[self.name]
             else:
                 value = value['existing_entries']
 
         if self.attr.is_blob:
-            if value in NONES:
-                value = None
-            elif value.endswith('npy'):
-                value = np.load(value)
-            elif value.endswith('csv'):
-                value = pd.read_csv(value).to_records(False)
-            elif value.endswith('pkl'):
-                with open(value, 'rb') as f:
-                    value = pickle.load(f)
-            elif value.endswith('json'):
-                with open(value, 'r') as f:
-                    value = json.load(f)
+            value = self._process_blob_value(value)
 
+        return value
+
+    @staticmethod
+    def _process_blob_value(value):
+        """process blobs by loading files
+        """
+
+        if value in NONES:
+            value = None
+        elif value.endswith('npy'):
+            value = np.load(value)
+        elif value.endswith('csv'):
+            value = pd.read_csv(value).to_records(False)
+        elif value.endswith('pkl'):
+            with open(value, 'rb') as f:
+                value = pickle.load(f)
+        elif value.endswith('json'):
+            with open(value, 'r') as f:
+                value = json.load(f)
+
+        return value
+
+    def foreign_table_format_value(self, value):
+        """process foreign table values before insertion
+        """
+        for name, attr in self.foreign_table.heading.attributes.items():
+            if attr.is_blob and name in value:
+                value[name] = self._process_blob_value(value[name])
         return value
 
     def prepare_populate(self, value):

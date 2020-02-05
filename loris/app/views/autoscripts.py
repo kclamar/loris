@@ -88,6 +88,9 @@ def experiment(table_name, autoscript_folder):
     _subprocess_checker()
 
     if request.method == 'POST':
+
+        reader.rm_hidden_entries()
+
         submit = request.form.get('submit', None)
         print(submit)
         if submit == 'Load' and form.validate_on_submit():
@@ -139,6 +142,8 @@ def experiment(table_name, autoscript_folder):
                     replace=(True if submit == 'Overwrite' else False)
                 )
 
+        # append hidden entries
+        reader.append_hidden_entries()
     else:
         reader.populate_form(_id)
 

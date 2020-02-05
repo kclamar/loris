@@ -15,3 +15,8 @@ class NeuronSection(ManualLookup, dj.Manual):
 @schema
 class BrainArea(ManualLookup, dj.Manual):
     primary_comment = 'brain area - e.g. medulla'
+
+
+@schema
+class CellType(ManualLookup, dj.Manual):
+    primary_comment = 'standard cell type name - e.g. dm8'

@@ -37,8 +37,6 @@ class ConfigReader:
     """
     """
 
-    # TODO append and remove entries
-
     def __init__(
         self, autoscript_filepath, table_name,
         settingsname_form, **kwargs):
@@ -106,6 +104,18 @@ class ConfigReader:
             )
 
         self.ultra_form = UltraForm()
+
+    def append_hidden_entries(self):
+
+        if self.initialized:
+
+            self.ultra_form.append_hidden_entries()
+
+    def rm_hidden_entries(self):
+
+        if self.initialized:
+
+            self.ultra_form.rm_hidden_entries()
 
     def validate_on_submit(
         self, include=None, check_experiment_form=False,

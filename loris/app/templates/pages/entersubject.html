@@ -1,0 +1,17 @@
+{% extends 'layouts/main.html' %}
+{% block title %}Loris.{{ table_name }}{% endblock %}
+{% block content %}
+
+<div class="page-header">
+    {% from 'macros/render_form.html' import render_form %}
+    <h2> <a href={{url}}>{{table_name}}</a> <h2>
+    <h4>Enter Subject Information</h4>
+    {{ render_form(form, readonly=readonly) }}
+    <hr>
+    <h4>Table</h4>
+    {% with data=data, toggle_off_keys=toggle_off_keys%}
+        {% include 'macros/tables.html' %}
+    {% endwith %}
+</div>
+
+{% endblock %}

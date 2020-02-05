@@ -280,15 +280,18 @@ class Config(dict):
             self.user_table.proj(self['user_name']).fetch()[self['user_name']]
         )
 
+        if not users:
+            self.create_administrator()
+
+        return users
+
+    def create_administrator(self):
         # insert administrator if not users exist and create
         # administrator schema
         # administrator must exist in SQL database
         # TODO check if user exists in SQL
-        if not users:
-            self.user_table.insert1(self['administrator_info'])
-            dj.schema(self['administrator_info'][self['user_name']])
-
-        return users
+        self.user_table.insert1(self['administrator_info'])
+        dj.schema(self['administrator_info'][self['user_name']])
 
     @property
     def user_tables(self):

@@ -13,6 +13,9 @@ class User(UserMixin):
     def __init__(self, user_name):
         self.table = config.user_table
 
+        if not len(self.table()):
+            config.create_administrator()
+
         self.user_name = user_name
 
         self.restriction = {config['user_name']: self.user_name}
