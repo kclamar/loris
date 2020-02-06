@@ -22,7 +22,7 @@
             "a": "dict",
             "b": {
                 "c": "int",
-                "_iterate": false,
+                "_iterate": true,
                 "_descriptions": {
                     "c": "haha"
                 }

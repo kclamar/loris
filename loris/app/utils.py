@@ -167,16 +167,94 @@ def draw_helper(obj=None, type='table', only_essentials=False):
 
     # rankdir TB?
     # setup of graphviz
-    graph_attr = {'size': '12, 12', 'rankdir': 'LR', 'splines': 'ortho'}
+    graph_attr = {
+        'size': '12, 12', 'rankdir': 'LR', 'splines': 'ortho',
+        'fontname':'helvetica'
+    }
     node_attr = {
-        'style': 'filled', 'shape': 'note', 'align': 'left',
-        'ranksep': '0.1', 'fontsize': '10', 'fontfamily': 'opensans',
-        'height': '0.2', 'fontname': 'Sans-Serif'
+        'style': 'filled, rounded', 'shape': 'record', 'align': 'center',
+        'ranksep': '0.1', 'fontsize': '10',
+        'penwidth': '1.5', 'height': '0.1', 'fontname':'helvetica'
+    }
+    edge_attr = {
+        'arrowsize': '0.7',
+        'headclip': 'true',
+        'penwidth': '1.5'
+    }
+
+    node_attrs = {
+        dj.Manual: {
+            'fillcolor': 'darkgreen',
+            'color': 'darkgreen',
+            'fontsize': '10',
+            'fontcolor': 'white'},
+        dj.Computed: {
+            'fillcolor': 'darkorchid3',
+            'color': 'darkorchid3',
+            'fontsize': '10',
+            'fontcolor': 'white'},
+        dj.Lookup: {
+            'fillcolor': 'azure4',
+            'color': 'azure4',
+            'fontsize': '10',
+            'fontcolor':'white'},
+        dj.Imported: {
+            'fillcolor': 'navyblue',
+            'color': 'navyblue',
+            'fontsize': '10',
+            'fontcolor': 'white'},
+        dj.Part: {
+            'fillcolor': 'azure4',
+            'color': 'azure4',
+            'fontsize': '6',
+            'fontcolor': 'white'},
+        dj.Settingstable: {
+            'fillcolor': 'goldenrod',
+            'color': 'goldenrod',
+            'fontsize': '6',
+            'fontcolor': 'white'},
+        dj.AutoComputed: {
+            'fillcolor': 'darkorchid4',
+            'color': 'darkorchid4',
+            'fontsize': '10',
+            'fontcolor': 'white'},
+        dj.AutoImported: {
+            'fillcolor': 'navy',
+            'color': 'navy',
+            'fontsize': '10',
+            'fontcolor': 'white'},
+    }
+
+    edge_attrs = {
+        dj.Manual: {
+            'color': 'darkgreen',
+        },
+        dj.Computed: {
+            'color': 'darkorchid3',
+        },
+        dj.Lookup: {
+            'color': 'azure4',
+        },
+        dj.Imported: {
+            'color': 'navyblue',
+        },
+        dj.Part: {
+            'color': 'azure4',
+        },
+        dj.Settingstable: {
+            'color': 'goldenrod',
+        },
+        dj.AutoComputed: {
+            'color': 'darkorchid4',
+        },
+        dj.AutoImported: {
+            'color': 'navy',
+        },
     }
 
     dot = graphviz.Digraph(
         graph_attr=graph_attr, node_attr=node_attr,
-        engine='dot', format='svg')
+        edge_attr=edge_attr, engine='dot', format='svg')
 
     def add_node(name, node_attr={}):
         """
@@ -187,8 +265,12 @@ def draw_helper(obj=None, type='table', only_essentials=False):
             zip(['schema', 'table', 'subtable'], name.split('.'))
         )
         graph_attr = {
-            'color': 'grey80', 'style': 'filled',
-            'label': table_names['schema']
+            'color': 'black',
+            'label': '<<B>{}</B>>'.format(table_names['schema']),
+            'URL': url_for('erd', schema=table_names['schema']),
+            'target': '_top',
+            'style': 'rounded',
+            'penwidth': '3'
         }
 
         with dot.subgraph(
@@ -197,7 +279,8 @@ def draw_helper(obj=None, type='table', only_essentials=False):
             graph_attr=graph_attr
         ) as subgraph:
             subgraph.node(
-                name, label=name.split('.')[-1],
+                name,
+                label='{}'.format(name.split('.')[-1]),
                 URL=url_for('table', **table_names),
                 target='_top', **node_attr
             )
@@ -220,22 +303,22 @@ def draw_helper(obj=None, type='table', only_essentials=False):
                     config['schemata'][schema],
                     table
                 )
-                truth = not is_manuallookup(table)
+                truth = not (
+                    is_manuallookup(table)
+                    or (
+                        table.full_table_name
+                        == config.user_table.full_table_name)
+                    or (
+                        table.full_table_name
+                        == config.group_table.full_table_name)
+                    or (
+                        table.full_table_name
+                        == config.assigned_table.full_table_name)
+                )
             except (KeyError, ValueError):
                 print('did not check essential table')
 
         return truth
-
-    node_attrs = {
-        dj.Manual: {'fillcolor': 'green3'},
-        dj.Computed: {'fillcolor': 'coral1'},
-        dj.Lookup: {'fillcolor': 'azure3'},
-        dj.Imported: {'fillcolor': 'cornflowerblue'},
-        dj.Part: {'fillcolor': 'azure3', 'fontsize': '6'},
-        dj.Settingstable: {'fillcolor': 'orange', 'fontsize': '6'},
-        dj.AutoComputed: {'fillcolor': 'coral1'},
-        dj.AutoImported: {'fillcolor': 'cornflowerblue'},
-    }
 
     if type == 'table':
         root_table = obj
@@ -256,7 +339,10 @@ def draw_helper(obj=None, type='table', only_essentials=False):
                 name_lookup(node_name),
                 node_attrs[dj.diagram._get_tier(node_name)]
             )
-            dot.edge(node_id, root_id)
+            dot.edge(
+                node_id, root_id,
+                **edge_attrs[dj.diagram._get_tier(node_name)]
+            )
 
         # out edges
         for _, node_name in root_dependencies.out_edges(root_name):
@@ -268,7 +354,10 @@ def draw_helper(obj=None, type='table', only_essentials=False):
                 name_lookup(node_name),
                 node_attrs[dj.diagram._get_tier(node_name)]
             )
-            dot.edge(root_id, node_id)
+            dot.edge(
+                root_id, node_id,
+                **edge_attrs[dj.diagram._get_tier(root_name)]
+            )
     else:
         dependencies = config['connection'].dependencies
         dependencies.load()
@@ -302,7 +391,10 @@ def draw_helper(obj=None, type='table', only_essentials=False):
                     name_lookup(node_name),
                     node_attrs[dj.diagram._get_tier(node_name)]
                 )
-                dot.edge(root_id, node_id)
+                dot.edge(
+                    root_id, node_id,
+                    **edge_attrs[dj.diagram._get_tier(root_name)]
+                )
 
     if os.path.exists(filepath):
         os.remove(filepath)

@@ -427,3 +427,46 @@ def dynamic_settingstableform():
             return formatted
 
     return SettingstableForm
+
+
+def dynamic_runform(table_class):
+
+    class RunForm(Form, FormMixin):
+        settings_name = SelectField(
+            'settings method',
+            description='settings name of function to apply',
+            validators=[InputRequired()],
+            choices=[
+                (ele, ele)
+                for ele
+                in table_class.settings_table.proj().fetch()['settings_name']
+            ]
+        )
+        restriction = RestrictionField(
+            RESTRICTION_LABEL,
+            description=RESTRICTION_DESCRIPTION,
+            validators=[InputRequired(), OptionalJsonSerializableValidator()],
+        )
+        limit = IntegerField(
+            'autopopulate limit',
+            description='limit of entries to autopopulate',
+            default=1,
+            validators=[Optional(), NumberRange(min=1)]
+        )
+        suppress_errors = BooleanField(
+            'suppress errors',
+            description='do not terminate execution',
+            default=False,
+            validators=[Optional()]
+        )
+        multiprocess = IntegerField(
+            'multiprocess',
+            description='use multiple cpus - 0 means False',
+            default=0,
+            validators=[
+                InputRequired(),
+                NumberRange(min=0, max=config['max_cpu'])
+            ]
+        )
+
+    return RunForm

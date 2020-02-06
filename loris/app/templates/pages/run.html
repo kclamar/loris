@@ -1,0 +1,11 @@
+{% extends 'layouts/main.html' %}
+{% block title %}Loris.Run{% endblock %}
+{% block content %}
+
+<div class="page-header">
+    {% from 'macros/render_form.html' import run_render_form %}
+    <h2> <a href="{{ url_for('run', schema=schema, table=table) }}">Autopopulate {{table_name}}</a></h2>
+    {{ run_render_form(form, readonly=readonly) }}
+</div>
+
+{% endblock %}

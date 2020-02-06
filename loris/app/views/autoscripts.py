@@ -17,7 +17,6 @@ from loris.app.forms.dynamic_form import DynamicForm
 from loris.app.forms.fixed import (
     dynamic_jointablesform, dynamic_settingstableform, LoginForm,
     PasswordForm, dynamic_tablecreationform, dynamic_autoscriptform,
-    SettingsNameForm
 )
 from loris.app.utils import (
     draw_helper, get_jsontable, save_join, user_has_permission)
@@ -71,11 +70,7 @@ def experiment(table_name, autoscript_folder):
     else:
         autoscript_filepath = None
 
-    settingsname_form = SettingsNameForm()
-    reader = ConfigReader(
-        autoscript_filepath, table_name,
-        settingsname_form
-    )
+    reader = ConfigReader(autoscript_filepath, table_name,)
     if reader.initialized:
         enter_show = ['show', 'true']
     else:
@@ -155,7 +150,6 @@ def experiment(table_name, autoscript_folder):
         ultra_form=reader.ultra_form,
         buttons=reader.buttons,
         include_insert=reader.include_insert,
-        settingsname_form=settingsname_form,
         enter_show=enter_show
     )
 
@@ -181,11 +175,7 @@ def deleteconfig(table_name, autoscript_folder):
     if _id is None:
         return redirect(redirect_url)
 
-    settingsname_form = SettingsNameForm()
-    reader = ConfigReader(
-        autoscript_filepath, table_name,
-        settingsname_form
-    )
+    reader = ConfigReader(autoscript_filepath, table_name,)
 
     name = reader.existing_settings[
         reader.existing_settings['_id'] == _id

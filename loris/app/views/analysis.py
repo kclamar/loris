@@ -15,7 +15,7 @@ from loris.app.templates import form_template
 from loris.app.forms.dynamic_form import DynamicForm
 from loris.app.forms.fixed import (
     dynamic_jointablesform, dynamic_settingstableform, LoginForm,
-    PasswordForm, dynamic_tablecreationform
+    PasswordForm, dynamic_tablecreationform, dynamic_runform
 )
 from loris.app.utils import (
     draw_helper, get_jsontable, save_join, user_has_permission)
@@ -109,7 +109,19 @@ def setup(schema, table):
 @app.route('/run/<schema>/<table>', methods=['GET', 'POST'])
 @login_required
 def run(schema, table):
-    return render_template('pages/home.html', user=current_user.user_name)
+
+    table_class = getattr(config['schemata'][schema], table)
+    form = dynamic_runform(table_class)()
+    table_name = '.'.join([schema, table])
+    # TODO show relations
+
+    return render_template(
+        'pages/run.html',
+        form=form,
+        schema=schema,
+        table=table,
+        table_name=table_name
+    )
 
 
 @app.route('/plot/<schema>/<table>', methods=['GET', 'POST'])

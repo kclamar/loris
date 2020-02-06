@@ -130,7 +130,16 @@ class DynamicField:
     def foreign_is_manuallookup(self):
         if not self.is_foreign_key:
             return False
-        return True # TODO test is_manuallookup(self.foreign_table)
+        return (
+            (
+                self.foreign_table.full_table_name
+                != config.user_table.full_table_name
+            ) & (
+                self.foreign_table.full_table_name
+                != config.assigned_table.full_table_name
+            )
+        )
+        # return True # TODO test is_manuallookup(self.foreign_table)
 
     def create_field(self):
         """create field for dynamic form
@@ -270,14 +279,22 @@ class DynamicField:
         """date and datetime field
         """
 
-        if sql_type == 'datetime':
+        if sql_type in ('datetime', 'timestamp'):
             if not (self.ignore_foreign_fields and self.attr.in_key):
                 kwargs['default'] = datetime.datetime.today()
             return DateTimeField(format='%Y-%m-%d %H:%M', **kwargs)
+        elif sql_type == 'time':
+            if not (self.ignore_foreign_fields and self.attr.in_key):
+                kwargs['default'] = datetime.datetime.today()
+            return DateTimeField(format='%H:%M', **kwargs)
         elif sql_type == 'date':
             if not (self.ignore_foreign_fields and self.attr.in_key):
                 kwargs['default'] = datetime.date.today()
             return DateField(format='%Y-%m-%d', **kwargs)
+        elif sql_type == 'year':
+            if not (self.ignore_foreign_fields and self.attr.in_key):
+                kwargs['default'] = datetime.date.today()
+            return DateField(format='%Y', **kwargs)
 
     def enum_field(self, kwargs, sql_type):
         """create field for enum

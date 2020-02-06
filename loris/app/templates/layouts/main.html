@@ -73,14 +73,14 @@
         <ul class="dropdown-menu border-0 shadow", aria-labelledby="navbarDropdown2">
         {% for schema in session['schemata'] %}
         <li class="dropdown-submenu">
-        <div class="btn-group">
+        <div class="btn-group dropright">
             <a href="{{ url_for('erd', schema=schema) }}" class="dropdown-item">
                 {{ schema }}
             </a>
             {% if 'tables' in session %}
             {% if session['tables'][schema] %}
             <a id="subdrop1" href="#" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" class="dropdown-item dropdown-toggle dropdown-toggle-split">
-                 <span class="sr-only">Toggle Dropdown</span>
+                 <span class="sr-only"></span>
             </a>
                 <ul aria-labelledby="subdrop1" class="dropdown-menu border-0 shadow">
                     {% for table in session['tables'][schema] %}

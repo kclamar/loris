@@ -19,6 +19,7 @@ from loris.app.utils import get_jsontable
 from loris.app.forms.dynamic_form import DynamicForm
 from loris.app.forms.formmixin import FormMixin
 from loris.app.autoscripting.form_creater import dynamic_autoscripted_form
+from loris.app.forms.fixed import SettingsNameForm
 
 
 CURRENT_CONFIG = "_current_config.pkl"
@@ -37,9 +38,7 @@ class ConfigReader:
     """
     """
 
-    def __init__(
-        self, autoscript_filepath, table_name,
-        settingsname_form, **kwargs):
+    def __init__(self, autoscript_filepath, table_name, **kwargs):
 
         if table_name is None or autoscript_filepath is None:
             self.experiment_form = "None"
@@ -56,7 +55,6 @@ class ConfigReader:
         self.autoscript_folder = os.path.split(autoscript_filepath)[-1]
         self.autoscript_filepath = autoscript_filepath
         self.table_name = table_name
-        self.settingsname_form = settingsname_form
         self.saved_settings_file = os.path.join(
             autoscript_filepath, SAVED_SETTINGS)
         self.current_config_file = os.path.join(
@@ -94,13 +92,13 @@ class ConfigReader:
             table_name = self.table_class.name
             experiment_form = FormField(self.experiment_form.__class__)
             autoscript_forms = list(self.autoscript_forms.keys())
-            settingsname_form = FormField(self.settingsname_form.__class__)
+            settingsname_form = FormField(SettingsNameForm)
 
         for key, form in self.autoscript_forms.items():
             setattr(
                 UltraForm,
                 key,
-                FormField(form.__class__)
+                FormField(form)
             )
 
         self.ultra_form = UltraForm()

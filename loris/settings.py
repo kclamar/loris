@@ -5,6 +5,7 @@ import json
 import os
 import shutil
 import inspect
+import multiprocessing as mp
 from collections import defaultdict
 import datajoint as dj
 from datajoint.settings import default
@@ -38,6 +39,7 @@ defaults = dict(
     group_name="experimental_project",
     assignedgroup_schema="experimenters",
     assignedgroup_table="AssignedExperimentalProject",
+    max_cpu=None
 )
 AUTOSCRIPT_CONFIG = 'config.json'
 
@@ -178,6 +180,9 @@ class Config(dict):
 
         if not os.path.exists(self['autoscript_folder']):
             os.makedirs(self['autoscript_folder'])
+
+        if self['max_cpu'] is None:
+            self['max_cpu'] = mp.cpu_count()
 
     def refresh_schema(self):
         """refresh container of schemas
@@ -538,7 +543,7 @@ class Config(dict):
             post_process_dict = {}
             for key, value in config['forms'].items():
                 form, post_process = form_creator(value, **kwargs)
-                forms[key] = form()
+                forms[key] = form
                 post_process_dict[key] = post_process
 
             self['autoscriptforms'][table_name][autoscript_filepath] = (
