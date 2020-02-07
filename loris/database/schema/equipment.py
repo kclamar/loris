@@ -31,12 +31,12 @@ class System(dj.Manual):
     system_id : int auto_increment
     ---
     -> Experimenter
-    -> [nullable] SystemType
-    {DESCRIPTION}
+    -> SystemType
     date_created : date # when was the system created
     active = 1 : <truebool> # is the system active?
     system_data = null : blob@datastore # python objects for the whole system
-    system_file = null : attach@attachstore # a complete folder to attach
+    system_file = null : attach@attachstore # file(s) related to the system
+    {DESCRIPTION}
     {COMMENTS}
     """
 
@@ -45,12 +45,12 @@ class System(dj.Manual):
         -> System
         piece_id = 1 : int # piece identification (integer)
         ---
-        -> [nullable] PieceType
-        -> [nullable] Manufacturer
-        model_name = null : varchar(255) # standard model name by manufacturer
-        {DESCRIPTION}
+        -> PieceType
+        -> Manufacturer
+        model_name : varchar(255) # standard model name by manufacturer
         link = null : <link>
-        piece_data = null : blob@datastore
-        piece_file = null : attach@attachstore
+        piece_data = null : blob@datastore # python objects for the piece
+        piece_file = null : attach@attachstore # file(s) related to piece
+        {DESCRIPTION}
         {COMMENTS}
         """

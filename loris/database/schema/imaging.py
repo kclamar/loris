@@ -3,9 +3,14 @@
 
 import datajoint as dj
 
-from loris.database.schema import subjects, anatomy, equipment, recordings
-from loris.database.attributes import truebool, attachplaceholder
-from loris.database.schema.base import COMMENTS, NEURAL_RECORDING, ManualLookup
+from loris.database.schema import (
+    subjects, anatomy, equipment, recordings, core
+)
+from loris.database.attributes import truebool, attachplaceholder, tags
+from loris.database.schema.base import (
+    COMMENTS, NEURAL_RECORDING, ManualLookup,
+    FilesMixin, DataMixin, ExtensionMixin
+)
 
 
 schema = dj.schema('imaging')
@@ -23,15 +28,21 @@ class TwoPhotonRecording(dj.Manual):
     -> [nullable] anatomy.NeuronSection
     -> [nullable] anatomy.BrainArea
     -> [nullable] OpticalIndicator
-    sequence_no = 1 : int unsigned # number of sequences in recording
-    plane_no = 1 : smallint unsigned # number of z-planes in recording
-    channel_no = 1 : smallint unsigned # number of channels in recording
     voltage_input = 0 : <truebool> # whether voltage input was recorded
     voltage_output = 0 : <truebool> # whether voltage output was recorded
     linescan = 0 : <truebool> # whether linescan was captured or not
     manual_start_time = null : float # manual start time of recording, if offset
     manual_end_time = null : float # manual end time of recording, if offset
     """
+
+    class Files(FilesMixin, dj.Part):
+        master_name = "TwoPhotonRecording"
+
+    class Data(DataMixin, dj.Part):
+        master_name = "TwoPhotonRecording"
+
+    class Extensions(ExtensionMixin, dj.Part):
+        master_name = "TwoPhotonRecording"
 
 
 @schema
@@ -56,8 +67,10 @@ class RawTwoPhotonData(dj.AutoImported):
     laser_wavelength = null : float # in nm
     dwell_time = null : float # in s
     microns_per_pixel = null : blob # x, y, z um/px
-    metadata = null : blob@datastore # metadata associated to movie
     """
+
+    class Data(DataMixin, dj.Part):
+        master_name = "RawTwoPhotonData"
 
 
 @schema
@@ -68,8 +81,10 @@ class MotionCorrectedData(dj.AutoComputed):
     rate : float # in Hz
     timestamps : blob@datastore # in seconds
     movie : blob@datastore
-    metadata = null : blob@datastore # additional data to describe movie
     """
+
+    class Data(DataMixin, dj.Part):
+        master_name = "MotionCorrectedData"
 
 
 @schema
@@ -77,8 +92,10 @@ class ExtractedData(dj.AutoComputed):
     definition = """
     -> MotionCorrectedData
     ---
-    metadata = null : blob@datastore # additional data to describe extracted data
     """
+
+    class Data(DataMixin, dj.Part):
+        master_name = "ExtractedData"
 
     class Roi(dj.Part):
         definition = """

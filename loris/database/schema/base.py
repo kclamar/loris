@@ -9,22 +9,17 @@ NEURAL_RECORDING = f"""
     ---
     -> subjects.FlySubject
     -> recordings.RecordingType
-    recording_time = CURRENT_TIMESTAMP : timestamp # time of recording
-    recording_temperature = null : float # recording temperature in Celsius
     -> recordings.RecordingSolution
-    was_completed = 0 : <truebool> # was the recording completed as intended
-    use_recording = 0 : <truebool> # should the recording be used for further analysis
+    recording_temperature = null : float # recording temperature in Celsius
+    recording_time = CURRENT_TIMESTAMP : timestamp # time of recording
+    completed = 0 : <truebool> # was the recording completed as intended
+    tags = null : <tags> # comma-separated tags
     {COMMENTS}
-    recording_ext = null : varchar(63) # file extension name of recording file used for post-processing
-    recording_file = null : attach@attachstore # file of recording, if available
-    protocol_ext = null : varchar(63) # file extension name of protocol file used for post-processing
-    protocol_file = null : attach@attachstore # file of protocol, if available
-    protocol_data = null : blob@attachstore # data of protocol, if available
     """
 
 
 class FilesMixin:
-    """Part table mixin for given a master table multiple files
+    """Part table mixin for given a master table multiple files.
     """
 
     master_name = None
@@ -33,15 +28,14 @@ class FilesMixin:
     def definition(self):
         return f"""
         -> {self.master_name}
-        file_id : varchar(63)
+        -> core.LookupName
         ---
-        file : attach@attachstore
-        -> [nullable] core.DataType
+        a_file : attach@attachstore
         """
 
 
 class DataMixin:
-    """Part table mixin for given a master table multiple files
+    """Part table mixin for given a master table multiple files.
     """
 
     master_name = None
@@ -50,10 +44,27 @@ class DataMixin:
     def definition(self):
         return f"""
         -> {self.master_name}
-        data_id : varchar(63)
+        -> core.LookupName
         ---
-        data : data@datastore
-        -> [nullable] core.DataType
+        a_datum : blob@datastore
+        """
+
+
+class ExtensionMixin:
+    """Part table mixin for given a master table multiple extensions
+    (not actual files).
+    """
+
+    master_name = None
+
+    @property
+    def definition(self):
+        return f"""
+        -> {self.master_name}
+        -> core.LookupName
+        ---
+        an_extension : varchar(63)
+        -> [nullable] core.LookupRegex
         """
 
 

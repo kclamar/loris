@@ -235,6 +235,10 @@
                       var elem_num = parseInt(elem_id.replace(/.*-(\d{1,4}).*/m, '$1')) + 1;
                       var postfix = '';
                   }
+                  // if still nan say it is 1
+                  if (isNaN(elem_num)) {
+                      var elem_num = 1;
+                  }
                   console.log(elem_num)
                   row.attr('data-id', elem_num);
 

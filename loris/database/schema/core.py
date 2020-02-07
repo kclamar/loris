@@ -10,10 +10,10 @@ schema = dj.schema('core')
 
 
 @schema
-class DataType(ManualLookup, dj.Manual):
-    primary_comment = 'type of data - e.g. numpy.array, pandas.DataFrame, csv'
+class LookupName(ManualLookup, dj.Manual):
+    primary_comment = 'identifiable name - e.g. stimulus, xml-file, array'
 
 
 @schema
-class RegexType(ManualLookup, dj.Manual):
-    primary_comment = 'type of regular expression'
+class LookupRegex(ManualLookup, dj.Manual):
+    primary_comment = 'a regular expression commonly used'
