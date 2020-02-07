@@ -317,6 +317,17 @@ def draw_helper(obj=None, type='table', only_essentials=False):
                     or (
                         table.full_table_name
                         == config.assigned_table.full_table_name)
+                    or (
+                        schema
+                        in config.group_table.proj().fetch()[
+                            config['group_name']
+                        ]
+                    ) or (
+                        schema 
+                        in config.user_table.proj().fetch()[
+                            config['user_name']
+                        ]
+                    )
                 )
             except (KeyError, ValueError):
                 print('did not check essential table')
