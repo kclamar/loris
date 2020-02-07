@@ -27,6 +27,6 @@ dependencies:
     - flask-wtf
     - markdown
     - plotly
-    - python-graphviz
+    - graphviz
     - wtforms
 prefix: /Users/matthias.christenson/anaconda3/envs/datajoint
