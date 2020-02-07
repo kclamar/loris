@@ -10,6 +10,13 @@ from loris import config
 from loris.app.login import User
 
 
+if config['init_database']:
+    from loris.database.schema import (
+        anatomy, equipment, experimenters,
+        imaging, recordings, subjects
+    )
+
+
 class LorisApp(Flask):
 
     def session_refresh(self):
@@ -17,7 +24,6 @@ class LorisApp(Flask):
         # for testing when refresh happens
         session['schemata'] = list(config['schemata'].keys())
         session['tables'], session['autotables'] = config.tables_to_list()
-
 
 app = LorisApp(__name__)
 app.secret_key = config['secret_key']

@@ -1,8 +1,15 @@
 {
     "autoscript_inserts": false,
     "scripts": {
-        "Run": ["run.py", ["form_name", "form_name2"]],
-        "Test": ["test.py", ["form_name"]]
+        "Run": [
+            "run.py", ["form_name", "form_name2"], true,
+            {
+                "configattr": "configuration_data",
+                "outputfile": "output.json",
+                "outputattr": "protocol_data"
+            }
+        ],
+        "Test": ["test.py", ["form_name"], false]
     },
     "forms": {
         "form_name" : {

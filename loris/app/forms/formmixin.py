@@ -269,7 +269,11 @@ class FormMixin:
 
         for field in self:
 
-            if isinstance(field, FieldList):
+            if isinstance(field, FormField):
+                field.rm_hidden_entries()
+                self.subhidden_entries.append(field)
+
+            elif isinstance(field, FieldList):
 
                 hidden_entry = field.entries.pop(0)
                 self.hidden_entries[field] = hidden_entry

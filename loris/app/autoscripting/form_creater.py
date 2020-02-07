@@ -23,6 +23,7 @@ from loris.app.autoscripting.utils import (
     frame_reader, series_reader, EnumReader, ListReader, TupleReader,
     DictReader
 )
+from loris.errors import LorisError
 
 
 class AutoscriptedField:
@@ -202,7 +203,7 @@ class AutoscriptedField:
                 field = FormField(form)
         # TODO set number of fieldlists (startswith numeric)
         else:
-            raise NameError(f"field value {value} not accepted.")
+            raise LorisError(f"field value {value} not accepted for {key}.")
 
         return field, post_process
 

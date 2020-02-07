@@ -19,7 +19,7 @@ from loris.app.forms.fixed import (
 from loris.app.utils import (
     draw_helper, get_jsontable, save_join, user_has_permission)
 from loris.app.login import User
-from loris.database.users import grantuser, change_password
+from loris.database.users import grantuser, change_password, grantprivileges
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -52,6 +52,17 @@ def login():
     return render_template(
         'pages/login.html',
         form=form,
+    )
+
+
+@app.route('/nuclino', methods=['GET', 'POST'])
+@login_required
+def nuclino():
+    """nuclino
+    """
+
+    return render_template(
+        'pages/nuclino.html'
     )
 
 
@@ -266,6 +277,11 @@ def assigngroup():
                     config.refresh_permissions()
                     user = formatted_dict[config['user_name']]
                     group = formatted_dict[config['group_name']]
+                    grantprivileges(
+                        user,
+                        config['connection'],
+                        {f'{group}.*': 'ALL PRIVILEGES'}
+                    )
                     flash(
                         f"Project {group} now includes user {user}",
                         'success'

@@ -6,6 +6,7 @@ import datajoint as dj
 
 from loris import config
 from loris.settings import Config
+from loris.errors import LorisError
 
 
 class User(UserMixin):
@@ -24,7 +25,7 @@ class User(UserMixin):
         self.restricted_table = self.table & self.restriction
 
         if len(self.restricted_table) > 1:
-            raise Exception('more than a single user entry')
+            raise LorisError('More than a single user entry')
 
         self._entry = None
 

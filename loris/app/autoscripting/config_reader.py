@@ -20,10 +20,14 @@ from loris.app.forms.dynamic_form import DynamicForm
 from loris.app.forms.formmixin import FormMixin
 from loris.app.autoscripting.form_creater import dynamic_autoscripted_form
 from loris.app.forms.fixed import SettingsNameForm
+from loris.errors import LorisError
 
 
 CURRENT_CONFIG = "_current_config.pkl"
 SAVED_SETTINGS = "_saved_settings_{table_name}.json"
+INSERT_SCRIPT = (
+    f"{os.path.join(os.path.split(__file__)[0], 'run_insert_script.py')}"
+)
 
 
 class ConfigDynamicForm(DynamicForm):
@@ -56,7 +60,7 @@ class ConfigReader:
         self.autoscript_filepath = autoscript_filepath
         self.table_name = table_name
         self.saved_settings_file = os.path.join(
-            autoscript_filepath, SAVED_SETTINGS)
+            autoscript_filepath, SAVED_SETTINGS.format(table_name=table_name))
         self.current_config_file = os.path.join(
             autoscript_filepath, CURRENT_CONFIG
         )
@@ -174,15 +178,38 @@ class ConfigReader:
         p = config.get('subprocess', None)
 
         if p is None or p.poll() is not None:
-            p = subprocess.Popen(
-                [
+
+            if self.buttons[button][2] and self.include_insert:
+                if len(self.buttons[button]) == 3:
+                    output_config = {}
+                else:
+                    output_config = self.buttons[button][3]
+                command = [
+                    "python",
+                    f"{INSERT_SCRIPT}",
+                    "--tablename",
+                    f"{self.table_name}",
+                    "--script",
+                    f"{script_file}",
+                    "--location",
+                    f"{self.current_config_file}",
+                    "--outputfile",
+                    f"{output_config.get('outputfile', 'null')}",
+                    "--configattr",
+                    f"{output_config.get('configattr', 'null')}",
+                    "--outputattr",
+                    f"{output_config.get('outputattr', 'null')}",
+                ]
+            else:
+                # just run the python script
+                command = [
                     "python",
                     f"{script_file}",
                     "--location",
                     f"{self.current_config_file}",
-                ],
-                shell=False
-            )
+                ]
+
+            p = subprocess.Popen(command, shell=False)
             config['subprocess'] = p
             flash(f'running script {script}')
         else:
@@ -248,7 +275,7 @@ class ConfigReader:
             self.existing_settings['_id'] == _id]
 
         if len(selected_entries) != 1:
-            raise Exception(f'entry id {_id} not in existing configurations.')
+            raise LorisError(f'entry id {_id} not in existing configurations.')
 
         settings_dict = selected_entries.iloc[0].to_dict()
         self.ultra_form.populate_form(settings_dict)

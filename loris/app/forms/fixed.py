@@ -21,6 +21,7 @@ from loris import config
 from loris.app.forms.formmixin import FormMixin, DynamicFileField, \
     DictField, ListField, JsonSerializableValidator, RestrictionField, \
     OptionalJsonSerializableValidator, Extension, CamelCaseValidator
+from loris.errors import LorisError
 
 
 RESTRICTION_DESCRIPTION = (
@@ -271,7 +272,7 @@ class ModuleForm(NoCsrfForm, FormMixin):
         formatted_dict = super().get_formatted()
 
         if formatted_dict['python_file'] is None and formatted_dict['python_module'] is None:
-            raise Exception('No python file or module was given.')
+            raise LorisError('No python file or module was given.')
         elif formatted_dict['python_file']:
             return formatted_dict['python_file']
         else:

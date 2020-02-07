@@ -155,11 +155,14 @@ def draw_helper(obj=None, type='table', only_essentials=False):
     filename = filename + str(only_essentials)
 
     filepath = os.path.join(config['tmp_folder'], filename)
+
+    # append filename to empty list for removing when refreshing database
+    config['_empty'].append(filename)
+
     filepaths = glob.glob(filepath + '*' + '.svg')
     if len(filepaths) == 1:
         return os.path.split(filepaths[0])[-1]
 
-    print(filename)
     # add random string (for rendering purposes on browsers)
     random_string = str(uuid.uuid4())
     filename += random_string

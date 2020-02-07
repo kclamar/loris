@@ -88,6 +88,7 @@ def experiment(table_name, autoscript_folder):
 
         submit = request.form.get('submit', None)
         print(submit)
+
         if submit == 'Load' and form.validate_on_submit():
             autoscript_filepath = form.autoscript.data
             table_name = form.experiment.data
@@ -139,6 +140,7 @@ def experiment(table_name, autoscript_folder):
 
         # append hidden entries
         reader.append_hidden_entries()
+
     else:
         reader.populate_form(_id)
 

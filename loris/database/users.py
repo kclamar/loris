@@ -67,14 +67,28 @@ def grantuser(
     schema = dj.schema(username)
 
     privileges = {
-        '*.*' : "DELETE, SELECT, INSERT, UPDATE, REFERENCES",
-        f'{username}.*' : "ALL PRIVILEGES"
+        '*.*': "DELETE, SELECT, INSERT, UPDATE, REFERENCES",
+        f'{username}.*': "ALL PRIVILEGES"
     }
+
+    grantprivileges(username, conn, privileges, connection)
+
+    return schema
+
+
+def grantprivileges(
+    username,
+    conn,
+    privileges,
+    connection='%',
+):
+    """grant privileges to user
+    """
+
+    conn.query("FLUSH PRIVILEGES;")
 
     for dbtable, privilege in privileges.items():
         privilege = (f"GRANT {privilege} ON {dbtable} to %s@%s;")
         conn.query(privilege, (username, connection))
 
     conn.query("FLUSH PRIVILEGES;")
-
-    return schema

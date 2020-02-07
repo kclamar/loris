@@ -14,6 +14,8 @@ from sshtunnel import SSHTunnelForwarder, HandlerSSHTunnelForwarderError
 
 from loris.database.attributes import custom_attributes_dict
 from loris.utils import is_manuallookup
+from loris.errors import LorisError
+
 
 # defaults for application
 defaults = dict(
@@ -39,7 +41,8 @@ defaults = dict(
     group_name="experimental_project",
     assignedgroup_schema="experimenters",
     assignedgroup_table="AssignedExperimentalProject",
-    max_cpu=None
+    max_cpu=None,
+    init_database=False,
 )
 AUTOSCRIPT_CONFIG = 'config.json'
 
@@ -60,6 +63,7 @@ class Config(dict):
         config = {**defaults, **config}
         config = cls(config)
         config['custom_attributes'] = custom_attributes_dict
+        config['_empty'] = []  # list of files in tmp to delete on refresh
         config.perform_checks()
 
         return config
@@ -209,7 +213,7 @@ class Config(dict):
         schema_module = self['schemata'].get(schema, None)
 
         if schema_module is None:
-            raise Exception(
+            raise LorisError(
                 f'schema {schema} not in database; refresh database'
             )
 
@@ -220,7 +224,7 @@ class Config(dict):
             try:
                 return getattr(schema_module, table_name)
             except AttributeError:
-                raise Exception(
+                raise LorisError(
                     f'table {table_name} not in schema {schema}; '
                     'refresh database'
                 )
@@ -235,7 +239,7 @@ class Config(dict):
                     part_table_name
                 )
             except AttributeError:
-                raise Exception(
+                raise LorisError(
                     f'table {table_name} not in schema {schema} '
                     f'or part table {part_table_name} not in table {table_name}'
                     '; refresh database'
@@ -292,11 +296,41 @@ class Config(dict):
 
     def create_administrator(self):
         # insert administrator if not users exist and create
-        # administrator schema
-        # administrator must exist in SQL database
-        # TODO check if user exists in SQL
         self.user_table.insert1(self['administrator_info'])
-        dj.schema(self['administrator_info'][self['user_name']])
+
+        # use standard password
+        password = self['standard_password']
+        # establish connection
+        conn = self['connection']
+        connection = '%'
+        username = self['administrator_info'][self['user_name']]
+
+        # for safety flush all privileges
+        conn.query("FLUSH PRIVILEGES;")
+
+        conn.query(
+            "DROP USER IF EXISTS %s@%s;",
+            (username, connection)
+        )
+        conn.query(
+            "CREATE USER %s@%s IDENTIFIED BY %s;",
+            (username, connection, password)
+        )
+
+        # create user-specific schema
+        schema = dj.schema(username)
+
+        privileges = {
+            '*.*': "ALL PRIVILEGES",
+        }
+
+        for dbtable, privilege in privileges.items():
+            privilege = (f"GRANT {privilege} ON {dbtable} to %s@%s;")
+            conn.query(privilege, (username, connection))
+
+        conn.query("FLUSH PRIVILEGES;")
+
+        return schema
 
     @property
     def user_tables(self):
@@ -387,7 +421,7 @@ class Config(dict):
         elif len(table) == 0:
             return False
         else:
-            raise Exception(
+            raise LorisError(
                 "assined user group table should only have "
                 "singular entries for given user and group."
             )
@@ -473,6 +507,8 @@ class Config(dict):
         """
 
         for filename in os.listdir(self['tmp_folder']):
+            if not any([filename.startswith(ele) for ele in self['_empty']]):
+                continue
             file_path = os.path.join(self['tmp_folder'], filename)
             try:
                 if os.path.isfile(file_path) or os.path.islink(file_path):
@@ -480,7 +516,9 @@ class Config(dict):
                 elif os.path.isdir(file_path):
                     shutil.rmtree(file_path)
             except Exception as e:
-                print('Failed to delete %s. Reason: %s' % (file_path, e))
+                print(f'Failed to delete {file_path}. Reason: {e}')
+
+        self['_empty'] = []
 
     def refresh(self):
         """refresh all containers and empty temporary folder
@@ -537,8 +575,43 @@ class Config(dict):
             with open(filepath, 'r') as f:
                 config = json.load(f)
 
-            include_insert = not config['autoscript_inserts']
+            include_insert = not bool(config['autoscript_inserts'])
             buttons = config['scripts']
+
+            if not isinstance(buttons, dict):
+                raise LorisError(
+                    f'In configuration file of autoscript '
+                    f'"{os.path.basename(autoscript_filepath)}", '
+                    '"scripts" keyword is incorrectly '
+                    'formatted.'
+                )
+
+            for key, button in buttons.items():
+                message = (
+                    f'In configuration file of autoscript '
+                    f'"{os.path.basename(autoscript_filepath)}", '
+                    '"scripts" keyword is incorrectly '
+                    f'formatted for button "{key}".'
+                )
+                if len(button) < 3 or len(button) > 4:
+                    raise LorisError(message)
+                elif len(button) == 4 and not isinstance(button[-1], dict):
+                    raise LorisError(message)
+                elif not all([
+                    isinstance(button[0], str),
+                    isinstance(button[1], list), 
+                    isinstance(button[2], bool)
+                ]):
+                    raise LorisError(message)
+
+            if not isinstance(config['forms'], dict):
+                raise LorisError(
+                    f'In configuration file of autoscript '
+                    f'"{os.path.basename(autoscript_filepath)}", '
+                    '"forms" keyword is incorrectly '
+                    'formatted.'
+                )
+
             forms = {}
             post_process_dict = {}
             for key, value in config['forms'].items():
