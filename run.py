@@ -7,4 +7,4 @@ conn()
 
 from loris.app.app import app
 
-app.run(debug=False)
+app.run(port=1234, debug=False)
