@@ -222,16 +222,20 @@
       $(function() {
           $("div[data-toggle=fieldsetting]").each(function() {
               var $this = $(this);
-              //only works if min_entries = 1
-              var field_counter = 0;
 
               //Add new entry
               $this.find("button[data-toggle=fieldsetting-add-row]").click(function() {
                   var target = $($(this).data("target"));
                   var oldrow = target.find("[data-toggle=fieldsetting-entry]:last");
                   var row = oldrow.clone(true, true);
-                  field_counter++;
-                  var elem_num = parseInt(field_counter);
+                  var elem_id = row.find(":input")[0].id;
+                  var elem_num = parseInt(elem_id.replace(/.*-(\d{1,4})-.*/m, '$1')) + 1;
+                  var postfix = '-';
+                  if (isNaN( elem_num )) {
+                      var elem_num = parseInt(elem_id.replace(/.*-(\d{1,4}).*/m, '$1')) + 1;
+                      var postfix = '';
+                  }
+                  console.log(elem_num)
                   row.attr('data-id', elem_num);
 
                   row.find("input").each(function() {
@@ -240,29 +244,12 @@
                           $(this).removeAttr("readonly");
                       }
                       try {
-                          var elem_num = $(this).attr('id').match(/-[0-9]+-/)[0];
-                          var elem_num = eval(elem_num.replace('-', '').replace('-', '')) + 1;
-                          var elem_double = true;
+                        var id = $(this).attr('name').replace('-' + (elem_num - 1) + postfix, '-' + (elem_num) + postfix);
                       }
                       catch(err) {
-                          var elem_num = $(this).attr('id').match(/-[0-9]+/)[0];
-                          var elem_num = eval(elem_num.replace('-', '')) + 1;
-                          var elem_double = false;
+                        var id = $(this).attr('id').replace('-' + (elem_num - 1) + postfix, '-' + (elem_num) + postfix);
                       }
-                      try {
-                        if(elem_double) {
-                            var id = $(this).attr('name').replace('-' + (elem_num - 1) + '-', '-' + (elem_num) + '-');
-                        } else {
-                             var id = $(this).attr('name').replace('-' + (elem_num - 1), '-' + (elem_num));
-                        }
-                      }
-                      catch(err) {
-                        if(elem_double) {
-                            var id = $(this).attr('id').replace('-' + (elem_num - 1) + '-', '-' + (elem_num) + '-');
-                        } else {
-                             var id = $(this).attr('id').replace('-' + (elem_num - 1), '-' + (elem_num));
-                        }
-                      }
+
                       var datatype = $(this).attr('type');
                       if (datatype == "checkbox") {
                           $(this).attr('name', id).attr('id', id).removeAttr("checked");
@@ -272,61 +259,64 @@
                           // change name, id, and value of field to none
                           $(this).attr('name', id).attr('id', id).val('').removeAttr("checked");
                       }
-                      try {
-                          // test
-                          var subfieldtarget = $(this).attr('data-target').replace(
-                              '-' + (elem_num - 1) + '-', '-' + (elem_num) + '-');
-                          $(this).attr('data-target', subfieldtarget);
+                  });
+
+                  row.find("select").each(function() {
+                      var attr = $(this).attr("readonly");
+                      if (typeof attr !== typeof undefined && attr !== false) {
+                          $(this).removeAttr("readonly");
                       }
-                      catch(err) {}
+                      try {
+                        var id = $(this).attr('name').replace('-' + (elem_num - 1) + postfix, '-' + (elem_num) + postfix);
+                      }
+                      catch(err) {
+                        var id = $(this).attr('id').replace('-' + (elem_num - 1) + postfix, '-' + (elem_num) + postfix);
+                      }
+                      $(this).attr('name', id).attr('id', id).val('').removeAttr("checked");
                   });
 
-                  try {
-                      row.find("select").each(function() {
-                          var attr = $(this).attr("readonly");
-                          if (typeof attr !== typeof undefined && attr !== false) {
-                              $(this).removeAttr("readonly");
-                          }
-                          try {
-                              var elem_num = $(this).attr('id').match(/-[0-9]+-/)[0];
-                              var elem_num = eval(elem_num.replace('-', '').replace('-', '')) + 1;
-                              var elem_double = true;
-                          }
-                          catch(err) {
-                              var elem_num = $(this).attr('id').match(/-[0-9]+/)[0];
-                              var elem_num = eval(elem_num.replace('-', '')) + 1;
-                              var elem_double = false;
-                          }
-                          try {
-                            if(elem_double) {
-                                var id = $(this).attr('name').replace('-' + (elem_num - 1) + '-', '-' + (elem_num) + '-');
-                            } else {
-                                 var id = $(this).attr('name').replace('-' + (elem_num - 1), '-' + (elem_num));
-                            }
-                          }
-                          catch(err) {
-                            if(elem_double) {
-                                var id = $(this).attr('id').replace('-' + (elem_num - 1) + '-', '-' + (elem_num) + '-');
-                            } else {
-                                 var id = $(this).attr('id').replace('-' + (elem_num - 1), '-' + (elem_num));
-                            }
-                          }
-                          $(this).attr('name', id).attr('id', id).val('').removeAttr("checked");
-                          try {
-                              // test
-                              var subfieldtarget = $(this).attr('data-target').replace(
-                                  '-' + (elem_num - 1) + '-', '-' + (elem_num) + '-');
-                              $(this).attr('data-target', subfieldtarget);
-                          }
-                          catch(err) {}
-                      });
-                  } catch(err) {}
-
-
-                  row.find("div[data-toggle=subfieldset]").each( function() {
-                      var id = $(this).attr('id').replace('-' + (elem_num - 1) + '-', '-' + (elem_num) + '-');
-                      $(this).attr('id', id);
+                  row.find("textarea").each(function() {
+                      var attr = $(this).attr("readonly");
+                      if (typeof attr !== typeof undefined && attr !== false) {
+                          $(this).removeAttr("readonly");
+                      }
+                      try {
+                        var id = $(this).attr('name').replace('-' + (elem_num - 1) + postfix, '-' + (elem_num) + postfix);
+                      }
+                      catch(err) {
+                        var id = $(this).attr('id').replace('-' + (elem_num - 1) + postfix, '-' + (elem_num) + postfix);
+                      }
+                      $(this).attr('name', id).attr('id', id).removeAttr("checked");
                   });
+
+                  row.find("button").each(function() {
+                      var dtoggle = $(this).attr("data-toggle");
+                      if (dtoggle == "modal") {
+                        var id = $(this).attr('data-target').replace('-' + (elem_num - 1) + postfix, '-' + (elem_num) + postfix);
+                        $(this).attr('data-target', id);
+                      }
+                  });
+
+                  row.find("div").each(function() {
+                      var dtoggle = $(this).attr("class");
+                      if (dtoggle == "modal fade") {
+                        var id = $(this).attr('id').replace('-' + (elem_num - 1) + postfix, '-' + (elem_num) + postfix);
+                        $(this).attr('id', id);
+                        // var id = $(this).attr('arialabelledby').replace('-' + (elem_num - 1) + '-', '-' + (elem_num) + '-');
+                        // $(this).attr('arialabelledby', id);
+                      }
+                  });
+
+                  row.find("h5").each(function() {
+                      var dtoggle = $(this).attr("class");
+                      if (dtoggle == "modal title") {
+                        var id = $(this).attr('id').replace('-' + (elem_num - 1) + postfix, '-' + (elem_num) + postfix);
+                        $(this).attr('id', id);
+                      }
+                  });
+
+
+
                   row.show();
                   oldrow.after(row);
               }); //End add new entry
@@ -344,78 +334,8 @@
                       });
                       if (noreadonly) {
                           thisRow.remove();
-                          field_counter--;
                       } else {
                           console.log("readonly define");
-                      }
-                  }
-              }); //End remove row
-          });
-      });
-      // subfieldset probably not needed
-      $(function pageLoad() {
-          $("div[data-toggle=subfieldset]").each(function() {
-              // requires id to end with "list" as a name
-              var $this = $(this);
-
-              //Add new entry
-              $this.find("button[data-toggle=subfieldset-add-row]").click(function() {
-                  var target = $($(this).data("target"));
-                  var oldrow = target.find("[data-toggle=subfieldset-entry]:last");
-                  var row = oldrow.clone(true, true);
-                  // requires that subfieldset ids end with list
-                  row.find(":input").each(function() {
-                      var attr = $(this).attr("readonly");
-                      if (typeof attr !== typeof undefined && attr !== false) {
-                          $(this).removeAttr("readonly");
-                      }
-                      try {
-                          var elem_num = $(this).attr('id').match(/-[0-9]+$/)[0];
-                          var elem_num = eval(elem_num.replace('-', '')) + 1;
-                          var before = new RegExp('-' + (elem_num - 1) + '$');
-                          var after = ('-' + (elem_num));
-                      }
-                      catch(err) {
-                          var elem_num = $(this).attr('id').match(
-                              /-[0-9]+-remove$/)[0];
-                          var elem_num = eval(
-                              elem_num.replace('-', '').replace('-remove', '')
-                          ) + 1;
-                          var before = new RegExp('-' + (elem_num - 1) + '-remove$');
-                          var after = ('-' + (elem_num) + '-remove');
-                      }
-
-                      try {
-                          var id = $(this).attr('name').replace(
-                              before, after);
-                      }
-                      catch(err) {
-                          var id = $(this).attr('id').replace(
-                              before, after);
-                      }
-                      var datatype = $(this).attr('type');
-                      if (datatype == "checkbox") {
-                          $(this).attr('name', id).attr('id', id).removeAttr("checked");
-                      } else if (datatype == "textarea") {
-                          $(this).attr('name', id).attr('id', id).removeAttr("checked");
-                      } else {
-                          // change name, id, and value of field to none
-                          $(this).attr('name', id).attr('id', id).val('').removeAttr("checked");
-                      }
-                  });
-                  row.show();
-                  oldrow.after(row);
-              }); //End add new entry
-
-              //Remove row
-              $this.find("button[data-toggle=subfieldset-remove-row]").click(function() {
-                  if($this.find("[data-toggle=subfieldset-entry]").length > 1) {
-                      var thisRow = $(this).closest("[data-toggle=subfieldset-entry]");
-                      var attr = $(thisRow).attr("readonly");
-                      if (typeof attr !== typeof undefined && attr !== false) {
-                          console.log("readonly define");
-                      } else {
-                          thisRow.remove();
                       }
                   }
               }); //End remove row

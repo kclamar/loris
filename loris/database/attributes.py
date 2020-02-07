@@ -45,7 +45,7 @@ class ListString(dj.AttributeAdapter):
         return json.loads(value)
 
 
-class ListDict(dj.AttributeAdapter):
+class DictString(dj.AttributeAdapter):
 
     attribute_type = 'varchar(4000)'
 
@@ -58,7 +58,7 @@ class ListDict(dj.AttributeAdapter):
             except Exception:
                 pass
         assert isinstance(obj, (dict)), \
-            f'object must be dict for listdict type: {type(obj)}'
+            f'object must be dict for dictstring type: {type(obj)}'
         return json.dumps(obj)
 
     def get(self, value):
@@ -225,7 +225,8 @@ crossschema = CrossSchema()
 truebool = TrueBool()
 tarfolder = TarFolder()
 liststring = ListString()
-listdict = ListDict()
+tags = ListString()
+dictstring = DictString()
 attachprocess = AttachProcess()
 attachplaceholder = AttachPlaceholder()
 
@@ -237,7 +238,8 @@ custom_attributes_dict = {
     'truebool': truebool,
     'tarfolder': tarfolder,
     'liststring': liststring,
-    'listdict': listdict,
+    'dictstring': dictstring,
+    'tags': tags, 
     'attachprocess': attachprocess,
     'attachplaceholder': attachplaceholder
 }

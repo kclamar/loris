@@ -120,7 +120,8 @@
                     <td>
                     <div>
                     <table>
-                    {{ _render_form(subfield, "subfieldset", readonly=readonly)}}
+                        <!-- changed back to fieldsetting instead of subfieldset -->
+                    {{ _render_form(subfield, "fieldsetting", readonly=readonly)}}
                     <tr>
                         <td>
                         <button type="button" class="btn btn-outline-danger btn-sm" data-toggle="{{ toggle_class }}-remove-row" id="{{field.id}}-{{loop.index0}}-remove">-
@@ -325,10 +326,12 @@
                 {% for button in buttons %}
                 <td align="center"><input class="btn btn-outline-secondary" type=submit value="{{button}}" name="submit"></td>
                 {% endfor %}
+                <!--
                 {% if include_insert %}
                 <td align="center"><input class="btn btn-outline-primary" type=submit value=Insert name="submit"></td>
                 <td align="center"><input class="btn btn-outline-warning" type=submit value=Overwrite name="submit"></td>
                 {% endif %}
+                -->
             </tr>
             </div>
             <p> </p>

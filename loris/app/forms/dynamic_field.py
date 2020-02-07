@@ -24,9 +24,11 @@ from werkzeug.datastructures import FileStorage
 from loris import config
 from loris.utils import is_manuallookup
 from loris.app.forms import NONES
-from loris.app.forms.formmixin import ManualLookupForm, ParentFormField, \
-    DynamicFileField, DictField, ListField, ParentValidator, JsonSerializableValidator, \
-    AttachFileField, BlobFileField, Extension
+from loris.app.forms.formmixin import (
+    ManualLookupForm, ParentFormField, DynamicFileField, DictField, ListField,
+    ParentValidator, JsonSerializableValidator, AttachFileField,
+    BlobFileField, Extension, TagListField
+)
 
 
 class DynamicField:
@@ -357,6 +359,8 @@ class DynamicField:
         elif attr_type_name == 'dictstring':
             kwargs['validators'].append(JsonSerializableValidator)
             return DictField(**kwargs)
+        elif attr_type_name == 'tags':
+            return TagListField(**kwargs)
         elif attr_type_name == 'link':
             kwargs['validators'].append(URL(False))
         elif attr_type_name == 'email':

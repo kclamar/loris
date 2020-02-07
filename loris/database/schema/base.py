@@ -17,14 +17,49 @@ NEURAL_RECORDING = f"""
     {COMMENTS}
     recording_ext = null : varchar(63) # file extension name of recording file used for post-processing
     recording_file = null : attach@attachstore # file of recording, if available
-    -> [nullable] recordings.ProtocolType
     protocol_ext = null : varchar(63) # file extension name of protocol file used for post-processing
     protocol_file = null : attach@attachstore # file of protocol, if available
     protocol_data = null : blob@attachstore # data of protocol, if available
     """
 
 
+class FilesMixin:
+    """Part table mixin for given a master table multiple files
+    """
+
+    master_name = None
+
+    @property
+    def definition(self):
+        return f"""
+        -> {self.master_name}
+        file_id : varchar(63)
+        ---
+        file : attach@attachstore
+        -> [nullable] core.DataType
+        """
+
+
+class DataMixin:
+    """Part table mixin for given a master table multiple files
+    """
+
+    master_name = None
+
+    @property
+    def definition(self):
+        return f"""
+        -> {self.master_name}
+        data_id : varchar(63)
+        ---
+        data : data@datastore
+        -> [nullable] core.DataType
+        """
+
+
 class ManualLookup:
+    """Manual table mixin with given definition
+    """
 
     primary_comment = "short name identifier"
 
