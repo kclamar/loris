@@ -1,5 +1,6 @@
 # user-specific ignores
 config.json
+*.icloud
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

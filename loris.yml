@@ -1,5 +1,7 @@
 name: loris
 channels:
+  - anaconda
+  - conda-forge
   - https://conda.anaconda.org/erik
   - anaconda-fusion
   - brian-team
@@ -11,6 +13,7 @@ dependencies:
   - jupyter
   - sshtunnel
   - graphviz
+  - pip=19.3.1=py37_0
   - pip:
     - dash
     - dash-bootstrap-components
