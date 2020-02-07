@@ -45,6 +45,12 @@ defaults = dict(
     init_database=False,
 )
 AUTOSCRIPT_CONFIG = 'config.json'
+EXPANDUSER_FIELDS = (
+    'tmp_folder',
+    'wiki_folder',
+    'autoscript_folder',
+    'ssh_pkey'
+)
 
 
 class Config(dict):
@@ -159,6 +165,7 @@ class Config(dict):
             dj.config['stores'] = {}
 
         for filestore_name, filestore in self['filestores'].items():
+            filestore = os.path.expanduser(filestore)
             if not os.path.exists(filestore):
                 os.makedirs(filestore)
 
@@ -188,6 +195,10 @@ class Config(dict):
 
         if self['max_cpu'] is None:
             self['max_cpu'] = mp.cpu_count()
+
+        for path in EXPANDUSER_FIELDS:
+            if path in self:
+                self[path] = os.path.expanduser(self[path])
 
     def refresh_schema(self):
         """refresh container of schemas
