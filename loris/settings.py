@@ -480,7 +480,15 @@ class Config(dict):
             if issubclass(table, dj.Manual):
                 auto_class = False
                 # ignore ManualLookup subclasses
-                if is_manuallookup(table):
+                if (
+                    is_manuallookup(table)
+                    or (table.full_table_name
+                        == self.user_table.full_table_name)
+                    or (table.full_table_name
+                        == self.group_table.full_table_name)
+                    or (table.full_table_name
+                        == self.assigned_table.full_table_name)
+                ):
                     continue
             elif issubclass(table, (dj.AutoImported, dj.AutoComputed)):
                 auto_class = True
@@ -599,7 +607,7 @@ class Config(dict):
                     raise LorisError(message)
                 elif not all([
                     isinstance(button[0], str),
-                    isinstance(button[1], list), 
+                    isinstance(button[1], list),
                     isinstance(button[2], bool)
                 ]):
                     raise LorisError(message)

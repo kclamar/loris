@@ -56,6 +56,6 @@ if __name__ == '__main__':
     # TODO insert into database
     # check if blob or attach for output and configuration saving
     # check if attributes in table
-
-    print(p)
-    print('ended')
+    # option with files/data part tables
+    # use jobs table to reserve inserting this entry
+    raise NotImplementedError('inserting into database after running subprocess')

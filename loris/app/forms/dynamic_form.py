@@ -13,6 +13,7 @@ from wtforms import Form as NoCsrfForm
 from wtforms import StringField, IntegerField, BooleanField, FloatField, \
     SelectField, FieldList, FormField, HiddenField
 
+from loris.errors import LorisError
 from loris.app.forms.dynamic_field import DynamicField
 from loris.app.forms.formmixin import FormMixin, ParentFormField
 from loris.app.utils import draw_helper, get_jsontable, save_join
@@ -202,7 +203,13 @@ class DynamicForm:
             arguments passed to datajoint Table.insert function
         """
 
-        formatted_dict = form.get_formatted()
+        if isinstance(form, FormMixin):
+            formatted_dict = form.get_formatted()
+        elif isinstance(form, dict):
+            formatted_dict = form
+        else:
+            raise LorisError(f'form is incorrect type (={type(form)}); '
+                             'form must be dict or be a subclass of FormMixin')
 
         primary_dict = self._insert(formatted_dict, _id, **kwargs)
 
