@@ -25,6 +25,23 @@ class TrueBool(dj.AttributeAdapter):
         return bool(value)
 
 
+class LookupName(dj.AttributeAdapter):
+
+    attribute_type = 'varchar(127)'
+
+    def put(self, obj):
+        if obj is None:
+            return
+
+        if isinstance(obj, str):
+            obj = obj.strip()
+
+        return obj
+
+    def get(self, value):
+        return value
+
+
 class ListString(dj.AttributeAdapter):
 
     attribute_type = 'varchar(4000)'
@@ -80,6 +97,8 @@ class Chromosome(dj.AttributeAdapter):
             f"object is not of type string, "
             f"but {type(obj)} for chromosome attribute")
 
+        obj = obj.strip()
+
         return obj
 
     def get(self, value):
@@ -115,6 +134,8 @@ class Link(dj.AttributeAdapter):
             f"object is not of type string, "
             f"but {type(obj)} for link attribute")
 
+        obj = obj.strip()
+
         if not self.is_url(obj):
             raise dj.DatajointError(
                 f"string {obj} is not a url for attribute {self}"
@@ -140,6 +161,8 @@ class FlyIdentifier(dj.AttributeAdapter):
         assert isinstance(obj, str), (
             f"object is not of type string, "
             f"but {type(obj)} for fly identifier attribute")
+
+        obj = obj.strip()
 
         return obj
 
@@ -229,6 +252,7 @@ tags = ListString()
 dictstring = DictString()
 attachprocess = AttachProcess()
 attachplaceholder = AttachPlaceholder()
+lookupname = LookupName()
 
 custom_attributes_dict = {
     'chr': chr,
@@ -239,7 +263,8 @@ custom_attributes_dict = {
     'tarfolder': tarfolder,
     'liststring': liststring,
     'dictstring': dictstring,
-    'tags': tags, 
+    'tags': tags,
     'attachprocess': attachprocess,
-    'attachplaceholder': attachplaceholder
+    'attachplaceholder': attachplaceholder,
+    'lookupname': lookupname
 }

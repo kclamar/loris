@@ -6,6 +6,8 @@ import datajoint as dj
 
 from loris.database.schema.base import COMMENTS, ManualLookup
 from loris.database.attributes import truebool
+from loris.database.attributes import lookupname
+
 
 schema = dj.schema('experimenters')
 

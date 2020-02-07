@@ -7,6 +7,7 @@ from loris.database.schema.experimenters import Experimenter
 from loris.database.schema.anatomy import CellType
 from loris.database.schema.base import ManualLookup, COMMENTS, PRIMARY_NAME
 from loris.database.attributes import chr, link, flyidentifier, crossschema
+from loris.database.attributes import lookupname
 
 
 schema = dj.schema('subjects')

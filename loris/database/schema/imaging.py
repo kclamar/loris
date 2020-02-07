@@ -7,6 +7,7 @@ from loris.database.schema import (
     subjects, anatomy, equipment, recordings, core
 )
 from loris.database.attributes import truebool, attachplaceholder, tags
+from loris.database.attributes import lookupname
 from loris.database.schema.base import (
     COMMENTS, NEURAL_RECORDING, ManualLookup,
     FilesMixin, DataMixin, ExtensionMixin

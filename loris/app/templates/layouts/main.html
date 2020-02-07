@@ -137,7 +137,9 @@
           Wiki
         </a>
         <ul class="dropdown-menu", aria-labelledby="navbarDropdown7">
-            <li><a class="dropdown-item" href="{{ url_for('nuclino') }}">Nuclino</a></li>
+            {% if 'external_wiki' in session and session['external_wiki'] not in [None, "None"]%}
+            <li><a class="dropdown-item" href="{{ session['external_wiki'] }}" target="_blank">External Wiki</a></li>
+            {% endif %}
             <li><a class="dropdown-item" href="{{ url_for('wikihome') }}">Home</a></li>
             <li><a class="dropdown-item" href="{{ url_for('wikiindex') }}">Index</a></li>
             <li><a class="dropdown-item" href="{{ url_for('wikitags') }}">Tags</a></li>

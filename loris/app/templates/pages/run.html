@@ -5,7 +5,21 @@
 <div class="page-header">
     {% from 'macros/render_form.html' import run_render_form %}
     <h2> <a href="{{ url_for('run', schema=schema, table=table) }}">Autopopulate {{table_name}}</a></h2>
+    <h4>Where are you in the data pipeline?</h4>
+    Click on a table to expand it.
+    <div class="post-tabs">
+        <object data="{{ url_for('tmpfile', filename=filename) }}" type="image/svg+xml"
+                class="Svg" target="_top">
+        </object>
+    </div>
+    <hr>
+    <h4> Enter settings for Population </h4>
     {{ run_render_form(form, readonly=readonly) }}
+    <hr>
+    <h4>Entries already populated</h4>
+    {% with data=data, toggle_off_keys=toggle_off_keys%}
+        {% include 'macros/tables.html' %}
+    {% endwith %}
 </div>
 
 {% endblock %}

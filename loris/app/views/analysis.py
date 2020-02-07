@@ -1,6 +1,9 @@
 """views for running analysis automatically
 """
 
+import json
+import os
+import subprocess
 
 from flask import render_template, request, flash, url_for, redirect, \
     send_from_directory, session
@@ -106,25 +109,108 @@ def setup(schema, table):
     )
 
 
+def _subprocess_checker(table_name):
+
+    p = config['_autopopulate'].get(table_name, None)
+
+    if p is not None:
+        if p.poll() is not None:
+            if p.returncode == 0:
+                flash('Subprocess complete', 'success')
+            else:
+                flash(f"Status of Subprocess: FAIL {p.returncode}", 'error')
+            config['_autopopulate'][table_name] = None
+        else:
+            flash('Subprocess is still running', 'warning')
+            return False
+
+    return True
+
+
+def _abort_subprocess(table_name):
+
+    p = config['_autopopulate'].get(table_name, None)
+
+    if p is not None:
+        p.terminate()
+        config['_autopopulate'][table_name] = None
+        flash('Aborting subprocess... '
+              '(some entries may have been inserted already)',
+              'warning')
+    else:
+        flash('No subprocess is running')
+
+
 @app.route('/run/<schema>/<table>', methods=['GET', 'POST'])
 @login_required
 def run(schema, table):
+    """run autopopulate on a table
+    """
 
     table_class = getattr(config['schemata'][schema], table)
     form = dynamic_runform(table_class)()
     table_name = '.'.join([schema, table])
     # TODO show relations
 
+    no_subprocess = _subprocess_checker(table_name)
+
+    # guidance for running new populates
+    dynamicform, _form = config.get_dynamicform(
+        table_name, table_class, DynamicForm
+    )
+    filename = dynamicform.draw_relations()
+    # load/notload table
+    data = dynamicform.get_jsontable()
+    toggle_off_keys = [0]
+
+    if request.method == 'POST':
+        submit = request.form.get('submit', None)
+
+        if no_subprocess and submit == 'Run' and form.validate_on_submit():
+
+            formatted_dict = form.get_formatted()
+            formatted_dict['reserve_jobs'] = True
+
+            kwargs = json.dumps(formatted_dict)
+
+            filepath = os.path.join(
+                os.path.dirname(os.path.dirname(__file__)),
+                "analysis",
+                "run_populate.py",
+            )
+
+            command = [
+                "python",
+                filepath,
+                "--schema",
+                schema,
+                "--table",
+                table,
+                "--kwargs",
+                kwargs
+            ]
+
+            p = subprocess.Popen(command, shell=False)
+
+            config['_autopopulate'][table_name] = p
+
+        elif submit == 'Abort':
+            _abort_subprocess(table_name)
+
     return render_template(
         'pages/run.html',
         form=form,
         schema=schema,
         table=table,
-        table_name=table_name
+        table_name=table_name,
+        data=data,
+        toggle_off_keys=toggle_off_keys,
+        filename=filename
     )
 
 
 @app.route('/plot/<schema>/<table>', methods=['GET', 'POST'])
 @login_required
 def plot(schema, table):
+    flash('Plotting functionality not yet implemented', 'warning')
     return render_template('pages/home.html', user=current_user.user_name)

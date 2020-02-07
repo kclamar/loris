@@ -24,6 +24,8 @@ class LorisApp(Flask):
         # for testing when refresh happens
         session['schemata'] = list(config['schemata'].keys())
         session['tables'], session['autotables'] = config.tables_to_list()
+        session['external_wiki'] = config['external_wiki']
+
 
 app = LorisApp(__name__)
 app.secret_key = config['secret_key']

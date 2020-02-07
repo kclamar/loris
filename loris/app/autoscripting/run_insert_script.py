@@ -49,7 +49,6 @@ if __name__ == '__main__':
         filepath = __file__
         for i in range(4):
             filepath = os.path.dirname(filepath)
-        print(filepath)
         sys.path.append(filepath)
         from loris import config
 

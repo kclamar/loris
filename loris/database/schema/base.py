@@ -3,7 +3,7 @@
 
 COMMENTS = 'comments = null : varchar(4000)'
 DESCRIPTION = 'description = null : varchar(4000) # (detailed) description'
-PRIMARY_NAME = '{name} : varchar(127) # {comment}'
+PRIMARY_NAME = '{name} : <lookupname> # {comment}'
 NEURAL_RECORDING = f"""
     recording_id : int auto_increment # integer id number
     ---

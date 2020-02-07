@@ -8,12 +8,14 @@ import graphviz
 from flask_wtf import FlaskForm as Form
 from flask import render_template, request, flash, url_for, redirect
 import datajoint as dj
+from datajoint.hash import key_hash
 from datajoint.table import lookup_class_name
 from wtforms import Form as NoCsrfForm
 from wtforms import StringField, IntegerField, BooleanField, FloatField, \
     SelectField, FieldList, FormField, HiddenField
 
 from loris.errors import LorisError
+from loris import config
 from loris.app.forms.dynamic_field import DynamicField
 from loris.app.forms.formmixin import FormMixin, ParentFormField
 from loris.app.utils import draw_helper, get_jsontable, save_join
@@ -247,7 +249,11 @@ class DynamicForm:
 
         return primary_dict
 
-    def _insert(self, formatted_dict, _id=None, primary_dict=None, **kwargs):
+    def _insert(
+        self, formatted_dict, _id=None,
+        primary_dict=None, check_reserved=True,
+        **kwargs
+    ):
         """insert helper function
         """
 
@@ -271,12 +277,30 @@ class DynamicForm:
             if primary_dict is not None:
                 insert_dict.update(primary_dict)
 
-            self.table.insert1(insert_dict, **kwargs)
-
-            return {
+            primary_dict = {
                 key: value for key, value in insert_dict.items()
                 if key in self.table.primary_key
             }
+
+            jobs = config['schemata'][self.table.database].schema.jobs
+
+            if check_reserved:
+                reserved = (
+                    jobs
+                    & {
+                        'table_name': self.table.table_name,
+                        'key_hash': key_hash(primary_dict)
+                    }
+                )
+                if reserved:
+                    raise dj.DataJointError(
+                        f"Entry {primary_dict} has been reserved; "
+                        "change your primary key values."
+                    )
+
+            self.table.insert1(insert_dict, **kwargs)
+
+            return primary_dict
         else:  # editing entries savely
             # remove primary keys
             insert_dict = {

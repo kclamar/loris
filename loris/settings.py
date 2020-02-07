@@ -64,6 +64,7 @@ class Config(dict):
         config = cls(config)
         config['custom_attributes'] = custom_attributes_dict
         config['_empty'] = []  # list of files in tmp to delete on refresh
+        config['_autopopulate'] = {}  # dictionary of subprocesses
         config.perform_checks()
 
         return config

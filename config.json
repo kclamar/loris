@@ -40,6 +40,7 @@
     "wiki_folder": "/Users/matthias.christenson/wiki",
     "autoscript_folder": "/Users/matthias.christenson/Documents/loris/autoscripts",
     "autoscript_tables": ["imaging.TwoPhotonRecording"],
+    "external_wiki": "https://app.nuclino.com/behnialab",
 
     "_ssh_comment": "keys for SSH tunneling of MySQL database. See: https://sshtunnel.readthedocs.io/en/latest/",
     "ssh_address": null,

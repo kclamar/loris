@@ -55,17 +55,6 @@ def login():
     )
 
 
-@app.route('/nuclino', methods=['GET', 'POST'])
-@login_required
-def nuclino():
-    """nuclino
-    """
-
-    return render_template(
-        'pages/nuclino.html'
-    )
-
-
 @app.route("/logout")
 @login_required
 def logout():
