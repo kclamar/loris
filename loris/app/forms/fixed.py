@@ -159,9 +159,8 @@ def dynamic_tablecreationform(user_name):
         definition = TextAreaField(
             (
                 'definition - '
-                '<a href="https://tutorials.datajoint.io/'
-                'beginner/building-first-pipeline/python/'
-                'first-table.html" target="_blank">help</a>'
+                '<a href="https://docs.datajoint.io/python/definition'
+                '/04-Definition-Syntax.html" target="_blank">help</a>'
             ),
             description=('datajoint definition of table'),
             validators=[

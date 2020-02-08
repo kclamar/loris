@@ -72,13 +72,13 @@
         </a>
         <ul class="dropdown-menu border-0 shadow", aria-labelledby="navbarDropdown2">
         {% for schema in session['schemata'] %}
+        {% if 'tables' in session %}
+        {% if session['tables'][schema] %}
         <li class="dropdown-submenu">
         <div class="btn-group dropright">
             <a href="{{ url_for('erd', schema=schema) }}" class="dropdown-item">
                 {{ schema }}
             </a>
-            {% if 'tables' in session %}
-            {% if session['tables'][schema] %}
             <a id="subdrop1" href="#" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" class="dropdown-item dropdown-toggle dropdown-toggle-split">
                  <span class="sr-only"></span>
             </a>
@@ -87,10 +87,10 @@
                     <li><a href="{{ url_for('table', schema=schema, table=table) }}" class="dropdown-item">{{table}}</a></li>
                     {% endfor %}
                 </ul>
-            {% endif %}
-            {% endif %}
         </div>
         </li>
+        {% endif %}
+        {% endif %}
         {% endfor %}
         </ul>
       </li>

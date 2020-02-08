@@ -213,39 +213,30 @@ class DynamicForm:
             raise LorisError(f'form is incorrect type (={type(form)}); '
                              'form must be dict or be a subclass of FormMixin')
 
-        primary_dict = self._insert(formatted_dict, _id, **kwargs)
+        # perform operations within a transaction
+        with self.table.connection.transaction:
 
-        for part_name, part_form in self.part_fields.items():
-            f_dicts = formatted_dict[part_name]
-            if f_dicts is None:
-                continue
-            for f_dict in f_dicts:
-                if _id is None:
-                    _part_id = None
-                else:
-                    # update with part entry that exist
-                    _part_primary = {
-                        key: value for key, value in f_dict.items()
-                        if (
-                            key in part_form.table.primary_key
-                            and key not in self.table.primary_key
-                        )
-                    }
-                    _part_id = {**_id, **_part_primary}
-                # try insertion
-                try:
+            primary_dict = self._insert(formatted_dict, _id, **kwargs)
+
+            for part_name, part_form in self.part_fields.items():
+                f_dicts = formatted_dict[part_name]
+                if f_dicts is None:
+                    continue
+                for f_dict in f_dicts:
+                    if _id is None:
+                        _part_id = None
+                    else:
+                        # update with part entry that exist
+                        _part_primary = {
+                            key: value for key, value in f_dict.items()
+                            if (
+                                key in part_form.table.primary_key
+                                and key not in self.table.primary_key
+                            )
+                        }
+                        _part_id = {**_id, **_part_primary}
+                    # insert into part table
                     part_form._insert(f_dict, _part_id, primary_dict, **kwargs)
-                except dj.DataJointError as e:
-                    raise dj.DataJointError(
-                        *e.args,
-                        (
-                            'Error occured while entering data into part '
-                            'table; master table entry already exists, and'
-                            ' possibly some part table entries.'
-                        )
-                    )
-                    # (self.table & primary_dict).delete(force=True)
-                    # raise e
 
         return primary_dict
 
