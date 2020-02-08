@@ -73,6 +73,9 @@ class RawTwoPhotonData(dj.AutoImported):
     class Data(DataMixin, dj.Part):
         master_name = "RawTwoPhotonData"
 
+    class Files(FilesMixin, dj.Part):
+        master_name = "RawTwoPhotonData"
+
 
 @schema
 class MotionCorrectedData(dj.AutoComputed):
@@ -87,6 +90,9 @@ class MotionCorrectedData(dj.AutoComputed):
     class Data(DataMixin, dj.Part):
         master_name = "MotionCorrectedData"
 
+    class Files(FilesMixin, dj.Part):
+        master_name = "MotionCorrectedData"
+
 
 @schema
 class ExtractedData(dj.AutoComputed):
@@ -96,6 +102,9 @@ class ExtractedData(dj.AutoComputed):
     """
 
     class Data(DataMixin, dj.Part):
+        master_name = "ExtractedData"
+
+    class Files(FilesMixin, dj.Part):
         master_name = "ExtractedData"
 
     class Roi(dj.Part):

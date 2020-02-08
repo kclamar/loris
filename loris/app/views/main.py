@@ -125,7 +125,15 @@ def register():
 
     if current_user.user_name not in config['administrators']:
         flash("Only administrators are allowed to register users", "warning")
-        return redirect(url_for('home'))
+        return redirect(
+            url_for(
+                'table',
+                schema=config['user_schema'],
+                table=config['user_table'],
+                edit="True",
+                _id={config['user_name']: current_user.user_name}
+            )
+        )
 
     user_class = config.user_table
 
@@ -178,6 +186,10 @@ def register():
 def registergroup():
     """setup a group
     """
+
+    if current_user.user_name not in config['administrators']:
+        flash("Only administrators are allowed to register groups", "warning")
+        return redirect(url_for('home'))
 
     group_class = config.group_table
 
@@ -278,17 +290,13 @@ def assigngroup():
 
         form.append_hidden_entries()
 
-    edit_url = url_for(
-        'table',
-        schema=config["assignedgroup_schema"],
-        table=config["assignedgroup_table"])
     delete_url = url_for(
         'delete',
         schema=config["assignedgroup_schema"],
         table=config["assignedgroup_table"])
 
     data = dynamicform.get_jsontable(
-        edit_url, delete_url,
+        delete_url=delete_url,
     )
 
     return render_template(

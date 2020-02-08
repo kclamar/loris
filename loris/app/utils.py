@@ -140,6 +140,11 @@ def get_jsontable(
     return jsontable
 
 
+def name_lookup(full_name):
+    """ Look for a table's class name given its full name. """
+    return lookup_class_name(full_name, config['schemata']) or full_name
+
+
 def draw_helper(obj=None, type='table', only_essentials=False):
     """
     helper for drawing erds
@@ -289,10 +294,6 @@ def draw_helper(obj=None, type='table', only_essentials=False):
             )
         return name
 
-    def name_lookup(full_name):
-        """ Look for a table's class name given its full name. """
-        return lookup_class_name(full_name, config['schemata']) or full_name
-
     def is_essential(name):
         truth = dj.diagram._get_tier(name) in [
             dj.Manual, dj.Computed, dj.Lookup,
@@ -323,7 +324,7 @@ def draw_helper(obj=None, type='table', only_essentials=False):
                             config['group_name']
                         ]
                     ) or (
-                        schema 
+                        schema
                         in config.user_table.proj().fetch()[
                             config['user_name']
                         ]

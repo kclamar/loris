@@ -213,6 +213,8 @@ class Config(dict):
                 add_objects=custom_attributes_dict,
                 create_tables=True
             )
+            # make sure jobs table has been created
+            schemata[schema].schema.jobs
 
         self['schemata'] = schemata
 
@@ -271,6 +273,8 @@ class Config(dict):
                 if key.split('.')[0] in self['schemata']:
                     continue
                 if isinstance(ele, dj.user_tables.OrderedClass):
+                    if is_manuallookup(ele):
+                        continue
                     tables[f'{schema}.{key}'] = ele
 
                     # get part tables

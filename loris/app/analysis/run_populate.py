@@ -18,19 +18,22 @@ if __name__ == '__main__':
     )
 
     args = parser.parse_args()
+    # TODO connect as user?
 
     kwargs = json.loads(args.kwargs)
 
     # add loris to path if not installed
     try:
-        from loris import config
+        from loris import config, conn
     except (ModuleNotFoundError, ImportError):
         filepath = __file__
         for i in range(4):
             filepath = os.path.dirname(filepath)
         print(filepath)
         sys.path.append(filepath)
-        from loris import config
+        from loris import config, conn
+
+    conn()
 
     table_class = getattr(
         config['schemata'][args.schema],

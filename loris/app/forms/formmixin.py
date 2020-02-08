@@ -7,7 +7,8 @@ import json
 import re
 
 from wtforms import FieldList, FormField, BooleanField, StringField, \
-TextAreaField, SelectField
+    TextAreaField, SelectField
+from wtforms.widgets import HiddenInput
 from wtforms import Form as NoCsrfForm
 from flask_wtf.file import FileField
 from werkzeug.utils import secure_filename
@@ -17,6 +18,10 @@ import datajoint as dj
 
 from loris import config
 from loris.app.forms import NONES
+
+
+class MetaHiddenField(BooleanField):
+    widget = HiddenInput()
 
 
 class TagListField(StringField):

@@ -21,6 +21,7 @@ from loris.app.forms.formmixin import FormMixin
 from loris.app.autoscripting.form_creater import dynamic_autoscripted_form
 from loris.app.forms.fixed import SettingsNameForm
 from loris.errors import LorisError
+from loris.app.subprocess import Run
 
 
 CURRENT_CONFIG = "_current_config.pkl"
@@ -171,15 +172,20 @@ class ConfigReader:
             idata = self.post_process_dict[key](idata)
             data[key] = idata
 
+        # add experiment_form
+        data['experiment_form'] = (
+            self.ultra_form.experiment_form.form.get_formatted()
+        )
         # save configurations to pickle file
         with open(self.current_config_file, 'wb') as f:
             pickle.dump(data, f, protocol=pickle.HIGHEST_PROTOCOL)
 
-        p = config.get('subprocess', None)
+        process = config.get('subprocess', Run())
 
-        if p is None or p.poll() is not None:
+        if not process.running:
 
             if self.buttons[button][2] and self.include_insert:
+                # running the insert script
                 if len(self.buttons[button]) == 3:
                     output_config = {}
                 else:
@@ -209,8 +215,8 @@ class ConfigReader:
                     f"{self.current_config_file}",
                 ]
 
-            p = subprocess.Popen(command, shell=False)
-            config['subprocess'] = p
+            process(command)
+            config['subprocess'] = process
             flash(f'running script {script}')
         else:
             flash(
@@ -315,20 +321,3 @@ class ConfigReader:
         length = len(self.existing_settings.columns)
         # just show name and date
         return [0] + [n+3 for n in range(length-3)]
-
-    def insert(self, **kwargs):
-        """
-        """
-
-        # TODO inserting configurations data into protocol_data field?
-
-        try:
-            self.dynamicform.insert(
-                self.ultra_form.experiment_form.form,
-                **kwargs
-            )
-        except dj.DataJointError as e:
-            flash(f'{e}', 'error')
-        else:
-            self.dynamicform.reset()
-            flash(f"Data inserted into database", 'success')

@@ -34,7 +34,9 @@ def wikiindex():
 @app.route('/wiki/<path:url>/')
 @login_required
 def wikidisplay(url):
-    page = current_wiki.get_or_404(url)
+    page = current_wiki.get(url)
+    if not page:
+        return redirect(url_for('wikicreate', url=url))
     return render_template(
         'pages/wiki/page.html',
         page=page, index_dict=app.config.get('index_dict', {}))
@@ -43,7 +45,8 @@ def wikidisplay(url):
 @app.route('/wikicreate/', methods=['GET', 'POST'])
 @login_required
 def wikicreate():
-    form = URLForm()
+    url = request.args.get('url', None)
+    form = URLForm(url=url)
     if form.validate_on_submit():
         return redirect(url_for(
             'wikiedit', url=form.clean_url(form.url.data)))
@@ -85,7 +88,9 @@ def wikipreview():
 @app.route('/wikimove/<path:url>/', methods=['GET', 'POST'])
 @login_required
 def wikimove(url):
-    page = current_wiki.get_or_404(url)
+    page = current_wiki.get(url)
+    if not page:
+        return redirect(url_for('wikicreate', url=url))
     form = URLForm(obj=page)
     if form.validate_on_submit():
         newurl = form.url.data
@@ -99,7 +104,9 @@ def wikimove(url):
 @app.route('/wikidelete/<path:url>/')
 @login_required
 def wikidelete(url):
-    page = current_wiki.get_or_404(url)
+    page = current_wiki.get(url)
+    if not page:
+        return redirect(url_for('wikicreate', url=url))
     current_wiki.delete(url)
     flash(f'Wiki page "{page.title}" was deleted.', 'error')
     return redirect(url_for('wikihome'))

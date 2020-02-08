@@ -4,7 +4,7 @@
 import os
 import re
 
-from flask import abort
+from flask import url_for, redirect
 
 from loris.app.wiki.page import Page
 from loris.app.wiki.utils import clean_url
@@ -26,12 +26,6 @@ class Wiki(object):
         if self.exists(url):
             return Page(path, url)
         return None
-
-    def get_or_404(self, url):
-        page = self.get(url)
-        if page:
-            return page
-        abort(404)
 
     def get_bare(self, url):
         path = self.path(url)

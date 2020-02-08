@@ -71,6 +71,9 @@ class ListReader:
 
     def __call__(self, value):
 
+        if value is None:
+            return 
+
         return [self.func(val) for val in value]
 
 
@@ -82,6 +85,9 @@ class TupleReader:
 
     def __call__(self, value):
 
+        if value is None:
+            return
+
         return (self.func(val) for val in value)
 
 
@@ -91,6 +97,9 @@ class DictReader:
         self.func_dict = func_dict
 
     def __call__(self, value):
+
+        if value is None:
+            return
 
         for key, func in self.func_dict.items():
             value[key] = func(value[key])

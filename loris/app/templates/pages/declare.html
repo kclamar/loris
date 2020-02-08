@@ -1,12 +1,12 @@
 {% extends 'layouts/main.html' %}
-{% block title %}Loris.Declare{% endblock %}
+{% block title %}Declare a New Table{% endblock %}
 {% block content %}
 
 <div class="page-header">
     {% from 'macros/render_form.html' import declare_render_form %}
     <h2> <a href="{{ url }}">Declare a Table</a></h2>
     <p>Please checkout the datajoint documentation on
-        <a href="https://docs.datajoint.io/python/definition/Definition.html"
+        <a href="https://docs.datajoint.io/python/definition/02-Creating-Tables.html"
         target=_blank>defining tables</a> for guidance.
     </p>
     {{ declare_render_form(form) }}

@@ -116,10 +116,33 @@ def delete(schema, table, subtable):
         ))
 
 
-@app.route('/table/<schema>/<table>', defaults={'subtable': None}, methods=['GET', 'POST'])
+@app.route('/table/<schema>/<table>',
+           defaults={'subtable': None}, methods=['GET', 'POST'])
 @app.route('/table/<schema>/<table>/<subtable>', methods=['GET', 'POST'])
 @login_required
 def table(schema, table, subtable):
+    if (  # people can edit their entries but can't create new users
+        (request.args.get('edit', None) != "True")
+        and ((schema, table)
+             == (config.user_table.database, config.user_table.name))
+    ):
+        return redirect(url_for('register'))
+    elif (
+        (schema, table)
+        == (config.group_table.database, config.group_table.name)
+    ):
+        return redirect(url_for('registergroup'))
+    elif (
+        (schema, table)
+        == (config.assigned_table.database, config.assigned_table.name)
+    ):
+        return redirect(url_for('assigngroup'))
+
+    if (schema, table) == ('subjects', 'FlyStock'):
+        override_permissions = True
+    else:
+        override_permissions = False
+
     subtable = request.args.get('subtable', subtable)
     edit_url = url_for(
         'table', schema=schema, table=table, subtable=subtable)
@@ -128,20 +151,5 @@ def table(schema, table, subtable):
 
     return form_template(
         schema, table, subtable, edit_url, overwrite_url, page='table',
+        override_permissions=override_permissions
     )
-
-
-# @app.route('/edit/<schema>/<table>', defaults={'subtable': None}, methods=['GET', 'POST'])
-# @app.route('/edit/<schema>/<table>/<subtable>', methods=['GET', 'POST'])
-# @login_required
-# def edit(schema, table, subtable):
-#     subtable = request.args.get('subtable', subtable)
-#     edit_url = url_for(
-#         'edit', schema=schema, table=table, subtable=subtable)
-#     overwrite_url = url_for(
-#         'table', schema=schema, table=table, subtable=subtable)
-#
-#     return form_template(
-#         schema, table, subtable, edit_url, overwrite_url, page='edit',
-#         redirect_page='table'
-#     )

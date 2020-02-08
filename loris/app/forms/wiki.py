@@ -5,7 +5,7 @@
 
 from flask_wtf import FlaskForm as Form
 from wtforms import (
-    BooleanField, TextField, TextAreaField
+    BooleanField, TextAreaField, StringField
 )
 from wtforms.validators import InputRequired, ValidationError, Optional
 
@@ -15,7 +15,7 @@ from loris.app.wiki.current_wiki import current_wiki
 
 
 class URLForm(Form, FormMixin):
-    url = TextField(
+    url = StringField(
         'url', [InputRequired()],
         description='URL of new wiki entry'
     )
@@ -29,7 +29,7 @@ class URLForm(Form, FormMixin):
 
 
 class SearchForm(Form, FormMixin):
-    term = TextField(
+    term = StringField(
         'term',
         [InputRequired()],
         description='Search for... (regex accepted)'
@@ -40,7 +40,7 @@ class SearchForm(Form, FormMixin):
 
 
 class EditorForm(Form, FormMixin):
-    title = TextField(
+    title = StringField(
         'title', [InputRequired()],
         description='title of wiki entry'
     )
@@ -48,7 +48,7 @@ class EditorForm(Form, FormMixin):
         'body', [InputRequired()],
         description='markdown text of wiki entry'
     )
-    tags = TextField(
+    tags = StringField(
         'tags', [Optional()],
         description='tags'
     )

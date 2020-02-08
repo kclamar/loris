@@ -10,24 +10,27 @@ import pickle
 import json
 import uuid
 
+import datajoint as dj
 from datajoint.declare import match_type
 from datajoint import FreeTable
 from datajoint.table import lookup_class_name
 from datajoint.utils import to_camel_case
+from flask import url_for
 from wtforms import BooleanField, SelectField, DateField, DateTimeField, \
     StringField, FloatField, IntegerField, FormField, \
-    TextAreaField, FieldList, DecimalField
+    TextAreaField, FieldList, DecimalField, HiddenField
 from wtforms.validators import InputRequired, Optional, NumberRange, \
     ValidationError, Length, UUID, URL, Email
 from werkzeug.datastructures import FileStorage
 
 from loris import config
 from loris.utils import is_manuallookup
+from loris.app.utils import name_lookup
 from loris.app.forms import NONES
 from loris.app.forms.formmixin import (
     ManualLookupForm, ParentFormField, DynamicFileField, DictField, ListField,
     ParentValidator, JsonSerializableValidator, AttachFileField,
-    BlobFileField, Extension, TagListField
+    BlobFileField, Extension, TagListField, MetaHiddenField
 )
 
 
@@ -213,7 +216,29 @@ class DynamicField:
         """
 
         kwargs = {}
-        kwargs['label'] = self.attr.name.replace('_', ' ')
+        attr_name = self.attr.name.replace('_', ' ')
+        if not self.is_foreign_key:
+            kwargs['label'] = attr_name
+        else:
+            # add table url
+            url_kwargs = dict(zip(
+                ['schema', 'table', 'subtable'],
+                name_lookup(self.foreign_table.full_table_name).split('.')
+            ))
+            if self.attr.in_key:
+                color = 'Crimson'
+            elif self.attr.nullable:
+                color = 'DarkGray'
+            else:
+                color = 'Black'
+            kwargs['label'] = (
+                f'<a href="{url_for("table", **url_kwargs)}" '
+                f'target="_blank">'
+                f'<font color={color}>'
+                f'{attr_name}'
+                '</font>'
+                '</a>'
+            )
         if self.attr.comment.strip():
             kwargs['description'] = self.attr.comment.strip()
         else:
@@ -399,15 +424,19 @@ class DynamicField:
         choices = self.get_foreign_choices()
         if self.attr.nullable:
             kwargs['default'] = 'NULL'
-        kwargs['choices'] = choices
 
-        return SelectField(**kwargs)
+        if choices:
+            kwargs['choices'] = choices
+            return SelectField(**kwargs)
+        else:
+            kwargs['label'] += ' -- <font color="red">MISSING ENTRIES IN PARENT TABLE!</font>'
+            return MetaHiddenField(**kwargs)
 
     def get_foreign_choices(self):
         choices = [(str(ele), str(ele)) for ele in self.foreign_data]
         if self.attr.nullable:
             choices = [('NULL', 'NULL')] + choices
-        if self.foreign_is_manuallookup:
+        if self.foreign_is_manuallookup and not self.ignore_foreign_fields:
             choices += [('<new>', '<add new entry>')]
 
         return choices
@@ -419,9 +448,15 @@ class DynamicField:
         if self.foreign_is_manuallookup:
             if value['existing_entries'] == '<new>':
                 value.pop('existing_entries')
-                self.foreign_table.insert1(
-                    self.foreign_table_format_value(value)
-                )
+                try:
+                    self.foreign_table.insert1(
+                        self.foreign_table_format_value(value)
+                    )
+                except dj.DataJointError as e:
+                    raise dj.DataJointError(
+                        "An error occured while inserting into parent table"
+                        f" {self.foreign_table.full_table_name}: {e}"
+                    )
                 value = value[self.name]
             else:
                 value = value['existing_entries']

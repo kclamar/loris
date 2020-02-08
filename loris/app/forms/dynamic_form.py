@@ -50,8 +50,22 @@ class DynamicForm:
         self._joined_datatable_container = {}
         self._formclass = None
         self._restriction = None
-        self.fields = {}
-        self.part_fields = {}
+        self._fields = None
+        self._part_fields = None
+
+    @property
+    def fields(self):
+
+        if self._fields is None:
+            self._fields = self.get_fields()
+        return self._fields
+
+    @property
+    def part_fields(self):
+
+        if self._part_fields is None:
+            self._part_fields = self.get_part_fields()
+        return self._part_fields
 
     @property
     def skip(self):
@@ -93,23 +107,25 @@ class DynamicForm:
 
         return self._formclass
 
-    def get_formclass(self):
+    def get_fields(self):
+        """get fields attributes
+        """
 
-        class TheForm(self.formtype, FormMixin):
-            pass
+        fields = {}
 
         for name, attr in self.table.heading.attributes.items():
             if name in self.skip:
                 continue
             field = DynamicField(self.table, attr)
-            self.fields[name] = field
-            field = field.create_field()
-            if field is not None:
-                setattr(
-                    TheForm,
-                    name,
-                    field
-                )
+            fields[name] = field
+
+        return fields
+
+    def get_part_fields(self):
+        """get part fields attribute
+        """
+
+        part_fields = {}
 
         for part_table in self.table.part_tables:
             # TODO aliased part tables
@@ -118,16 +134,34 @@ class DynamicForm:
                 formtype=NoCsrfForm
             )
             dynamicform.restriction = self.restriction
-            self.part_fields[part_table.name] = dynamicform
+            part_fields[part_table.name] = dynamicform
+
+        return part_fields
+
+    def get_formclass(self):
+
+        class TheForm(self.formtype, FormMixin):
+            pass
+
+        for name, field in self.fields.items():
+            field = field.create_field()
+            if field is not None:
+                setattr(
+                    TheForm,
+                    name,
+                    field
+                )
+
+        for part_name, part_form in self.part_fields.items():
             fieldlist = FieldList(
                 FormField(
-                    dynamicform.formclass
+                    part_form.formclass
                 ),
                 min_entries=1
             )
             setattr(
                 TheForm,
-                part_table.name,
+                part_name,
                 fieldlist
             )
 
@@ -279,17 +313,24 @@ class DynamicForm:
                 reserved = (
                     jobs
                     & {
-                        'table_name': self.table.table_name,
+                        'table_name': self.table.full_table_name,
                         'key_hash': key_hash(primary_dict)
                     }
                 )
                 if reserved:
                     raise dj.DataJointError(
-                        f"Entry {primary_dict} has been reserved; "
+                        f"Entry {primary_dict} has been reserved for table "
+                        f"{self.table.full_table_name}; "
                         "change your primary key values."
                     )
 
-            self.table.insert1(insert_dict, **kwargs)
+            try:
+                self.table.insert1(insert_dict, **kwargs)
+            except dj.DataJointError as e:
+                raise dj.DataJointError(
+                    "An error occured while inserting into table "
+                    f"{self.table.full_table_name}: {e}"
+                )
 
             return primary_dict
         else:  # editing entries savely
@@ -309,9 +350,15 @@ class DynamicForm:
                     )
                 )
             }
-            restricted_table.save_updates(
-                insert_dict, reload=False
-            )
+            try:
+                restricted_table.save_updates(
+                    insert_dict, reload=False
+                )
+            except dj.DataJointError as e:
+                raise dj.DataJointError(
+                    "An error occured while updating table "
+                    f"{self.table.full_table_name}: {e}"
+                )
 
     def populate_form(
         self, restriction, form, is_edit='False', **kwargs
@@ -333,7 +380,8 @@ class DynamicForm:
         for part_table in self.table.part_tables:
             part_formatted_list_dict = (
                 part_table & restriction
-            ).proj(*part_table.heading.non_blobs).fetch(as_dict=True)  # proj non_blobs?
+            ).proj(*part_table.heading.non_blobs).fetch(as_dict=True)
+            # proj non_blobs?
             formatted_dict[part_table.name] = []
             for part_formatted_dict in part_formatted_list_dict:
                 formatted_dict[part_table.name].append({})

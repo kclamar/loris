@@ -24,34 +24,7 @@ from loris.app.login import User
 from loris.database.users import grantuser, change_password
 from loris.app.autoscripting.form_creater import dynamic_autoscripted_form
 from loris.app.autoscripting.config_reader import ConfigReader
-
-
-def _subprocess_checker():
-
-    p = config.get('subprocess', None)
-
-    if p is not None:
-        if p.poll() is not None:
-            if p.returncode == 0:
-                flash('Subprocess complete', 'success')
-                config['subprocess'] = None
-            else:
-                flash(f"Status of Subprocess: FAIL {p.returncode}", 'error')
-                config['subprocess'] = None
-        else:
-            flash('Subprocess is still running', 'warning')
-
-
-def _abort_subprocess():
-
-    p = config.get('subprocess', None)
-
-    if p is not None:
-        p.terminate()
-        config['subprocess'] = None
-        flash('Aborting subprocess...', 'warning')
-    else:
-        flash('No subprocess is running')
+from loris.app.subprocess import Run
 
 
 @app.route("/experiment",
@@ -80,7 +53,9 @@ def experiment(table_name, autoscript_folder):
 
     submit = request.args.get('submit', None)
 
-    _subprocess_checker()
+    process = config.get('subprocess', Run())
+
+    process.check()
 
     if request.method == 'POST':
 
@@ -99,7 +74,7 @@ def experiment(table_name, autoscript_folder):
                 table_name=table_name))
 
         elif submit == 'Abort':
-            _abort_subprocess()
+            process.abort()
 
         elif reader.initialized:
             if (
@@ -124,19 +99,6 @@ def experiment(table_name, autoscript_folder):
                 )
             ):
                 reader.save_settings()
-
-            elif (
-                (submit in ['Insert', 'Overwrite'])
-                and reader.validate_on_submit(
-                    check_experiment_form=True,
-                    flash_message=(
-                        'Unable to insert/overwrite settings; '
-                        'check all fields in the forms')
-                )
-            ):
-                reader.insert(
-                    replace=(True if submit == 'Overwrite' else False)
-                )
 
         # append hidden entries
         reader.append_hidden_entries()
