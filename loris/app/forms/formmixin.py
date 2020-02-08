@@ -130,8 +130,6 @@ class RestrictionField(StringField):
     def evaluate(self, data):
         if data.startswith('['):
             return True
-        elif data.startswith('('):
-            return True
         elif data.startswith('{'):
             return True
         else:

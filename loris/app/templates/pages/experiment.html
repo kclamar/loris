@@ -6,7 +6,9 @@
     {% from 'macros/render_form.html' import auto_render_form, simple_render_form %}
     <h2> <a href="{{url_for('experiment')}}">Experiment</a> <h2>
         <h6></h6>
-    {{ auto_render_form(form, ultra_form, data, toggle_off_keys, buttons, include_insert, enter_show, readonly=readonly) }}
+    {{ auto_render_form(
+        form, ultra_form, data, toggle_off_keys, buttons,
+        include_insert, enter_show, url_experiment, readonly=readonly) }}
 </div>
 
 {% endblock %}

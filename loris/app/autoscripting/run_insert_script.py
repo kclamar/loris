@@ -71,33 +71,30 @@ if __name__ == '__main__':
         table_class.full_table_name, primary_dict
     )
 
-    primary_dict = dynamicform.insert(
-        data['experiment_form'],
-        check_reserved=False
-    )
+    with table_class.connection.transaction:
+        primary_dict = dynamicform.insert(
+            data['experiment_form'],
+            check_reserved=False
+        )
 
-    command = [
-        "python",
-        f"{args.script}",
-        "--location",
-        f"{args.location}",
-    ]
+        command = [
+            "python",
+            f"{args.script}",
+            "--location",
+            f"{args.location}",
+        ]
 
-    process = Run()
-    process(command)
-    returncode = process.wait()
+        process = Run()
+        process(command)
+        returncode = process.wait()
 
-    if returncode != 0:
-        # force delete of data
-        for part_table in table_class().part_tables:
-            (part_table & primary_dict).delete_quick()
-        (table_class & primary_dict).delete_quick()
-        raise LorisError(f'automatic script error: {returncode}')
+        if returncode != 0:
+            raise LorisError(f'automatic script error: {returncode}')
 
-    # update fields with data from autoscript
-    args.outputattr  # field name or <datamixin_name>, <filemixin_name>
-    args.configattr  # field name or <datamixin_name>, <filemixin_name>
-    args.outputfile  # for data can be - npy, csv, json, pkl, txt
+        # update fields with data from autoscript
+        args.outputattr  # field name or <datamixin_name>, <filemixin_name>
+        args.configattr  # field name or <datamixin_name>, <filemixin_name>
+        args.outputfile  # for data can be - npy, csv, json, pkl, txt
 
     jobs.complete(
         table_class.full_table_name, primary_dict

@@ -121,12 +121,23 @@ class ConfigReader:
             self.ultra_form.rm_hidden_entries()
 
     def validate_on_submit(
-        self, include=None, check_experiment_form=False,
-        check_settings_name=False, flash_message=''
+        self, button=None,
+        check_settings_name=False,
+        flash_message=''
     ):
         """validate on submit on all forms (always check experiment form?)
         """
         truth = True
+
+        if button is None:
+            include = None
+            check_experiment_form = True
+        else:
+            include = self.buttons[button][1]
+            if self.buttons[button][2]:
+                check_experiment_form = True
+            else:
+                check_experiment_form = False
 
         if not self.ultra_form.is_submitted():
             flash(flash_message, 'error')

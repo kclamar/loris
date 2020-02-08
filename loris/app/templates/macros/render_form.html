@@ -232,7 +232,7 @@
 {% endmacro %}
 
 
-{% macro auto_render_form(form, ultra_form, data, toggle_off_keys, buttons, include_insert, enter_show, readonly=[]) %}
+{% macro auto_render_form(form, ultra_form, data, toggle_off_keys, buttons, include_insert, enter_show, url_experiment, readonly=[]) %}
 <div id="accordion">
   <div class="card">
     <div class="card-header" id="headingOne">
@@ -304,7 +304,7 @@
                   <div class="collapse multi-collapse" id="ExperimentForm">
                       <p></p>
                       <div class="card card-body">
-                        <h4>{{ ultra_form.table_name }}</h4>
+                        <h4><a href="{{url_experiment}}" target="_blank">{{ ultra_form.table_name }}</a></h4>
                         {{ simple_render_form(ultra_form.experiment_form.form, readonly=readonly) }}
                       </div>
                     </div>

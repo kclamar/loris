@@ -247,11 +247,8 @@ class DynamicForm:
             raise LorisError(f'form is incorrect type (={type(form)}); '
                              'form must be dict or be a subclass of FormMixin')
 
-        # perform operations within a transaction
-        with self.table.connection.transaction:
-
+        def helper():
             primary_dict = self._insert(formatted_dict, _id, **kwargs)
-
             for part_name, part_form in self.part_fields.items():
                 f_dicts = formatted_dict[part_name]
                 if f_dicts is None:
@@ -271,7 +268,14 @@ class DynamicForm:
                         _part_id = {**_id, **_part_primary}
                     # insert into part table
                     part_form._insert(f_dict, _part_id, primary_dict, **kwargs)
-
+            return primary_dict
+            
+        if self.table.connection.in_transaction:
+            primary_dict = helper()
+        else:
+            # perform operations within a transaction
+            with self.table.connection.transaction:
+                primary_dict = helper()
         return primary_dict
 
     def _insert(

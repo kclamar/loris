@@ -80,7 +80,7 @@ def experiment(table_name, autoscript_folder):
             if (
                 (submit in reader.buttons)
                 and reader.validate_on_submit(
-                    reader.buttons[submit][1],
+                    submit,
                     flash_message=(
                         'Unable to run process; '
                         'check all fields in the forms')
@@ -91,7 +91,6 @@ def experiment(table_name, autoscript_folder):
             elif (
                 (submit == 'Save')
                 and reader.validate_on_submit(
-                    check_experiment_form=True,
                     check_settings_name=True,
                     flash_message=(
                         'Unable to save settings; '
@@ -114,7 +113,15 @@ def experiment(table_name, autoscript_folder):
         ultra_form=reader.ultra_form,
         buttons=reader.buttons,
         include_insert=reader.include_insert,
-        enter_show=enter_show
+        enter_show=enter_show,
+        url_experiment=url_for(
+            'table',
+            **{
+                key: value
+                for key, value in
+                zip(('schema', 'table', 'subtable'), table_name.split('.'))
+            }
+        )
     )
 
 
