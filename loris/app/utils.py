@@ -5,13 +5,33 @@ import graphviz
 import os
 import pandas as pd
 import uuid
+import pickle
+import json
 import glob
 import datajoint as dj
+import numpy as np
 from datajoint.schema import lookup_class_name
 from flask import render_template, request, flash, url_for, redirect
 
 from loris import config, conn
 from loris.utils import is_manuallookup
+
+
+def datareader(value):
+    """data reader for supported files, otherwise just return the file
+    """
+    if value.endswith('npy'):
+        value = np.load(value)
+    elif value.endswith('csv'):
+        value = pd.read_csv(value).to_records(False)
+    elif value.endswith('pkl'):
+        with open(value, 'rb') as f:
+            value = pickle.load(f)
+    elif value.endswith('json'):
+        with open(value, 'r') as f:
+            value = json.load(f)
+
+    return value
 
 
 def user_has_permission(table, user, skip_tables=None):

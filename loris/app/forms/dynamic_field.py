@@ -25,7 +25,7 @@ from werkzeug.datastructures import FileStorage
 
 from loris import config
 from loris.utils import is_manuallookup
-from loris.app.utils import name_lookup
+from loris.app.utils import name_lookup, datareader
 from loris.app.forms import NONES
 from loris.app.forms.formmixin import (
     ManualLookupForm, ParentFormField, DynamicFileField, DictField, ListField,
@@ -471,16 +471,8 @@ class DynamicField:
 
         if value in NONES:
             value = None
-        elif value.endswith('npy'):
-            value = np.load(value)
-        elif value.endswith('csv'):
-            value = pd.read_csv(value).to_records(False)
-        elif value.endswith('pkl'):
-            with open(value, 'rb') as f:
-                value = pickle.load(f)
-        elif value.endswith('json'):
-            with open(value, 'r') as f:
-                value = json.load(f)
+        else:
+            value = datareader(value)
 
         return value
 

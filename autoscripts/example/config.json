@@ -4,9 +4,9 @@
         "Run": [
             "run.py", ["form_name", "form_name2"], true,
             {
-                "configattr": "configuration_data",
+                "configattr": "<Files:example_configuration>",
                 "outputfile": "output.json",
-                "outputattr": "protocol_data"
+                "outputattr": "<Data:example_output>"
             }
         ],
         "Test": ["test.py", ["form_name"], false]

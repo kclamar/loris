@@ -187,6 +187,10 @@ class Config(dict):
         """perform various checks (create directories if they don't exist)
         """
 
+        for path in EXPANDUSER_FIELDS:
+            if path in self:
+                self[path] = os.path.expanduser(self[path])
+
         if not os.path.exists(self['tmp_folder']):
             os.makedirs(self['tmp_folder'])
 
@@ -195,10 +199,6 @@ class Config(dict):
 
         if self['max_cpu'] is None:
             self['max_cpu'] = mp.cpu_count()
-
-        for path in EXPANDUSER_FIELDS:
-            if path in self:
-                self[path] = os.path.expanduser(self[path])
 
     def refresh_schema(self):
         """refresh container of schemas

@@ -2,17 +2,78 @@
 """
 
 import argparse
-import subprocess
 import sys
 import os
 import pickle
+
+# add loris to path if not installed
+try:
+    from loris import config, conn
+except (ModuleNotFoundError, ImportError):
+    filepath = __file__
+    for i in range(4):
+        filepath = os.path.dirname(filepath)
+    sys.path.append(filepath)
+    from loris import config, conn
+# import other loris packages
+from loris.app.forms.dynamic_form import DynamicForm
+from loris.app.subprocess import Run
+from loris.errors import LorisError
+from loris.app.utils import datareader
+from loris.database.schema.base import DataMixin, FilesMixin
+
+
+def get_insert_part_mixin(
+    attr, value, lookup_name, table_name, attr_name, func=lambda x: x
+):
+    """get dictionary to insert from part table mixin (data or file)
+    """
+    lookup_name = {lookup_name: attr}
+    lookup_table = getattr(config['schemata']['core'], table_name)
+    if not (lookup_table & lookup_name):
+        lookup_table.insert1(lookup_name)
+    return {
+        **primary_dict,
+        **lookup_name,
+        attr_name: func(value),
+    }
+
+
+def inserting_autoscript_stuff(attr, value, table_class):
+    """inserting data/file from autoscript into database
+    """
+    if attr.startswith('<') and attr.endswith('>'):
+        # assumes either data or filemixin was used
+        part_table_name, attr = attr.split(':')
+        part_table = getattr(table_class, part_table_name)
+        if issubclass(part_table, DataMixin):
+            to_insert = get_insert_part_mixin(
+                attr, value, 'data_lookup_name', 'DataLookupName',
+                'a_datum', func=datareader
+            )
+        elif issubclass(part_table, FilesMixin):
+            to_insert = get_insert_part_mixin(
+                attr, value, 'file_lookup_name', 'FileLookupName',
+                'a_file', func=datareader
+            )
+        else:
+            raise LorisError('part table {part_table.name} is not a '
+                             'subclass of DataMixin or FilesMixin.')
+        part_table.insert1(to_insert)
+    elif attr in table_class.heading:
+        if table_class.heading[attr].is_blob:
+            value = datareader(value)
+        (table_class & primary_dict).save_update(attr, value)
+    else:
+        raise LorisError(f'attr {attr} does not exist in '
+                         f'table {table_class.full_table_name}')
 
 
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--location", help="location of basedir", type=str)
+        "--location", help="location of config file", type=str)
     parser.add_argument(
         "--tablename", help="name of table in database", type=str)
     parser.add_argument(
@@ -38,23 +99,10 @@ if __name__ == '__main__':
     with open(args.location, 'rb') as f:
         data = pickle.load(f)
 
-    # add loris to path if not installed
-    try:
-        from loris import config, conn
-    except (ModuleNotFoundError, ImportError):
-        filepath = __file__
-        for i in range(4):
-            filepath = os.path.dirname(filepath)
-        sys.path.append(filepath)
-        from loris import config, conn
-
     # connect to database
     conn()
 
-    from loris.app.forms.dynamic_form import DynamicForm
-    from loris.app.subprocess import Run
-    from loris.errors import LorisError
-
+    # get table class
     schema, table = args.tablename.split('.')
     table_class = getattr(config['schemata'][schema], table)
     dynamicform = DynamicForm(table_class)
@@ -94,10 +142,13 @@ if __name__ == '__main__':
         if returncode != 0:
             raise LorisError(f'automatic script error:\n{stderr}')
 
-        # update fields with data from autoscript
-        args.outputattr  # field name or <datamixin_name>, <filemixin_name>
-        args.configattr  # field name or <datamixin_name>, <filemixin_name>
-        args.outputfile  # for data can be - npy, csv, json, pkl, txt
+        # update/insert fields with data from autoscript
+        if args.configattr != 'null' and args.configattr is not None:
+            inserting_autoscript_stuff(args.configattr, args.location, table_class)
+        if args.outputattr != 'null' and args.outputattr is not None:
+            inserting_autoscript_stuff(args.outputattr, args.outputfile, table_class)
+        # field name or <part_table_name:data/file_lookupname>
+        # or just an attribute in the table
 
     jobs.complete(
         table_class.full_table_name, primary_dict
