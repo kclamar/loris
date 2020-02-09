@@ -9,12 +9,15 @@ import pickle
 # add loris to path if not installed
 try:
     from loris import config, conn
+    conn()
 except (ModuleNotFoundError, ImportError):
     filepath = __file__
     for i in range(4):
         filepath = os.path.dirname(filepath)
     sys.path.append(filepath)
     from loris import config, conn
+    conn()
+
 # import other loris packages
 from loris.app.forms.dynamic_form import DynamicForm
 from loris.app.subprocess import Run
@@ -55,6 +58,7 @@ def file_subclass(part_table, primary_dict):
     truth = (
         set(part_table.heading)
         == (set(primary_dict) | {'a_file', 'file_lookup_name'}))
+    # TODO test attr is blob and foreign key reference
 
     return truth
 
@@ -78,7 +82,7 @@ def inserting_autoscript_stuff(attr, value, table_class, primary_dict):
                 'a_file', func=datareader
             )
         else:
-            raise LorisError('part table {part_table.name} is not a '
+            raise LorisError(f'part table {part_table.name} is not a '
                              'subclass of DataMixin or FilesMixin.')
         part_table.insert1(to_insert)
     elif attr in table_class.heading:
@@ -120,9 +124,6 @@ if __name__ == '__main__':
     with open(args.location, 'rb') as f:
         data = pickle.load(f)
 
-    # connect to database
-    conn()
-
     # get table class
     schema, table = args.tablename.split('.')
     table_class = getattr(config['schemata'][schema], table)
@@ -155,7 +156,8 @@ if __name__ == '__main__':
             ]
 
             process = Run()
-            process(command)
+            cwd = os.path.dirname(args.script)
+            process(command, cwd)
             returncode, stdout, stderr = process.wait()
 
             if stdout is not None:
@@ -171,7 +173,7 @@ if __name__ == '__main__':
                     table_class, primary_dict)
             if args.outputattr != 'null' and args.outputattr is not None:
                 inserting_autoscript_stuff(
-                    args.outputattr, args.outputfile,
+                    args.outputattr, os.path.join(cwd, args.outputfile),
                     table_class, primary_dict)
             # field name or <part_table_name:data/file_lookupname>
             # or just an attribute in the table
@@ -184,9 +186,3 @@ if __name__ == '__main__':
         jobs.complete(
             table_class.full_table_name, primary_dict
         )
-
-    # TODO insert into database
-    # check if blob or attach for output and configuration saving
-    # check if attributes in table
-    # option with files/data part tables
-    # use jobs table to reserve inserting this entry

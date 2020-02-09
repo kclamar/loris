@@ -34,7 +34,7 @@ class Run:
     def running(self):
         return self.p is not None and self.p.poll() is None
 
-    def __call__(self, command):
+    def __call__(self, command, cwd):
         """
         """
 
@@ -42,7 +42,8 @@ class Run:
             command, shell=False,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
-            universal_newlines=True
+            universal_newlines=True,
+            cwd=cwd
         )
 
         return self.p

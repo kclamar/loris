@@ -4,6 +4,7 @@
 import argparse
 import json
 import pickle
+import os
 
 
 if __name__ == '__main__':
@@ -19,7 +20,6 @@ if __name__ == '__main__':
 
     # perform tasks
     print(os.getcwd())
-    print(f'form: {data["form_name"]}')
     print('this is not a unique message.')
 
     # save output as indicated in the config.json file

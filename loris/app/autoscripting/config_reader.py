@@ -227,7 +227,7 @@ class ConfigReader:
                     f"{self.current_config_file}",
                 ]
 
-            process(command)
+            process(command, os.path.dirname(script_file))
             config['subprocess'] = process
             flash(f'running script {script}')
         else:
