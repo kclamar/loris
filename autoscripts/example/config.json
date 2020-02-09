@@ -1,8 +1,15 @@
 {
     "autoscript_inserts": false,
     "scripts": {
-        "Run": ["script.py", ["form_name", "form_name2"]],
-        "Test": ["test.py", ["form_name"]]
+        "Run": [
+            "run.py", ["form_name", "form_name2"], true,
+            {
+                "configattr": "configuration_data",
+                "outputfile": "output.json",
+                "outputattr": "protocol_data"
+            }
+        ],
+        "Test": ["test.py", ["form_name"], false]
     },
     "forms": {
         "form_name" : {
@@ -11,13 +18,9 @@
             "c" : ["float", null],
             "d" : "int",
             "e" : "bool",
-            "f" : "numpy.array",
-            "g" : "pandas.DataFrame",
             "gg": ["folder---/Users/matthias.christenson/wiki---file", null],
-            "h" : "set",
             "i" : "str",
             "j" : [["1234", "adf", "asdf"], null],
-            "k" : "file",
             "_descriptions": {
                 "a" : "something"
             }
@@ -26,18 +29,9 @@
             "a": "dict",
             "b": {
                 "c": "int",
-                "d": "file",
-                "_iterate": false,
-                "_descriptions": {
-                    "c": "haha"
-                },
-            "f": {
-                "c": "int",
-                "d": "file",
                 "_iterate": true,
                 "_descriptions": {
                     "c": "haha"
-                    }
                 }
             }
         }
