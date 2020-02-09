@@ -79,6 +79,7 @@ class ConfigReader:
             table_name, table_class, ConfigDynamicForm,
             **kwargs
         )
+        dynamicform.reset()
         self.dynamicform = dynamicform
         self.experiment_form = experiment_form
 

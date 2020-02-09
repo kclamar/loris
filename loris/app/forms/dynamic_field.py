@@ -110,26 +110,7 @@ class DynamicField:
         else:
             return None
 
-        schema, table = table_name.replace('`', '').split('.')
-        table = table.strip('_#').split('__')
-        if len(table) == 2:
-            table, subtable = table
-        else:
-            table = table[0]
-            subtable = None
-
-        if schema not in config['schemata']:
-            return FreeTable(self.table.connection, table_name)
-
-        schema = config['schemata'][schema]
-        try:
-            table_class = getattr(schema, to_camel_case(table))
-            if subtable is not None:
-                table_class = getattr(table_class, to_camel_case(subtable))
-        except AttributeError:
-            return FreeTable(self.table.connection, table_name)
-
-        return table_class
+        return config.get_table(table_name)
 
     @property
     def foreign_table(self):

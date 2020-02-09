@@ -13,7 +13,7 @@ from wtforms import Form as NoCsrfForm
 from flask_wtf.file import FileField
 from werkzeug.utils import secure_filename
 from wtforms.validators import InputRequired, Optional, NumberRange, \
-    ValidationError, Length, UUID, URL, Email
+    ValidationError, Length, UUID, URL, Email, StopValidation
 import datajoint as dj
 
 from loris import config
@@ -207,7 +207,7 @@ class FilePath:
             )
 
 
-class ParentInputRequired(InputRequired):
+class ParentInputRequired(Optional):
 
     def __call__(self, form, field):
         """only required if <new> set
@@ -219,13 +219,22 @@ class ParentInputRequired(InputRequired):
             existing = '<new>'
 
         if existing == '<new>':
-            return super().__call__(form, field)
+            if field.data in NONES:
+                raise ValidationError('Data missing!')
+
+        super().__call__(form, field)
 
 
 class Always:
 
     def __call__(self, form, field):
-        raise ValidationError("Data completely missing!")
+        try:
+            existing = getattr(form, 'existing_entries').data
+        except AttributeError:
+            existing = '<new>'
+
+        if existing == '<new>':
+            raise ValidationError("Data completely missing!")
 
 
 class ParentValidator:

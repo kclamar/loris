@@ -273,7 +273,7 @@ class Config(dict):
                 if key.split('.')[0] in self['schemata']:
                     continue
                 if isinstance(ele, dj.user_tables.OrderedClass):
-                    if is_manuallookup(ele):
+                    if is_manuallookup(ele) or issubclass(ele, dj.Settingstable):
                         continue
                     tables[f'{schema}.{key}'] = ele
 

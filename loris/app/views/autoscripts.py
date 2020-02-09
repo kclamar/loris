@@ -55,8 +55,6 @@ def experiment(table_name, autoscript_folder):
 
     process = config.get('subprocess', Run())
 
-    stdout, stderr = process.check()
-
     if request.method == 'POST':
 
         reader.rm_hidden_entries()
@@ -104,6 +102,8 @@ def experiment(table_name, autoscript_folder):
 
     else:
         reader.populate_form(_id)
+
+    stdout, stderr = process.check()
 
     return render_template(
         f'pages/experiment.html',

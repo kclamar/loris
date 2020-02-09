@@ -121,7 +121,6 @@ def run(schema, table):
     table_name = '.'.join([schema, table])
     # load existing process
     process = config['_autopopulate'].get(table_name, Run())
-    stdout, stderr = process.check()
 
     # guidance for running new populates
     dynamicform, _form = config.get_dynamicform(
@@ -168,6 +167,8 @@ def run(schema, table):
 
         elif submit == 'Abort':
             process.abort()
+
+    stdout, stderr = process.check()
 
     return render_template(
         'pages/run.html',

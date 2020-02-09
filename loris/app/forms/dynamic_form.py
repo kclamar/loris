@@ -40,9 +40,15 @@ class DynamicForm:
         self._skip = skip
         self._formtype = formtype
 
-        self.reset()
+        self._set()
 
     def reset(self):
+        """reset attributes and other operations not performed in init
+        """
+
+        self._set()
+
+    def _set(self):
         """reset attributes
         """
 
@@ -269,7 +275,7 @@ class DynamicForm:
                     # insert into part table
                     part_form._insert(f_dict, _part_id, primary_dict, **kwargs)
             return primary_dict
-            
+
         if self.table.connection.in_transaction:
             primary_dict = helper()
         else:
