@@ -74,12 +74,12 @@ def inserting_autoscript_stuff(attr, value, table_class, primary_dict):
         if data_subclass(part_table, primary_dict):
             to_insert = get_insert_part_mixin(
                 attr, value, 'data_lookup_name', DataLookupName,
-                'a_datum', func=datareader
+                'a_datum', primary_dict, func=datareader
             )
         elif file_subclass(part_table, primary_dict):
             to_insert = get_insert_part_mixin(
                 attr, value, 'file_lookup_name', FileLookupName,
-                'a_file', func=datareader
+                'a_file', primary_dict, func=datareader
             )
         else:
             raise LorisError(f'part table {part_table.name} is not a '

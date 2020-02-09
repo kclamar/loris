@@ -1,6 +1,5 @@
 # user-specific ignores
-autoscripts/*_current_config.pkl
-autoscripts/*_saved_settings_*.json
+autoscripts/*
 config.json
 *.icloud
 
