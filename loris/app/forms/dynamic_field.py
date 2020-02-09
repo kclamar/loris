@@ -30,7 +30,8 @@ from loris.app.forms import NONES
 from loris.app.forms.formmixin import (
     ManualLookupForm, ParentFormField, DynamicFileField, DictField, ListField,
     ParentValidator, JsonSerializableValidator, AttachFileField,
-    BlobFileField, Extension, TagListField, MetaHiddenField
+    BlobFileField, Extension, TagListField, MetaHiddenField,
+    ParentInputRequired, Always
 )
 
 
@@ -109,19 +110,26 @@ class DynamicField:
         else:
             return None
 
-        if self.table.declaration_context is not None:
-            foreign_table = lookup_class_name(
-                table_name, self.table.declaration_context
-            )
-            if foreign_table is not None:
-                foreign_table = self.table.declaration_context[foreign_table]
+        schema, table = table_name.replace('`', '').split('.')
+        table = table.strip('_#').split('__')
+        if len(table) == 2:
+            table, subtable = table
         else:
-            foreign_table = None
+            table = table[0]
+            subtable = None
 
-        if foreign_table is None:
+        if schema not in config['schemata']:
             return FreeTable(self.table.connection, table_name)
-        else:
-            return foreign_table
+
+        schema = config['schemata'][schema]
+        try:
+            table_class = getattr(schema, to_camel_case(table))
+            if subtable is not None:
+                table_class = getattr(table_class, to_camel_case(subtable))
+        except AttributeError:
+            return FreeTable(self.table.connection, table_name)
+
+        return table_class
 
     @property
     def foreign_table(self):
@@ -244,7 +252,7 @@ class DynamicField:
         else:
             kwargs['description'] = self.attr.name.replace('_', ' ')
 
-        nullable = self.attr.nullable or self.attr.default in NONES
+        nullable = self.attr.nullable  # or self.attr.default in NONES
         kwargs['render_kw'] = {
             'nullable': self.attr.nullable,
             'primary_key': self.attr.in_key
@@ -260,7 +268,11 @@ class DynamicField:
             (self.attr.in_key or not nullable)
             and not self.ignore_foreign_fields
         ):
+            # case of no pop up
             kwargs['validators'] = [InputRequired()]
+        elif (self.attr.in_key or not nullable) and self.ignore_foreign_fields:
+            # case when foreign key pop up form
+            kwargs['validators'] = [ParentInputRequired()]
         else:
             kwargs['validators'] = [Optional()]
 
@@ -309,18 +321,22 @@ class DynamicField:
         if sql_type in ('datetime', 'timestamp'):
             if not (self.ignore_foreign_fields and self.attr.in_key):
                 kwargs['default'] = datetime.datetime.today()
-            return DateTimeField(format='%Y-%m-%d %H:%M', **kwargs)
+            kwargs['label'] += '&emsp;<small>(Y/m/d H:M - e.g. 2020/01/01 11:11)</small>&emsp;'
+            return DateTimeField(format='%Y/%m/%d %H:%M', **kwargs)
         elif sql_type == 'time':
             if not (self.ignore_foreign_fields and self.attr.in_key):
                 kwargs['default'] = datetime.datetime.today()
+            kwargs['label'] += '&emsp;<small>(H:M - e.g. 11:11)</small>&emsp;'
             return DateTimeField(format='%H:%M', **kwargs)
         elif sql_type == 'date':
             if not (self.ignore_foreign_fields and self.attr.in_key):
                 kwargs['default'] = datetime.date.today()
-            return DateField(format='%Y-%m-%d', **kwargs)
+            kwargs['label'] += '&emsp;<small>(Y/m/d - e.g. 2020/01/01)</small>&emsp;'
+            return DateField(format='%Y/%m/%d', **kwargs)
         elif sql_type == 'year':
             if not (self.ignore_foreign_fields and self.attr.in_key):
                 kwargs['default'] = datetime.date.today()
+            kwargs['label'] += '&emsp;<small>(Y - e.g. 2020)</small>&emsp;'
             return DateField(format='%Y', **kwargs)
 
     def enum_field(self, kwargs, sql_type):
@@ -430,6 +446,7 @@ class DynamicField:
             return SelectField(**kwargs)
         else:
             kwargs['label'] += ' -- <font color="red">MISSING ENTRIES IN PARENT TABLE!</font>'
+            kwargs['validators'].append(Always())
             return MetaHiddenField(**kwargs)
 
     def get_foreign_choices(self):

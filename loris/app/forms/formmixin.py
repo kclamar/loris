@@ -207,6 +207,27 @@ class FilePath:
             )
 
 
+class ParentInputRequired(InputRequired):
+
+    def __call__(self, form, field):
+        """only required if <new> set
+        """
+
+        try:
+            existing = getattr(form, 'existing_entries').data
+        except AttributeError:
+            existing = '<new>'
+
+        if existing == '<new>':
+            return super().__call__(form, field)
+
+
+class Always:
+
+    def __call__(self, form, field):
+        raise ValidationError("Data completely missing!")
+
+
 class ParentValidator:
 
     def __init__(self, primary_key):
@@ -223,6 +244,10 @@ class ParentValidator:
                 raise ValidationError(
                     'Must specify new foreign primary key '
                     'if <add new entry> is selected.'
+                )
+            if str(data) in [ele for ele, ele in field.choices]:
+                raise ValidationError(
+                    f'Entry {data} already exists in parent table.'
                 )
 
         else:

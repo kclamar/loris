@@ -55,7 +55,7 @@ def experiment(table_name, autoscript_folder):
 
     process = config.get('subprocess', Run())
 
-    process.check()
+    stdout, stderr = process.check()
 
     if request.method == 'POST':
 
@@ -114,14 +114,16 @@ def experiment(table_name, autoscript_folder):
         buttons=reader.buttons,
         include_insert=reader.include_insert,
         enter_show=enter_show,
-        url_experiment=url_for(
+        stdout=stdout,
+        stderr=stderr,
+        url_experiment=(None if table_name is None else url_for(
             'table',
             **{
                 key: value
                 for key, value in
                 zip(('schema', 'table', 'subtable'), table_name.split('.'))
             }
-        )
+        ))
     )
 
 

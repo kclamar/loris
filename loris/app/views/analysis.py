@@ -121,6 +121,7 @@ def run(schema, table):
     table_name = '.'.join([schema, table])
     # load existing process
     process = config['_autopopulate'].get(table_name, Run())
+    stdout, stderr = process.check()
 
     # guidance for running new populates
     dynamicform, _form = config.get_dynamicform(
@@ -173,6 +174,8 @@ def run(schema, table):
         form=form,
         schema=schema,
         table=table,
+        stdout=stdout,
+        stderr=stderr,
         table_name=table_name,
         data=data,
         toggle_off_keys=toggle_off_keys,

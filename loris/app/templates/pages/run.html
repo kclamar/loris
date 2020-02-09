@@ -2,6 +2,33 @@
 {% block title %}Run Analysis for {{ table_name }}{% endblock %}
 {% block content %}
 
+{% if stdout %}
+<div class="card border-secondary mb-3" overflow="scroll" style="max-height: 36rem;">
+  <div class="card-header"><strong>Output Printed by the Subprocess</strong></div>
+  <div class="card-body text-secondary scroll">
+    <p class="card-text">
+        {% for line in stdout%}
+            {{line}}<br>
+        {% endfor %}
+    </p>
+  </div>
+</div>
+{% endif %}
+{% if stderr %}
+<hr>
+<div class="card border-danger mb-3" overflow="scroll" style="max-height: 36rem;">
+  <div class="card-header text-danger"><strong>Error Message from Subprocess; Read and Report!</strong></div>
+  <div class="card-body text-danger scroll">
+    <p class="card-text">
+        {% for line in stderr%}
+            {{line}}<br>
+        {% endfor %}
+    </p>
+  </div>
+</div>
+<hr>
+{% endif %}
+
 <div class="page-header">
     {% from 'macros/render_form.html' import run_render_form %}
     <h2> <a href="{{ url_for('run', schema=schema, table=table) }}">Autopopulate {{table_name}}</a></h2>

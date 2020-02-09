@@ -29,7 +29,7 @@ class FilesMixin:
     def definition(self):
         return f"""
         -> {self.master_name}
-        -> core.LookupName
+        -> core.FileLookupName
         ---
         a_file : attach@attachstore
         """
@@ -45,7 +45,7 @@ class DataMixin:
     def definition(self):
         return f"""
         -> {self.master_name}
-        -> core.LookupName
+        -> core.DataLookupName
         ---
         a_datum : blob@datastore
         """
@@ -62,7 +62,7 @@ class ExtensionMixin:
     def definition(self):
         return f"""
         -> {self.master_name}
-        -> core.LookupName
+        -> core.ExtensionLookupName
         ---
         an_extension : varchar(63)
         -> [nullable] core.LookupRegex

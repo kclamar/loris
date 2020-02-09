@@ -40,7 +40,9 @@ class Run:
 
         self.p = subprocess.Popen(
             command, shell=False,
-            # stdout=subprocess.PIPE
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            universal_newlines=True
         )
 
         return self.p
@@ -48,19 +50,29 @@ class Run:
     def check(self):
         """check on subprocess and flash messages
         """
+        stdout, stderr = '', ''
+
         if self.p is not None:
             if self.p.poll() is not None:
+                try:
+                    stdout, stderr = self.p.communicate()
+                except ValueError:
+                    pass
+
                 if self.p.returncode == 0:
                     flash('Subprocess complete', 'success')
-                    self.p = None
                 else:
-                    flash(f"Status of Subprocess: "
-                          f"FAIL {self.p.returncode}", 'error')
-                    self.p = None
+                    flash(f"Subprocess failed: "
+                          f"{self.p.returncode}", 'error')
+
+                self.p = None
+
             else:
                 flash('Subprocess is still running', 'warning')
         else:
             flash('No subprocess is running', 'secondary')
+
+        return stdout.splitlines(), stderr.splitlines()
 
     def abort(self):
         """abort subprocess
@@ -79,7 +91,6 @@ class Run:
         if self.p is None:
             raise LorisError('No subprocess is running.')
 
-        while self.p.poll() is None:
-            pass
+        stdout, stderr = self.p.communicate()
 
-        return self.p.returncode
+        return self.p.returncode, stdout, stderr

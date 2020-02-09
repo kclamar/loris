@@ -86,10 +86,13 @@ if __name__ == '__main__':
 
         process = Run()
         process(command)
-        returncode = process.wait()
+        returncode, stdout, stderr = process.wait()
+
+        if stdout is not None:
+            print(stdout)
 
         if returncode != 0:
-            raise LorisError(f'automatic script error: {returncode}')
+            raise LorisError(f'automatic script error:\n{stderr}')
 
         # update fields with data from autoscript
         args.outputattr  # field name or <datamixin_name>, <filemixin_name>
