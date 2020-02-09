@@ -79,7 +79,7 @@ def inserting_autoscript_stuff(attr, value, table_class, primary_dict):
         elif file_subclass(part_table, primary_dict):
             to_insert = get_insert_part_mixin(
                 attr, value, 'file_lookup_name', FileLookupName,
-                'a_file', primary_dict, func=datareader
+                'a_file', primary_dict
             )
         else:
             raise LorisError(f'part table {part_table.name} is not a '
@@ -135,6 +135,8 @@ if __name__ == '__main__':
         value = data['experiment_form'][key]
         primary_dict[key] = dynamicform.fields[key].format_value(value)
 
+    print(f"Running autoscript for insertion with primary key: {primary_dict}")
+
     # reserve job for insertion
     jobs = config['schemata'][schema].schema.jobs
     jobs.reserve(
@@ -143,7 +145,7 @@ if __name__ == '__main__':
 
     try:
         with table_class.connection.transaction:
-            primary_dict = dynamicform.insert(
+            dynamicform.insert(
                 data['experiment_form'],
                 check_reserved=False
             )
@@ -183,6 +185,8 @@ if __name__ == '__main__':
         )
         raise e
     else:
+        print(f"Finished autoscript for insertion with "
+              f"primary key: {primary_dict}")
         jobs.complete(
             table_class.full_table_name, primary_dict
         )
