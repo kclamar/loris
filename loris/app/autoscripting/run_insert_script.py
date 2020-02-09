@@ -20,16 +20,17 @@ from loris.app.forms.dynamic_form import DynamicForm
 from loris.app.subprocess import Run
 from loris.errors import LorisError
 from loris.app.utils import datareader
-from loris.database.schema.base import DataMixin, FilesMixin
+from loris.database.schema.core import DataLookupName, FileLookupName
 
 
 def get_insert_part_mixin(
-    attr, value, lookup_name, table_name, attr_name, func=lambda x: x
+    attr, value, lookup_name, lookup_table, attr_name,
+    primary_dict,
+    func=lambda x: x
 ):
     """get dictionary to insert from part table mixin (data or file)
     """
     lookup_name = {lookup_name: attr}
-    lookup_table = getattr(config['schemata']['core'], table_name)
     if not (lookup_table & lookup_name):
         lookup_table.insert1(lookup_name)
     return {
@@ -39,21 +40,41 @@ def get_insert_part_mixin(
     }
 
 
-def inserting_autoscript_stuff(attr, value, table_class):
+def data_subclass(part_table, primary_dict):
+
+    truth = (
+        set(part_table.heading)
+        == (set(primary_dict) | {'a_datum', 'data_lookup_name'}))
+    # TODO test attr is blob and foreign key reference
+
+    return truth
+
+
+def file_subclass(part_table, primary_dict):
+
+    truth = (
+        set(part_table.heading)
+        == (set(primary_dict) | {'a_file', 'file_lookup_name'}))
+
+    return truth
+
+
+def inserting_autoscript_stuff(attr, value, table_class, primary_dict):
     """inserting data/file from autoscript into database
     """
     if attr.startswith('<') and attr.endswith('>'):
         # assumes either data or filemixin was used
+        attr = attr.strip('<>')
         part_table_name, attr = attr.split(':')
         part_table = getattr(table_class, part_table_name)
-        if issubclass(part_table, DataMixin):
+        if data_subclass(part_table, primary_dict):
             to_insert = get_insert_part_mixin(
-                attr, value, 'data_lookup_name', 'DataLookupName',
+                attr, value, 'data_lookup_name', DataLookupName,
                 'a_datum', func=datareader
             )
-        elif issubclass(part_table, FilesMixin):
+        elif file_subclass(part_table, primary_dict):
             to_insert = get_insert_part_mixin(
-                attr, value, 'file_lookup_name', 'FileLookupName',
+                attr, value, 'file_lookup_name', FileLookupName,
                 'a_file', func=datareader
             )
         else:
@@ -119,40 +140,50 @@ if __name__ == '__main__':
         table_class.full_table_name, primary_dict
     )
 
-    with table_class.connection.transaction:
-        primary_dict = dynamicform.insert(
-            data['experiment_form'],
-            check_reserved=False
+    try:
+        with table_class.connection.transaction:
+            primary_dict = dynamicform.insert(
+                data['experiment_form'],
+                check_reserved=False
+            )
+
+            command = [
+                "python",
+                f"{args.script}",
+                "--location",
+                f"{args.location}",
+            ]
+
+            process = Run()
+            process(command)
+            returncode, stdout, stderr = process.wait()
+
+            if stdout is not None:
+                print(stdout)
+
+            if returncode != 0:
+                raise LorisError(f'automatic script error:\n{stderr}')
+
+            # update/insert fields with data from autoscript
+            if args.configattr != 'null' and args.configattr is not None:
+                inserting_autoscript_stuff(
+                    args.configattr, args.location,
+                    table_class, primary_dict)
+            if args.outputattr != 'null' and args.outputattr is not None:
+                inserting_autoscript_stuff(
+                    args.outputattr, args.outputfile,
+                    table_class, primary_dict)
+            # field name or <part_table_name:data/file_lookupname>
+            # or just an attribute in the table
+    except Exception as e:
+        jobs.complete(
+            table_class.full_table_name, primary_dict
         )
-
-        command = [
-            "python",
-            f"{args.script}",
-            "--location",
-            f"{args.location}",
-        ]
-
-        process = Run()
-        process(command)
-        returncode, stdout, stderr = process.wait()
-
-        if stdout is not None:
-            print(stdout)
-
-        if returncode != 0:
-            raise LorisError(f'automatic script error:\n{stderr}')
-
-        # update/insert fields with data from autoscript
-        if args.configattr != 'null' and args.configattr is not None:
-            inserting_autoscript_stuff(args.configattr, args.location, table_class)
-        if args.outputattr != 'null' and args.outputattr is not None:
-            inserting_autoscript_stuff(args.outputattr, args.outputfile, table_class)
-        # field name or <part_table_name:data/file_lookupname>
-        # or just an attribute in the table
-
-    jobs.complete(
-        table_class.full_table_name, primary_dict
-    )
+        raise e
+    else:
+        jobs.complete(
+            table_class.full_table_name, primary_dict
+        )
 
     # TODO insert into database
     # check if blob or attach for output and configuration saving
