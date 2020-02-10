@@ -320,7 +320,7 @@ class FuncForm(NoCsrfForm, FormMixin):
             )
 
 
-def dynamic_settingstableform():
+def dynamic_settingstableform(table_class):
 
     class FetchTableForm(NoCsrfForm, FormMixin):
         table_name = SelectField(
@@ -439,7 +439,9 @@ def dynamic_runform(table_class):
             choices=[
                 (ele, ele)
                 for ele
-                in table_class.settings_table.proj().fetch()['settings_name']
+                in table_class.settings_table.proj().fetch()[
+                    table_class.settings_table.primary_key[0]
+                ]
             ]
         )
         restriction = RestrictionField(

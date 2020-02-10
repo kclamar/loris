@@ -33,10 +33,6 @@ def setup(schema, table):
     """setup a setting to run analysis
     """
 
-    # TODO post method
-
-    form = dynamic_settingstableform()()
-
     table_name = '.'.join([schema, table])
     url = url_for(
         'setup', schema=schema, table=table
@@ -48,6 +44,8 @@ def setup(schema, table):
     )
 
     table_class = getattr(config['schemata'][schema], table).settings_table
+
+    form = dynamic_settingstableform(table_class)()
 
     try:
         df = table_class.fetch(format='frame').reset_index()
