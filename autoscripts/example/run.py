@@ -6,6 +6,7 @@ import json
 import pickle
 import os
 import time
+from tqdm import tqdm
 
 
 if __name__ == '__main__':
@@ -20,8 +21,9 @@ if __name__ == '__main__':
         print('data was loaded')
 
     # perform tasks
+    for i in tqdm(range(10)):
+        time.sleep(3)
     print(os.getcwd())
-    time.sleep(10)
     print('this is not a unique message.')
 
     # save output as indicated in the config.json file
