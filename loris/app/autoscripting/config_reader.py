@@ -250,7 +250,7 @@ class ConfigReader:
         settings_dict['name'] = formatted_dict['settingsname_form'][
             'settings_name'
         ]
-        settings_dict['date'] = str(datetime.date.today())
+        settings_dict['date'] = str(datetime.datetime.today())
         settings_dict['experiment_form'] = formatted_dict['experiment_form']
 
         for key in self.ultra_form.autoscript_forms:
