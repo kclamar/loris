@@ -204,6 +204,7 @@ class ConfigReader:
                     output_config = self.buttons[button][3]
                 command = [
                     "python",
+                    "-u",
                     f"{INSERT_SCRIPT}",
                     "--tablename",
                     f"{self.table_name}",
@@ -222,12 +223,13 @@ class ConfigReader:
                 # just run the python script
                 command = [
                     "python",
+                    "-u",
                     f"{script_file}",
                     "--location",
                     f"{self.current_config_file}",
                 ]
 
-            process(command, os.path.dirname(script_file))
+            process.start(command, os.path.dirname(script_file))
             config['subprocess'] = process
             flash(f'running script {script}')
         else:

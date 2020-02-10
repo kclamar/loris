@@ -82,11 +82,13 @@ class AutoscriptedField:
 
         if required:
             kwargs = {
-                'validators': [InputRequired()]
+                'validators': [InputRequired()],
+                'render_kw': {'nullable': False}
             }
         else:
             kwargs = {
-                'validators': [Optional()]
+                'validators': [Optional()],
+                'render_kw': {'nullable': True}
             }
 
         kwargs['default'] = default

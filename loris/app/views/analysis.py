@@ -163,7 +163,7 @@ def run(schema, table):
             ]
 
             config['_autopopulate'][table_name] = process
-            process(command, config['tmp_folder'])
+            process.start(command, config['tmp_folder'])
 
         elif submit == 'Abort':
             process.abort()

@@ -152,6 +152,7 @@ if __name__ == '__main__':
 
             command = [
                 "python",
+                "-u",
                 f"{args.script}",
                 "--location",
                 f"{args.location}",
@@ -159,14 +160,25 @@ if __name__ == '__main__':
 
             process = Run()
             cwd = os.path.dirname(args.script)
-            process(command, cwd)
-            returncode, stdout, stderr = process.wait()
+            process.start(command, cwd)
 
-            if stdout is not None:
-                print(stdout)
+            lnumbers = 0
+            while True:
+                length = len(process.lines)
+                if length > lnumbers:
+                    print(''.join(process.lines[lnumbers:length]))
+                    lnumbers = length
+                if process.p is not None and process.p.poll() is not None:
+                    break
 
-            if returncode != 0:
-                raise LorisError(f'automatic script error:\n{stderr}')
+            if process.thread.is_alive():
+                process.wait()
+
+            if process.stdout is not None:
+                print(process.stdout)
+
+            if process.rc != 0:
+                raise LorisError(f'automatic script error:\n{process.stderr}')
 
             # update/insert fields with data from autoscript
             if args.configattr != 'null' and args.configattr is not None:

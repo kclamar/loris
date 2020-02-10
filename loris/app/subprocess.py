@@ -2,6 +2,7 @@
 """
 
 import subprocess
+import threading
 
 from flask import flash
 
@@ -9,71 +10,72 @@ from loris.errors import LorisError
 
 
 class Run:
+    """run a thread
+    """
 
     def __init__(self):
-        """
-        """
+        self.reset()
 
-        self._p = None
-
-    @property
-    def p(self):
-        """
-        """
-
-        return self._p
-
-    @p.setter
-    def p(self, value):
-        """
-        """
-
-        self._p = value
+    def reset(self):
+        self.p = None
+        self.cmd = None
+        self.cwd = None
+        self.lines = []
+        self.rc = None
+        self.stderr = ''
+        self.thread = None
 
     @property
     def running(self):
         return self.p is not None and self.p.poll() is None
 
-    def __call__(self, command, cwd):
-        """
-        """
+    def start(self, cmd, cwd):
+        self.reset()
+        self.cmd = cmd
+        self.cwd = cwd
+        self.thread = threading.Thread(target=self.run)
+        self.thread.start()
+
+    def run(self):
 
         self.p = subprocess.Popen(
-            command, shell=False,
+            self.cmd, shell=False,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             universal_newlines=True,
-            cwd=cwd
+            cwd=self.cwd, bufsize=1
         )
 
-        return self.p
+        while True:
+            output = self.p.stdout.readline()
+            if self.p.poll() is not None:
+                break
+            if output:
+                self.lines.append(output)
+        self.rc = self.p.poll()
+        _, self.stderr = self.p.communicate()
+
+    @property
+    def stdout(self):
+        return ''.join(self.lines)
 
     def check(self):
         """check on subprocess and flash messages
         """
-        stdout, stderr = '', ''
 
-        if self.p is not None:
-            if self.p.poll() is not None:
-                try:
-                    stdout, stderr = self.p.communicate()
-                except ValueError:
-                    pass
-
-                if self.p.returncode == 0:
-                    flash('Subprocess complete', 'success')
-                else:
-                    flash(f"Subprocess failed: "
-                          f"{self.p.returncode}", 'error')
-
-                self.p = None
-
+        if self.rc is not None:
+            if self.rc == 0:
+                flash('Subprocess complete', 'success')
             else:
-                flash('Subprocess is still running', 'warning')
+                flash(f"Subprocess failed: "
+                      f"{self.rc}", 'error')
+            self.p = None
+        elif self.p is not None:
+            flash('Subprocess is still running', 'warning')
         else:
             flash('No subprocess is running', 'secondary')
 
-        return stdout.splitlines(), stderr.splitlines()
+        return self.stdout.splitlines(), self.stderr.splitlines()
 
     def abort(self):
         """abort subprocess
@@ -92,6 +94,6 @@ class Run:
         if self.p is None:
             raise LorisError('No subprocess is running.')
 
-        stdout, stderr = self.p.communicate()
+        self.thread.join()
 
-        return self.p.returncode, stdout, stderr
+        return self.rc, self.stdout, self.stderr
