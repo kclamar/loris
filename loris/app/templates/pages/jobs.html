@@ -1,0 +1,15 @@
+{% extends 'layouts/main.html' %}
+{% block title %}Jobs{% endblock %}
+{% block content %}
+
+<div class="page-header">
+    {% from 'macros/render_form.html' import render_form %}
+    <h2> <a href="{{url_for('jobs', schema=schema)}}">Jobs Table</a> <h2>
+</div>
+
+<p></p>
+{% with data=data, toggle_off_keys=toggle_off_keys%}
+    {% include 'macros/tables.html' %}
+{% endwith %}
+
+{% endblock %}

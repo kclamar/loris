@@ -5,6 +5,7 @@ import argparse
 import json
 import pickle
 import os
+import time
 
 
 if __name__ == '__main__':
@@ -20,6 +21,7 @@ if __name__ == '__main__':
 
     # perform tasks
     print(os.getcwd())
+    time.sleep(10)
     print('this is not a unique message.')
 
     # save output as indicated in the config.json file

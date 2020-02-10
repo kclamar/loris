@@ -322,6 +322,24 @@ class ConfigReader:
             )
         )
 
+    def get_jsontable_form(self):
+
+        if not self.initialized:
+            return "None"
+
+        return self.dynamicform.get_jsontable(
+            delete_url=url_for(
+                'delete',
+                schema=self.table_class.database,
+                table=self.table_class.name,
+            ),
+            edit_url=url_for(
+                'table',
+                schema=self.table_class.database,
+                table=self.table_class.name
+            )
+        )
+
     @property
     def toggle_off_keys(self):
         """

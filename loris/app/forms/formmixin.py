@@ -29,7 +29,7 @@ class TagListField(StringField):
 
     def __init__(
         self, label='', validators=None, remove_duplicates=True,
-        to_lowercase=True, separator=' ', **kwargs
+        to_lowercase=True, separator=',', **kwargs
     ):
         """
         Construct a new field.

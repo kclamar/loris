@@ -342,10 +342,12 @@ class DynamicField:
         return BooleanField(**kwargs)
 
     def blob_field(self, kwargs):
+        kwargs['validators'] = [Optional()]  # TODO fix for editing
         kwargs['validators'].append(Extension())
         return BlobFileField(**kwargs)
 
     def attach_field(self, kwargs):
+        kwargs['validators'] = [Optional()]  # TODO fix for editing
         kwargs['validators'].append(Extension(config['attach_extensions']))
         return AttachFileField(**kwargs)
 

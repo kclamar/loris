@@ -64,6 +64,16 @@
         <li><a class="dropdown-item" href="{{ url_for('declare') }}">Create/Declare a Table</a></li>
         <li><a class="dropdown-item" href="{{ url_for('change') }}">Change Password</a></li>
         <li><a class="dropdown-item" href="{{ url_for('refresh')}}">Refresh Database</a></li>
+        <li class="dropdown-submenu">
+        <a id="subdrop1" href="#" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" class="dropdown-item dropdown-toggle">
+            Jobs
+        </a>
+            <ul aria-labelledby="subdrop1" class="dropdown-menu border-0 shadow">
+                {% for schema in session['schemata'] %}
+                <li><a href="{{ url_for('jobs', schema=schema) }}" class="dropdown-item">{{schema}}</a></li>
+                {% endfor %}
+            </ul>
+        </li>
         </ul>
       </li>
       <li class="nav-item dropdown">

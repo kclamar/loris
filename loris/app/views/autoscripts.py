@@ -109,6 +109,8 @@ def experiment(table_name, autoscript_folder):
         f'pages/experiment.html',
         form=form,
         data=reader.get_jsontable_settings(),
+        data2=reader.get_jsontable_form(),
+        toggle_off_keys2=[0],
         toggle_off_keys=reader.toggle_off_keys,
         ultra_form=reader.ultra_form,
         buttons=reader.buttons,
@@ -169,8 +171,8 @@ def deleteconfig(table_name, autoscript_folder):
         return redirect(redirect_url)
 
     message = (
-        f"Are you sure you want to delete configuration {name} "
-        f"for protocol {autoscript_folder} and experiment type {table_name}?")
+        f"Are you sure you want to delete configuration <<{name}>> "
+        f"for protocol <<{autoscript_folder}>> and experiment type <<{table_name}>>?")
 
     return render_template(
         'pages/deleteconfig.html',

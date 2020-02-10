@@ -107,3 +107,50 @@ def join():
         data=data,
         toggle_off_keys=[0]
     )
+
+
+@app.route('/jobs/<schema>', methods=['GET', 'POST'])
+@login_required
+def jobs(schema):
+    """jobs table
+    """
+
+    administrator = current_user.user_name in config['administrators']
+
+    jobs = config['schemata'][schema].schema.jobs
+    # standard delete and edit urls
+    delete_url = url_for('jobs', schema=schema)
+    _id = eval(request.args.get('_id', "None"))
+
+    data = jobs.fetch(format='frame').reset_index()
+    data = get_jsontable(
+        data, jobs.primary_key, delete_url=delete_url
+    )
+
+    print(administrator)
+
+    if not administrator and _id is not None:
+        flash("Only administrators are allowed to "
+              "delete entries in the jobs table", "error")
+    elif _id is not None:
+        try:
+            (jobs & _id).delete_quick()
+        except dj.DataJointError as e:
+            flash(f"{e}", 'error')
+        else:
+            flash(f'Entry deleted: {_id}', 'warning')
+            return redirect(url_for('jobs', schema=schema))
+
+    return render_template(
+        'pages/jobs.html',
+        data=data,
+        toggle_off_keys=[0],
+        schema=schema
+    )
+
+    # return form_template(
+    #     schema, table, subtable,
+    #     edit_url=None, overwrite_url=None,
+    #     page='jobs',
+    #     override_permissions=True
+    # )

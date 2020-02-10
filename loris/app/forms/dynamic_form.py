@@ -265,7 +265,8 @@ class DynamicForm:
                     else:
                         # update with part entry that exist
                         _part_primary = {
-                            key: value for key, value in f_dict.items()
+                            key: part_form.fields[key].format_value(value)
+                            for key, value in f_dict.items()
                             if (
                                 key in part_form.table.primary_key
                                 and key not in self.table.primary_key
@@ -308,32 +309,32 @@ class DynamicForm:
                 )
             truth = False
 
-        if truth:
-            if primary_dict is not None:
-                insert_dict.update(primary_dict)
+        if primary_dict is not None:
+            insert_dict = {**primary_dict, **insert_dict}
 
-            primary_dict = {
-                key: value for key, value in insert_dict.items()
-                if key in self.table.primary_key
-            }
+        primary_dict = {
+            key: value for key, value in insert_dict.items()
+            if key in self.table.primary_key
+        }
 
-            jobs = config['schemata'][self.table.database].schema.jobs
+        jobs = config['schemata'][self.table.database].schema.jobs
 
-            if check_reserved:
-                reserved = (
-                    jobs
-                    & {
-                        'table_name': self.table.full_table_name,
-                        'key_hash': key_hash(primary_dict)
-                    }
+        if check_reserved:
+            reserved = (
+                jobs
+                & {
+                    'table_name': self.table.full_table_name,
+                    'key_hash': key_hash(primary_dict)
+                }
+            )
+            if reserved:
+                raise dj.DataJointError(
+                    f"Entry {primary_dict} has been reserved for table "
+                    f"{self.table.full_table_name}; "
+                    "change your primary key values."
                 )
-                if reserved:
-                    raise dj.DataJointError(
-                        f"Entry {primary_dict} has been reserved for table "
-                        f"{self.table.full_table_name}; "
-                        "change your primary key values."
-                    )
 
+        if truth:
             try:
                 self.table.insert1(insert_dict, **kwargs)
             except dj.DataJointError as e:
@@ -341,8 +342,6 @@ class DynamicForm:
                     "An error occured while inserting into table "
                     f"{self.table.full_table_name}: {e}"
                 )
-
-            return primary_dict
         else:  # editing entries savely
             # remove primary keys
             insert_dict = {
@@ -350,7 +349,7 @@ class DynamicForm:
                 if (
                     key not in self.table.primary_key
                     # skip updating non-specified files
-                    # TODO
+                    # TODO fix for uploading files
                     and not (
                         value is None
                         and (
@@ -360,15 +359,18 @@ class DynamicForm:
                     )
                 )
             }
-            try:
-                restricted_table.save_updates(
-                    insert_dict, reload=False
-                )
-            except dj.DataJointError as e:
-                raise dj.DataJointError(
-                    "An error occured while updating table "
-                    f"{self.table.full_table_name}: {e}"
-                )
+            if insert_dict:
+                try:
+                    restricted_table.save_updates(
+                        insert_dict, reload=False
+                    )
+                except dj.DataJointError as e:
+                    raise dj.DataJointError(
+                        "An error occured while updating table "
+                        f"{self.table.full_table_name}: {e}"
+                    )
+
+        return primary_dict
 
     def populate_form(
         self, restriction, form, is_edit='False', **kwargs

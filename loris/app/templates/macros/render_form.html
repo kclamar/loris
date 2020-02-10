@@ -232,7 +232,7 @@
 {% endmacro %}
 
 
-{% macro auto_render_form(form, ultra_form, data, toggle_off_keys, buttons, include_insert, enter_show, url_experiment, readonly=[]) %}
+{% macro auto_render_form(form, ultra_form, data, toggle_off_keys, data2, toggle_off_keys2, buttons, include_insert, enter_show, url_experiment, readonly=[]) %}
 <div id="accordion">
   <div class="card">
     <div class="card-header" id="headingOne">
@@ -353,6 +353,22 @@
     <div id="collapseThree" class="collapse" aria-labelledby="headingThree" data-parent="#accordion">
       <div class="card-body">
           {% with data=data, toggle_off_keys=toggle_off_keys%}
+              {% include 'macros/tables.html' %}
+          {% endwith %}
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-header" id="headingThree2">
+      <h5 class="mb-0">
+        <button class="btn btn-outline-primary collapsed" data-toggle="collapse" data-target="#collapseThree2" aria-expanded="false" aria-controls="collapseThree2">
+         Existing Entries for {{ ultra_form.table_name }}
+        </button>
+      </h5>
+    </div>
+    <div id="collapseThree2" class="collapse" aria-labelledby="headingThree2" data-parent="#accordion">
+      <div class="card-body">
+          {% with data=data2, toggle_off_keys=toggle_off_keys2%}
               {% include 'macros/tables.html' %}
           {% endwith %}
       </div>
