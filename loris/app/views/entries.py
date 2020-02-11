@@ -84,6 +84,7 @@ def delete(schema, table, subtable):
                 return redirect(redirect_url)
 
         elif submit == 'Cancel':
+            conn.cancel_transaction()
             flash(f'Entry not deleted')
             return redirect(url_for(
                 'table',
