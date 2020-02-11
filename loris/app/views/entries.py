@@ -93,8 +93,10 @@ def delete(schema, table, subtable):
                 subtable=subtable
             ))
 
+    # always cancel transaction
+    conn.cancel_transaction()
+    
     if commit_transaction:
-        conn.cancel_transaction()
         return render_template(
             'pages/delete.html',
             table_name=table_name,
