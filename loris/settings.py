@@ -208,7 +208,7 @@ class Config(dict):
             if schema in self["skip_schemas"]:
                 continue
             # TODO error messages
-            schemata[schema] = dj.create_virtual_module(
+            schemata[schema] = dj.VirtualModule(
                 schema, schema, connection=self['connection'],
                 add_objects=custom_attributes_dict,
                 create_tables=True
@@ -334,7 +334,7 @@ class Config(dict):
         )
 
         # create user-specific schema
-        schema = dj.schema(username)
+        schema = dj.Schema(username)
 
         privileges = {
             '*.*': "ALL PRIVILEGES",
@@ -386,7 +386,7 @@ class Config(dict):
         """
 
         for group in self.groups:
-            dj.schema(group, connection=self['connection'])
+            dj.Schema(group, connection=self['connection'])
 
     @property
     def assigned_table(self):

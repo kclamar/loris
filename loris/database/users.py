@@ -64,7 +64,7 @@ def grantuser(
         )
 
     # create user-specific schema
-    schema = dj.schema(username)
+    schema = dj.Schema(username)
 
     privileges = {
         '*.*': "DELETE, SELECT, INSERT, UPDATE, REFERENCES",

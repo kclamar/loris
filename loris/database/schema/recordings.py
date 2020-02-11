@@ -6,7 +6,7 @@ from loris.database.schema.base import ManualLookup
 from loris.database.attributes import lookupname
 
 
-schema = dj.schema('recordings')
+schema = dj.Schema('recordings')
 
 
 @schema

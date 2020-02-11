@@ -9,7 +9,7 @@ from loris.database.attributes import truebool
 from loris.database.attributes import lookupname
 
 
-schema = dj.schema('experimenters')
+schema = dj.Schema('experimenters')
 
 
 @schema

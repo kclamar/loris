@@ -14,7 +14,7 @@ from loris.database.schema.base import (
 )
 
 
-schema = dj.schema('imaging')
+schema = dj.Schema('imaging')
 
 
 @schema

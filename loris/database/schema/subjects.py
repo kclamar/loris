@@ -10,7 +10,7 @@ from loris.database.attributes import chr, link, flyidentifier, crossschema
 from loris.database.attributes import lookupname
 
 
-schema = dj.schema('subjects')
+schema = dj.Schema('subjects')
 
 
 @schema

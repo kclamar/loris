@@ -9,7 +9,7 @@ from loris.database.attributes import truebool, tarfolder, link
 from loris.database.attributes import lookupname
 
 
-schema = dj.schema('equipment')
+schema = dj.Schema('equipment')
 
 
 @schema

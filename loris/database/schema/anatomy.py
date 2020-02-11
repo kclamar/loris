@@ -5,7 +5,7 @@ import datajoint as dj
 from loris.database.schema.base import ManualLookup
 from loris.database.attributes import lookupname
 
-schema = dj.schema('anatomy')
+schema = dj.Schema('anatomy')
 
 
 @schema

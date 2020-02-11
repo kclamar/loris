@@ -10,7 +10,7 @@ import json
 import glob
 import datajoint as dj
 import numpy as np
-from datajoint.schema import lookup_class_name
+from datajoint.schemas import lookup_class_name
 from flask import render_template, request, flash, url_for, redirect
 
 from loris import config, conn
