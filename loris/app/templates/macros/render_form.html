@@ -38,7 +38,7 @@
                 {% endif %}
             {% endif %}
             {% if field.short_name in readonly %}
-            {{ field(class="form-control", readonly=true, disabled=true) }}
+            {{ field(class="form-control", readonly=true) }}
             {% else %}
             {{ field(class="form-control") }}
             {% endif %}
