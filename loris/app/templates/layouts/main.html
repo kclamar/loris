@@ -58,7 +58,7 @@
         <ul class="dropdown-menu", aria-labelledby="navbarDropdown1">
         <li><a class="dropdown-item" href="{{ url_for('erd') }}">Complete ERD</a></li>
         <li><a class="dropdown-item" href="{{ url_for('erd', only_essentials=True) }}">Simple ERD</a></li>
-        <li><a class="dropdown-item" href="{{ url_for('join') }}">Join Tables</a></li>
+        <li><a class="dropdown-item" href="{{ url_for('join') }}">Join/Download Tables</a></li>
         <li><a class="dropdown-item" href="{{ url_for('register') }}">Register User</a></li>
         <li><a class="dropdown-item" href="{{ url_for('assigngroup') }}">Create/Assign Group Project</a></li>
         <li><a class="dropdown-item" href="{{ url_for('declare') }}">Create/Declare a Table</a></li>
@@ -69,7 +69,7 @@
             Jobs
         </a>
             <ul aria-labelledby="subdrop1" class="dropdown-menu border-0 shadow">
-                {% for schema in session['schemata'] %}
+                {% for schema in config['schemata'] %}
                 <li><a href="{{ url_for('jobs', schema=schema) }}" class="dropdown-item">{{schema}}</a></li>
                 {% endfor %}
             </ul>
@@ -81,9 +81,9 @@
           Schema
         </a>
         <ul class="dropdown-menu border-0 shadow", aria-labelledby="navbarDropdown2">
-        {% for schema in session['schemata'] %}
+        {% for schema in config['schemata'] %}
         {% if 'tables' in session %}
-        {% if session['tables'][schema] %}
+        {% if config['tables'][schema] %}
         <li class="dropdown-submenu">
         <div class="btn-group dropright">
             <a href="{{ url_for('erd', schema=schema) }}" class="dropdown-item">
@@ -93,7 +93,7 @@
                  <span class="sr-only"></span>
             </a>
                 <ul aria-labelledby="subdrop1" class="dropdown-menu border-0 shadow">
-                    {% for table in session['tables'][schema] %}
+                    {% for table in config['tables'][schema] %}
                     <li><a href="{{ url_for('table', schema=schema, table=table) }}" class="dropdown-item">{{table}}</a></li>
                     {% endfor %}
                 </ul>
@@ -104,6 +104,7 @@
         {% endfor %}
         </ul>
       </li>
+      {% if config['include_fly'] in [True, "True"] %}
       <li class="nav-item dropdown">
         <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown4" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
             Flies
@@ -114,6 +115,7 @@
         <li><a class="dropdown-item" href="{{ url_for('cross')}}">Enter Cross</a></li>
         </ul>
       </li>
+      {% endif %}
       <li class="nav-item dropdown">
         <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown5" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
             Experiments
@@ -128,7 +130,7 @@
             Analysis
         </a>
         <ul aria-labelledby="navbarDropdown6" class="dropdown-menu border-0 shadow">
-        {% for value in session['autotables'] %}
+        {% for value in config['autotables'] %}
         <li class="dropdown-submenu">
         <a id="subdrop1" href="#" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" class="dropdown-item dropdown-toggle">
             {{ value[0] }}
@@ -147,8 +149,8 @@
           Wiki
         </a>
         <ul class="dropdown-menu", aria-labelledby="navbarDropdown7">
-            {% if 'external_wiki' in session and session['external_wiki'] not in [None, "None"]%}
-            <li><a class="dropdown-item" href="{{ session['external_wiki'] }}" target="_blank">External Wiki</a></li>
+            {% if config['external_wiki'] not in [None, "None"]%}
+            <li><a class="dropdown-item" href="{{ config['external_wiki'] }}" target="_blank">External Wiki</a></li>
             {% endif %}
             <li><a class="dropdown-item" href="{{ url_for('wikihome') }}">Home</a></li>
             <li><a class="dropdown-item" href="{{ url_for('wikiindex') }}">Index</a></li>

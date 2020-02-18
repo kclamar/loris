@@ -3,13 +3,17 @@
 {% block content %}
 
 <div class="page-header">
-    {% from 'macros/render_form.html' import submit_render_form %}
-    <h2> <a href={{url}}>Join Tables</a> <h2>
+    {% from 'macros/render_form.html' import joindownload_render_form %}
+    <h2> <a href={{url}}>Join/Download Tables</a> <h2>
     <h6>
-        Join arbitrary tables that exist in the database.
-        It is not required to add a restriction.
+        Join arbitrary tables that exist in the database, or download a
+        pandas pickle file of the joined table.
+        It is not required to add a restriction, although a large table
+        especially with blobs (i.e. data or attachments) can take a long
+        time to download. You can also just join/download
+        a single table.
     </h6>
-    {{ submit_render_form(form) }}
+    {{ joindownload_render_form(form) }}
     <hr>
     <h4>Joined Table</h4>
     {% with data=data, toggle_off_keys=toggle_off_keys%}

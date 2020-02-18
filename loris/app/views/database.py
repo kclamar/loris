@@ -1,6 +1,9 @@
 """dabase-speific views
 """
 
+import os
+import uuid
+
 from flask import render_template, request, flash, url_for, redirect, \
     send_from_directory, session
 from functools import wraps
@@ -77,7 +80,7 @@ def join():
         if submit is None:
             pass
 
-        elif submit in ['Submit']:
+        elif submit in ['Join', 'Download']:
             if form.validate_on_submit():
                 formatted_dict = form.get_formatted()
 
@@ -94,9 +97,27 @@ def join():
                 except dj.DataJointError as e:
                     flash(f"{e}", 'error')
                 else:
-                    df = joined_table.fetch(format='frame').reset_index()
-                    data = get_jsontable(df, joined_table.heading.primary_key)
-                    flash(f"successfully joined tables.", 'success')
+                    if submit == 'Download':
+                        df = joined_table.fetch(format='frame').reset_index()
+                        filename = str(uuid.uuid4()) + '.pkl'
+                        filepath = os.path.join(
+                            config['tmp_folder'], filename
+                        )
+                        df.to_pickle(filepath)
+                        flash(
+                            f"Downloaded pandas pickle file {filename} "
+                            "for joined table",
+                            'success'
+                        )
+                        return redirect(url_for('tmpfile', filename=filename))
+                    else:
+                        df = joined_table.proj(
+                            *joined_table.heading.non_blobs
+                        ).fetch(format='frame').reset_index()
+                        data = get_jsontable(
+                            df, joined_table.heading.primary_key
+                        )
+                        flash(f"Successfully joined tables.", 'success')
 
         form.append_hidden_entries()
 

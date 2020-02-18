@@ -43,6 +43,7 @@ defaults = dict(
     assignedgroup_table="AssignedExperimentalProject",
     max_cpu=None,
     init_database=False,
+    include_fly=True
 )
 AUTOSCRIPT_CONFIG = 'config.json'
 EXPANDUSER_FIELDS = (

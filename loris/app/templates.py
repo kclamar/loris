@@ -119,7 +119,8 @@ def form_template(
                         )
                     )
             else:
-                flash(f"Form appears incomplete; check error messages on fields and in pop-ups of parent tables", 'warning')
+                flash(f"Form appears incomplete; check error messages on "
+                      "fields and in pop-ups of parent tables", 'warning')
 
         form.append_hidden_entries()
 

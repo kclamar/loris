@@ -22,13 +22,17 @@ class LorisApp(Flask):
     def session_refresh(self):
         config.refresh()
         # for testing when refresh happens
-        session['schemata'] = list(config['schemata'].keys())
-        session['tables'], session['autotables'] = config.tables_to_list()
-        session['external_wiki'] = config['external_wiki']
+        self.config['schemata'] = list(config['schemata'].keys())
+        self.config['tables'], self.config['autotables'] = \
+            config.tables_to_list()
 
 
 app = LorisApp(__name__)
 app.secret_key = config['secret_key']
+app.config['include_fly'] = config['include_fly']
+app.config['external_wiki'] = config['external_wiki']
+app.config['schemata'] = list(config['schemata'].keys())
+app.config['tables'], app.config['autotables'] = config.tables_to_list()
 
 login_manager = LoginManager(app)
 

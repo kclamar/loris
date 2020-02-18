@@ -3,7 +3,7 @@
     "database.host": "127.0.0.1",
     "database.user": "root",
     "database.password": "simple",
-    "database.port": 3313,
+    "database.port": 3306,
     "filestores": {
         "attachstore": "~/attachstore",
         "datastore": "~/datastore"
@@ -14,6 +14,7 @@
 
     "_app_comment": "app-specific keys",
     "init_database": true,
+    "include_fly": true,
     "secret_key": "myprecious",
     "tmp_folder": "~/tmp",
     "skip_schemas": ["mysql", "sys", "performance_schema", "tutorial"],
@@ -26,7 +27,7 @@
     "group_name": "experimental_project",
     "assignedgroup_schema": "experimenters",
     "assignedgroup_table": "AssignedExperimentalProject",
-    "standard_password": "dr0s0phila",
+    "standard_password": "fruitfly",
     "administrator_info" : {
         "experimenter": "gucky92",
         "first_name": "Matthias",
@@ -37,10 +38,10 @@
         "active": true
     },
     "administrators": ["gucky92"],
-    "wiki_folder": "~/wiki",
-    "autoscript_folder": "~/Documents/loris/autoscripts",
+    "wiki_folder": "~/loris/wiki",
+    "autoscript_folder": "~/loris/autoscripts",
     "autoscript_tables": ["imaging.TwoPhotonRecording"],
-    "external_wiki": "https://app.nuclino.com/behnialab",
+    "external_wiki": "#",
 
     "_ssh_comment": "keys for SSH tunneling of MySQL database. See: https://sshtunnel.readthedocs.io/en/latest/",
     "ssh_address": null,

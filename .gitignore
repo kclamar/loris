@@ -1,5 +1,6 @@
 # user-specific ignores
 autoscripts/*
+wiki/*
 config.json
 *.icloud
 

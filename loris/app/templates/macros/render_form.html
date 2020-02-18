@@ -449,6 +449,22 @@
     </form>
 {% endmacro %}
 
+{% macro joindownload_render_form(form) %}
+    <form novalidate method=post enctype="multipart/form-data">
+        <table  style="width:100%">
+        {{ form.hidden_tag() }}
+        {{ _render_form(form) }}
+        </table>
+        <p> </p>
+        <div>
+        <tr>
+            <td align="center"><input class="btn btn-outline-primary" type=submit value=Join name="submit"></td>
+            <td align="center"><input class="btn btn-outline-secondary" type=submit value=Download name="submit"></td>
+        </tr>
+        </div>
+        <p> </p>
+    </form>
+{% endmacro %}
 
 {% macro submitcancel_render_form(form) %}
     <form novalidate method=post enctype="multipart/form-data">
