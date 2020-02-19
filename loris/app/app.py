@@ -22,6 +22,7 @@ class LorisApp(Flask):
     def session_refresh(self):
         config.refresh()
         # for testing when refresh happens
+        config.refresh()
         self.config['schemata'] = list(config['schemata'].keys())
         self.config['tables'], self.config['autotables'] = \
             config.tables_to_list()

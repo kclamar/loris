@@ -82,7 +82,7 @@
         </a>
         <ul class="dropdown-menu border-0 shadow", aria-labelledby="navbarDropdown2">
         {% for schema in config['schemata'] %}
-        {% if 'tables' in session %}
+        {% if 'tables' in config %}
         {% if config['tables'][schema] %}
         <li class="dropdown-submenu">
         <div class="btn-group dropright">
