@@ -53,11 +53,17 @@ class TagListField(StringField):
 
     def process_formdata(self, valuelist):
         if valuelist:
-            self.data = [x.strip() for x in valuelist[0].split(self.separator)]
+            self.data = [
+                x.strip()
+                for x in valuelist[0].split(self.separator)
+                if x.strip()
+            ]
             if self.remove_duplicates:
                 self.data = list(self._remove_duplicates(self.data))
             if self.to_lowercase:
                 self.data = [x.lower() for x in self.data]
+            if not self.data:
+                self.data = None
 
     @classmethod
     def _remove_duplicates(cls, seq):
@@ -77,37 +83,24 @@ class EvalJsonField(StringField):
     startswith = None
     endswith = None
 
-    def process_data(self, value):
-        return super().process_data(str(value))
-
-    @property
-    def noneval_data(self):
-        data = super().__getattribute__('data')
-        if data in NONES:
+    def _value(self):
+        if self.data not in NONES:
+            return json.dumps(self.data)
+        else:
             return ''
-        else:
-            if (
-                data.startswith(self.startswith)
-                and data.endswith(self.endswith)
-            ):
-                return data
+
+    def process_formdata(self, valuelist):
+        if valuelist:
+            data = valuelist[0]
+            if data in NONES:
+                self.data = None
             else:
-                return f'{self.startswith}{data}{self.endswith}'
-
-    @property
-    def eval_data(self):
-        data = self.noneval_data
-        if data in NONES:
-            return data
-        else:
-            return json.loads(data)
-
-    def __getattribute__(self, name):
-        # dirty trick to get evaluated data
-        if name == 'data':
-            return self.eval_data
-        else:
-            return super().__getattribute__(name)
+                if (
+                    not data.startswith(self.startswith)
+                    or not data.endswith(self.endswith)
+                ):
+                    data = f'{self.startswith}{data}{self.endswith}'
+                self.data = json.loads(data)
 
 
 class ListField(EvalJsonField):
@@ -124,38 +117,33 @@ class DictField(EvalJsonField):
 
 class RestrictionField(StringField):
 
-    def process_data(self, value):
-        return super().process_data(str(value))
-
     def evaluate(self, data):
-        if data.startswith('['):
+        if data in NONES:
+            return False
+        elif data.startswith('['):
             return True
         elif data.startswith('{'):
             return True
         else:
             return False
 
-    @property
-    def noneval_data(self):
-        data = super().__getattribute__('data')
-        return data
-
-    @property
-    def eval_data(self):
-        data = self.noneval_data
-        if data in NONES:
+    def _value(self):
+        if self.data in NONES:
             return ''
-        elif self.evaluate(data):
-            return json.loads(data)
+        elif isinstance(self.data, str):
+            return self.data
         else:
-            return data
+            return json.dumps(self.data)
 
-    def __getattribute__(self, name):
-        # dirty trick to get evaluated data
-        if name == 'data':
-            return self.eval_data
-        else:
-            return super().__getattribute__(name)
+    def process_formdata(self, valuelist):
+        if valuelist:
+            data = valuelist[0]
+            if data in NONES:
+                self.data = None
+            elif self.evaluate(data):
+                self.data = json.loads(data)
+            else:
+                self.data = data
 
 
 class DynamicFileField(FileField):
@@ -269,26 +257,44 @@ class ParentValidator:
 
 class JsonSerializableValidator:
 
+    def __init__(self, is_instance=None):
+        self.is_instance = is_instance
+
     def __call__(self, form, field):
 
-        if hasattr(field, 'noneval_data'):
-            data = field.noneval_data
-        else:
-            data = field.data
+        data = field.data
 
-        try:
-            json.loads(data)
-        except Exception as e:
-            raise ValidationError(
-                f'Data is not a json-serializable: {e}'
-            )
+        if data in NONES:
+            return
+
+        if not isinstance(data, str):
+            if (
+                self.is_instance is not None
+                and
+                not isinstance(data, self.is_instance)
+            ):
+                raise ValidationError(
+                    f'Json Data is not correct type {self.is_instance}, '
+                    f'but is {type(data)}'
+                )
+        else:
+            try:
+                data = json.loads(data)
+                if self.is_instance is not None:
+                    assert isinstance(data, self.is_instance), (
+                        f'Json Data is not correct type {self.is_instance}, '
+                        f'but is {type(data)}'
+                    )
+            except Exception as e:
+                raise ValidationError(
+                    f'Data is not a json-serializable: {e}'
+                )
 
 
 class OptionalJsonSerializableValidator(JsonSerializableValidator):
 
     def __call__(self, form, field):
-
-        if field.evaluate(field.noneval_data):
+        if not isinstance(field.data, str):
             super().__call__(form, field)
 
 

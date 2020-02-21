@@ -49,7 +49,17 @@ def setup(schema, table):
 
     try:
         df = table_class.fetch(format='frame').reset_index()
-    except Exception:
+        df = df.apply(
+            lambda x: pd.Series(
+                table_class()._postfetch_processing(
+                    x.to_dict(), check_function=False,
+                    get_joined_table=False
+                )
+            ),
+            axis=1
+        )
+    except Exception as e:
+        flash(str(e), 'error')
         df = table_class.proj(
             *table_class.heading.non_blobs
         ).fetch(format='frame').reset_index()

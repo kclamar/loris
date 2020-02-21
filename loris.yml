@@ -13,6 +13,7 @@ dependencies:
   - jupyter
   - sshtunnel
   - graphviz
+  - conda
   - pip=19.3.1=py37_0
   - pip:
     - dash

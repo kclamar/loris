@@ -378,10 +378,10 @@ class DynamicField:
         if adapter is None:
             pass
         elif attr_type_name == 'liststring':
-            kwargs['validators'].append(JsonSerializableValidator)
+            kwargs['validators'].append(JsonSerializableValidator(list))
             return ListField(**kwargs)
         elif attr_type_name == 'dictstring':
-            kwargs['validators'].append(JsonSerializableValidator)
+            kwargs['validators'].append(JsonSerializableValidator(dict))
             return DictField(**kwargs)
         elif attr_type_name == 'tags':
             return TagListField(**kwargs)

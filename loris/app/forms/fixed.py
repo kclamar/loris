@@ -241,7 +241,10 @@ def dynamic_jointablesform():
         restriction = RestrictionField(
             RESTRICTION_LABEL,
             description=RESTRICTION_DESCRIPTION,
-            validators=[Optional(), OptionalJsonSerializableValidator()],
+            validators=[
+                Optional(),
+                OptionalJsonSerializableValidator(is_instance=(dict, list))
+            ],
             render_kw={
                 'nullable': True
             }
@@ -288,7 +291,7 @@ class FuncForm(NoCsrfForm, FormMixin):
     args = ListField(
         'args',
         description='list of arguments for init if function is class',
-        validators=[Optional(), JsonSerializableValidator()],
+        validators=[Optional(), JsonSerializableValidator(list)],
         render_kw={
             'nullable': True
         }
@@ -296,7 +299,7 @@ class FuncForm(NoCsrfForm, FormMixin):
     kwargs = DictField(
         'kwargs',
         description='dict of keyword arguments for init if function is class',
-        validators=[Optional(), JsonSerializableValidator()],
+        validators=[Optional(), JsonSerializableValidator(dict)],
         render_kw={
             'nullable': True
         }
@@ -332,7 +335,7 @@ def dynamic_settingstableform(table_class):
         proj_list = ListField(
             'projections',
             description='arguments to project',
-            validators=[Optional(), JsonSerializableValidator()],
+            validators=[Optional(), JsonSerializableValidator(list)],
             render_kw={
                 'nullable': True
             }
@@ -340,7 +343,7 @@ def dynamic_settingstableform(table_class):
         proj_dict = DictField(
             'renamed projections',
             description='arguments to project and rename',
-            validators=[Optional(), JsonSerializableValidator()],
+            validators=[Optional(), JsonSerializableValidator(dict)],
             render_kw={
                 'nullable': True
             }
@@ -375,12 +378,12 @@ def dynamic_settingstableform(table_class):
         global_settings = DictField(
             'global settings',
             description='dict of keyword arguments to pass to function for every entry',
-            validators=[InputRequired(), JsonSerializableValidator()]
+            validators=[InputRequired(), JsonSerializableValidator(dict)]
         )
         entry_settings = DictField(
             'entry settings',
             description='dict of keyword arguments to pass to function specific to each entry as defined by columns of the joined table',
-            validators=[InputRequired(), JsonSerializableValidator()]
+            validators=[InputRequired(), JsonSerializableValidator(dict)]
         )
         fetch_method = SelectField(
             'fetch method',
@@ -398,7 +401,7 @@ def dynamic_settingstableform(table_class):
         restrictions = RestrictionField(
             RESTRICTION_LABEL,
             description=RESTRICTION_DESCRIPTION,
-            validators=[Optional(), OptionalJsonSerializableValidator()],
+            validators=[Optional(), OptionalJsonSerializableValidator((list, dict))],
             render_kw={
                 'nullable': True
             }
@@ -406,7 +409,7 @@ def dynamic_settingstableform(table_class):
         parse_unique = ListField(
             'parse as unique',
             description='list of unique entries when using fetch - not wrapped into numpy.array',
-            validators=[Optional(), JsonSerializableValidator()],
+            validators=[Optional(), JsonSerializableValidator(list)],
             render_kw={
                 'nullable': True
             }
@@ -447,7 +450,7 @@ def dynamic_runform(table_class):
         restriction = RestrictionField(
             RESTRICTION_LABEL,
             description=RESTRICTION_DESCRIPTION,
-            validators=[InputRequired(), OptionalJsonSerializableValidator()],
+            validators=[InputRequired(), OptionalJsonSerializableValidator((list, dict))],
         )
         limit = IntegerField(
             'autopopulate limit',
