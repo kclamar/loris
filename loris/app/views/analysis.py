@@ -58,6 +58,9 @@ def setup(schema, table):
             ),
             axis=1
         )
+        df['func'] = df['func'].apply(
+            lambda x: f'{x.__class__.__name__}: {x.__module__}.{x.__name__}'
+        )
     except Exception as e:
         flash(str(e), 'error')
         df = table_class.proj(
