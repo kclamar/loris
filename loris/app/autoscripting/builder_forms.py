@@ -39,7 +39,7 @@ from loris.app.forms.formmixin import (
     ManualLookupForm, ParentFormField, DynamicFileField, DictField, ListField,
     ParentValidator, JsonSerializableValidator, AttachFileField,
     BlobFileField, Extension, TagListField, MetaHiddenField,
-    ParentInputRequired, Always, LookupNameValidator
+    ParentInputRequired, Always, LookupNameValidator, DictTextArea
 )
 
 
@@ -51,24 +51,15 @@ class AutomaticFolderForm(Form, FormMixin):
     )
 
 
-def dynamic_scriptform(folderpath, form_names):
+def dynamic_scriptform(folderpath):
     class ScriptForm(NoCsrfForm, FormMixin):
-        script_name = SelectField()
-        required_forms = FieldList(SelectField())
-        insert_db = BooleanField()
+        script = SelectField()
+        validate = TagListField()
+        insert = BooleanField()
         configattr = StringField()
         outputfile = StringField()
         outputattr = StringField()
 
 
-def dynamic_configfield(folderpath):
-    class DynamicConfigField(NoCsrfForm, FormMixin):
-        field_name = StringField()
-        field_datatype = SelectField()
-        folder_location = SelectField()
-        folder_datatype = SelectField()
-        selectfield_choices = FieldList(StringField())
-        default = BooleanField()
-        default_value = StringField()
-        description = StringField()
-        iterate = BooleanField()
+class FormConfig(NoCsrfForm, FormMixin):
+    forms = FieldList(DictTextArea())

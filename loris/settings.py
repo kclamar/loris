@@ -11,6 +11,7 @@ import datajoint as dj
 from datajoint.settings import default
 from datajoint.utils import to_camel_case
 from sshtunnel import SSHTunnelForwarder, HandlerSSHTunnelForwarderError
+from werkzeug.utils import secure_filename
 
 from loris.database.attributes import custom_attributes_dict
 from loris.utils import is_manuallookup
@@ -650,11 +651,18 @@ class Config(dict):
                     isinstance(button.get('outputattr', ''), str),
                 ]):
                     raise LorisError(message)
-                elif not os.path.exists(os.path.join(autoscript_filepath, button['script'])):
+
+                button['script'] = secure_filename(button['script'])
+                if not os.path.exists(os.path.join(autoscript_filepath, button['script'])):
                     raise LorisError(
                         f'{base_message} script "{button["script"]}" '
                         'does not exist in autoscript folder.'
                     )
+
+                if 'outputfile' in button:
+                    button['outputfile'] = secure_filename(button['outputfile'])
+
+            print(buttons)
 
             if not isinstance(config_forms, dict):
                 raise LorisError(

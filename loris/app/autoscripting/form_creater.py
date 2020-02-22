@@ -10,6 +10,7 @@ from wtforms.validators import InputRequired, Optional, NumberRange, \
     ValidationError, Length, UUID, URL, Email
 from flask_wtf import FlaskForm as Form
 from wtforms import Form as NoCsrfForm
+from werkzeug import secure_filename
 import glob
 
 from loris import config
@@ -180,10 +181,15 @@ class AutoscriptedField:
                     f"field value {value} not accepted for {key}."
                 )
         elif loc is not None and isinstance(value, str):
-            if not os.path.isabs(loc):
-                loc = os.path.join(folderpath, loc)
+            loc = secure_filename(loc)
+            locpath = os.path.join(folderpath, loc)
+            if not os.path.exists(locpath):
+                raise LorisError(
+                    f'Folder "{loc}" does not exist in '
+                    f'autoscript folder "{os.path.basename(folderpath)}".'
+                )
             # get all files from folder
-            files = glob.glob(os.path.join(loc, '*'))
+            files = glob.glob(os.path.join(locpath, '*'))
             # setup as choices
             choices = [
                 (str(ele), os.path.split(ele)[-1])

@@ -78,7 +78,7 @@ class TagListField(StringField):
                 yield item
 
 
-class EvalJsonField(StringField):
+class EvalJsonField:
 
     startswith = None
     endswith = None
@@ -103,14 +103,17 @@ class EvalJsonField(StringField):
                 self.data = json.loads(data)
 
 
-class ListField(EvalJsonField):
-
+class ListField(EvalJsonField, StringField):
     startswith = '['
     endswith = ']'
 
 
-class DictField(EvalJsonField):
+class DictField(EvalJsonField, StringField):
+    startswith = '{'
+    endswith = '}'
 
+
+class DictTextArea(EvalJsonField, TextAreaField):
     startswith = '{'
     endswith = '}'
 
