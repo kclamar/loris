@@ -5,9 +5,11 @@ import datajoint as dj
 
 from loris.database.schema.experimenters import Experimenter
 from loris.database.schema.anatomy import CellType
-from loris.database.schema.base import ManualLookup, COMMENTS, PRIMARY_NAME
+from loris.database.schema.base import (
+    ManualLookup, COMMENTS, PRIMARY_NAME, TAGS
+)
 from loris.database.attributes import chr, link, flyidentifier, crossschema
-from loris.database.attributes import lookupname
+from loris.database.attributes import lookupname, tags
 
 
 schema = dj.Schema('subjects')
@@ -29,6 +31,7 @@ class FlyGenotype(dj.Manual):
     chr3 : <chr>
     chr4 = null : <chr>
     -> [nullable] CellType
+    {TAGS}
     {COMMENTS}
     """
 
@@ -92,5 +95,6 @@ class FlySubject(dj.Manual):
     sex = 'U' : enum('F', 'M', 'U')
     age = null : float # age of fly in days
     prep_time = CURRENT_TIMESTAMP : timestamp # time of prep
+    {TAGS}
     {COMMENTS}
     """
