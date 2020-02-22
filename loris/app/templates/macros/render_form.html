@@ -232,7 +232,7 @@
 {% endmacro %}
 
 
-{% macro auto_render_form(form, ultra_form, data, toggle_off_keys, data2, toggle_off_keys2, buttons, include_insert, enter_show, url_experiment, readonly=[]) %}
+{% macro auto_render_form(form, ultra_form, data, toggle_off_keys, data2, toggle_off_keys2, buttons, enter_show, url_experiment, readonly=[]) %}
 <div id="accordion">
   <div class="card">
     <div class="card-header" id="headingOne">
@@ -326,12 +326,6 @@
                 {% for button in buttons %}
                 <td align="center"><input class="btn btn-outline-secondary" type=submit value="{{button}}" name="submit"></td>
                 {% endfor %}
-                <!--
-                {% if include_insert %}
-                <td align="center"><input class="btn btn-outline-primary" type=submit value=Insert name="submit"></td>
-                <td align="center"><input class="btn btn-outline-warning" type=submit value=Overwrite name="submit"></td>
-                {% endif %}
-                -->
             </tr>
             </div>
             <p> </p>

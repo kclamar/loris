@@ -22,7 +22,6 @@ from loris.app.utils import (
     draw_helper, get_jsontable, save_join, user_has_permission)
 from loris.app.login import User
 from loris.database.users import grantuser, change_password
-from loris.app.autoscripting.form_creater import dynamic_autoscripted_form
 from loris.app.autoscripting.config_reader import ConfigReader
 from loris.app.subprocess import Run
 
@@ -114,7 +113,6 @@ def experiment(table_name, autoscript_folder):
         toggle_off_keys=reader.toggle_off_keys,
         ultra_form=reader.ultra_form,
         buttons=reader.buttons,
-        include_insert=reader.include_insert,
         enter_show=enter_show,
         stdout=stdout,
         stderr=stderr,

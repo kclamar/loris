@@ -49,7 +49,6 @@ class ConfigReader:
             self.experiment_form = "None"
             self.autoscript_forms = "None"
             self.buttons = "None"
-            self.include_insert = False
             self.initialized = False
             self.ultra_form = "None"
             self.existing_settings = None
@@ -83,7 +82,7 @@ class ConfigReader:
         self.dynamicform = dynamicform
         self.experiment_form = experiment_form
 
-        autoscript_forms, post_process_dict, buttons, include_insert = \
+        autoscript_forms, post_process_dict, buttons = \
             config.get_autoscriptforms(
                 autoscript_filepath, table_name, dynamic_autoscripted_form,
                 formclass=NoCsrfForm
@@ -91,7 +90,6 @@ class ConfigReader:
         self.autoscript_forms = autoscript_forms
         self.post_process_dict = post_process_dict
         self.buttons = buttons
-        self.include_insert = include_insert
 
         # dynamically create combined form
         class UltraForm(Form, FormMixin):
@@ -134,8 +132,8 @@ class ConfigReader:
             include = None
             check_experiment_form = True
         else:
-            include = self.buttons[button][1]
-            if self.buttons[button][2]:
+            include = self.buttons[button].get('validate', [])
+            if self.buttons[button].get('insert', False):
                 check_experiment_form = True
             else:
                 check_experiment_form = False
@@ -169,7 +167,7 @@ class ConfigReader:
         """
 
         # assert that script exists
-        script = self.buttons[button][0]
+        script = self.buttons[button].get('script')
         script_file = os.path.join(
             self.autoscript_filepath, script
         )
@@ -177,7 +175,7 @@ class ConfigReader:
         assert os.path.exists(script_file), f'script {script} does not exist.'
 
         # get formatted form data and post_process
-        keys = self.buttons[button][1]
+        keys = self.buttons[button].get('validate', [])
         data = {}
         for key in keys:
             idata = getattr(self.ultra_form, key).form.get_formatted()
@@ -196,12 +194,8 @@ class ConfigReader:
 
         if not process.running:
 
-            if self.buttons[button][2] and self.include_insert:
+            if self.buttons[button].get('insert', False):
                 # running the insert script
-                if len(self.buttons[button]) == 3:
-                    output_config = {}
-                else:
-                    output_config = self.buttons[button][3]
                 command = [
                     "python",
                     "-u",
@@ -213,11 +207,11 @@ class ConfigReader:
                     "--location",
                     f"{self.current_config_file}",
                     "--outputfile",
-                    f"{output_config.get('outputfile', 'null')}",
+                    f"{self.buttons.get('outputfile', 'null')}",
                     "--configattr",
-                    f"{output_config.get('configattr', 'null')}",
+                    f"{self.buttons.get('configattr', 'null')}",
                     "--outputattr",
-                    f"{output_config.get('outputattr', 'null')}",
+                    f"{self.buttons.get('outputattr', 'null')}",
                 ]
             else:
                 # just run the python script

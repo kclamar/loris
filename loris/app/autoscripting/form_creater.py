@@ -28,20 +28,37 @@ from loris.errors import LorisError
 
 class AutoscriptedField:
 
-    def __init__(self, key, value, description=None):
+    def __init__(self, key, value, folderpath):
         self.key = key
-        self.description = (
-            key if description is None else description
-        )
+        self.folderpath = folderpath
 
-        if isinstance(value, list):
-            self.value = value[0]
-            self.default = value[1]
-            self.required = self.default is not None
-        else:
-            self.required = True
+        if isinstance(value, (str, list)):
             self.value = value
+            self.description = None
             self.default = None
+            self.required = True
+            self.iterate = None
+            self.loc = None
+        elif isinstance(value, dict):
+            truth = set(value) - {'type', 'comment', 'default', 'loc', 'iterate'}
+            if truth:
+                raise LorisError(
+                    'Key in dynamic auto-generated form contains '
+                    f'illegal keywords: {truth}.'
+                )
+            if 'type' not in value:
+                raise LorisError(
+                    'Must provide type key for dynamic auto-generated form; '
+                    f'only provided these keys for "{key}": {set(value)}.'
+                )
+            self.value = value.get('type')
+            self.description = value.get('comment', None)
+            self.default = value.get('default', None)
+            self.required = 'default' not in value
+            self.loc = value.get('loc', None)
+            self.iterate = value.get('iterate', False)
+        else:
+            LorisError(f"value is wrong type {type(value)}")
 
         self.get_field()
 
@@ -50,8 +67,8 @@ class AutoscriptedField:
         """
 
         self.field, self.post_process = self._get_field(
-            self.key, self.value, self.default,
-            self.required, self.description
+            self.key, self.value, self.required, self.default,
+            self.description, self.iterate, self.loc, self.folderpath
         )
 
     @staticmethod
@@ -73,7 +90,10 @@ class AutoscriptedField:
         return post_process
 
     @classmethod
-    def _get_field(cls, key, value, default, required, description):
+    def _get_field(
+        cls, key, value, required, default, description,
+        iterate, loc, folderpath
+    ):
         """get initialized field
         """
 
@@ -92,125 +112,109 @@ class AutoscriptedField:
             }
 
         kwargs['default'] = default
-        kwargs['label'] = key
-        kwargs['description'] = description
+        kwargs['label'] = key.replace('_', ' ')
+        kwargs['description'] = (key if description is None else description)
 
-        if value == 'list':
-            kwargs['validators'].append(JsonSerializableValidator())
-            field = ListField(**kwargs)
-        elif value == 'dict':
-            kwargs['validators'].append(JsonSerializableValidator())
-            field = DictField(**kwargs)
-        elif value == 'str':
-            field = StringField(**kwargs)
-        elif value == 'set':
-            kwargs['validators'].append(JsonSerializableValidator())
-            post_process = set
-            field = ListField(**kwargs)
-        elif value == 'tuple':
-            kwargs['validators'].append(JsonSerializableValidator())
-            post_process = tuple
-            field = ListField(**kwargs)
-        elif value == 'int':
-            field = IntegerField(**kwargs)
-        elif value == 'float':
-            field = FloatField(**kwargs)
-        elif value == 'bool':
-            kwargs['validators'] = [Optional()]
-            field = BooleanField(**kwargs)
-        elif value == 'numpy.array':
-            kwargs['validators'].append(Extension())
-            post_process = cls.file_processing(value)
-            field = DynamicFileField(**kwargs)
-        elif value == 'numpy.recarray':
-            kwargs['validators'].append(Extension())
-            post_process = cls.file_processing(value)
-            field = DynamicFileField(**kwargs)
-        elif value == 'pandas.DataFrame':
-            kwargs['validators'].append(Extension())
-            post_process = cls.file_processing(value)
-            field = DynamicFileField(**kwargs)
-        elif value == 'pandas.Series':
-            kwargs['validators'].append(Extension())
-            post_process = cls.file_processing(value)
-            field = DynamicFileField(**kwargs)
-        elif value == 'json':
-            kwargs['validators'].append(Extension(['json']))
-            post_process = cls.file_processing(value)
-            field = DynamicFileField(**kwargs)
-        elif value == 'file':
-            kwargs['validators'].append(Extension(config['attach_extensions']))
-            field = DynamicFileField(**kwargs)
-        elif isinstance(value, str) and value.startswith('folder'):
-            _, folder_name, value = value.split('---')
-            files = glob.glob(os.path.join(folder_name, '*'))
+        if loc is None and not isinstance(value, dict):
+            if value == 'list':
+                kwargs['validators'].append(JsonSerializableValidator())
+                field = ListField(**kwargs)
+            elif value == 'dict':
+                kwargs['validators'].append(JsonSerializableValidator())
+                field = DictField(**kwargs)
+            elif value == 'str':
+                field = StringField(**kwargs)
+            elif value == 'set':
+                kwargs['validators'].append(JsonSerializableValidator())
+                post_process = set
+                field = ListField(**kwargs)
+            elif value == 'tuple':
+                kwargs['validators'].append(JsonSerializableValidator())
+                post_process = tuple
+                field = ListField(**kwargs)
+            elif value == 'int':
+                field = IntegerField(**kwargs)
+            elif value == 'float':
+                field = FloatField(**kwargs)
+            elif value == 'bool':
+                kwargs['validators'] = [Optional()]
+                field = BooleanField(**kwargs)
+            elif value == 'numpy.array':
+                kwargs['validators'].append(Extension())
+                post_process = cls.file_processing(value)
+                field = DynamicFileField(**kwargs)
+            elif value == 'numpy.recarray':
+                kwargs['validators'].append(Extension())
+                post_process = cls.file_processing(value)
+                field = DynamicFileField(**kwargs)
+            elif value == 'pandas.DataFrame':
+                kwargs['validators'].append(Extension())
+                post_process = cls.file_processing(value)
+                field = DynamicFileField(**kwargs)
+            elif value == 'pandas.Series':
+                kwargs['validators'].append(Extension())
+                post_process = cls.file_processing(value)
+                field = DynamicFileField(**kwargs)
+            elif value == 'json':
+                kwargs['validators'].append(Extension(['json']))
+                post_process = cls.file_processing(value)
+                field = DynamicFileField(**kwargs)
+            elif value == 'file':
+                kwargs['validators'].append(
+                    Extension(config['attach_extensions']))
+                field = DynamicFileField(**kwargs)
+            elif isinstance(value, list):
+                choices = [
+                    str(ele).strip().strip('"').strip("'")
+                    for ele in value
+                ]
+                post_process = EnumReader(value, choices)
+
+                if default is None:
+                    choices = ['NULL'] + choices
+                kwargs['choices'] = [(ele, ele) for ele in choices]
+
+                field = SelectField(**kwargs)
+            else:
+                raise LorisError(
+                    f"field value {value} not accepted for {key}."
+                )
+        elif loc is not None and isinstance(value, str):
+            if not os.path.isabs(loc):
+                loc = os.path.join(folderpath, loc)
+            # get all files from folder
+            files = glob.glob(os.path.join(loc, '*'))
+            # setup as choices
             choices = [
                 (str(ele), os.path.split(ele)[-1])
                 for ele in files
             ]
-
-            if default is None:
+            # setup None choice
+            if default is None and not required:
                 choices = [('NULL', 'NULL')] + choices
             kwargs['choices'] = choices
             post_process = cls.file_processing(value)
             field = SelectField(**kwargs)
-        elif isinstance(value, list):
-            choices = [
-                str(ele).strip().strip('"').strip("'")
-                for ele in value
-            ]
-            post_process = EnumReader(value, choices)
-
-            if default is None:
-                choices = ['NULL'] + choices
-            kwargs['choices'] = [(ele, ele) for ele in choices]
-
-            field = SelectField(**kwargs)
-        elif isinstance(value, str) and value.startswith('list'):
-            value = value.split('---')[-1]
-
-            field, post_process = cls._get_field(
-                key, value, default, required, description
-            )
-
-            field = FieldList(
-                field,
-                min_entries=1
-            )
-            post_process = ListReader(post_process)
-        elif isinstance(value, str) and value.startswith('tuple'):
-            value = value.split('---')[-1]
-
-            field, post_process = cls._get_field(
-                key, value, default, required, description
-            )
-
-            field = FieldList(
-                field,
-                min_entries=1
-            )
-            post_process = TupleReader(post_process)
         elif isinstance(value, dict):
             form, post_process = dynamic_autoscripted_form(
                 value, NoCsrfForm
             )
-
-            if value.get('_iterate', False):
-                field = FieldList(
-                    FormField(form),
-                    min_entries=1
-                )
-                post_process = ListReader(post_process)
-            else:
-                field = FormField(form)
+            field = FormField(form)
         # TODO set number of fieldlists (startswith numeric)
         else:
             raise LorisError(f"field value {value} not accepted for {key}.")
 
+        # make iterator (can add multiple values together)
+        if iterate:
+            field = FieldList(
+                field,
+                min_entries=int(required) + 1  # have one required field if so
+            )
+            post_process = ListReader(post_process)
         return field, post_process
 
 
-def dynamic_autoscripted_form(dictionary, formclass=Form):
+def dynamic_autoscripted_form(dictionary, folderpath, formclass=Form):
 
     post_process_dict = {}
 
@@ -219,11 +223,18 @@ def dynamic_autoscripted_form(dictionary, formclass=Form):
 
     for key, value in dictionary.items():
         # comments in the json or formatting guidelines start with _
-        if key.startswith('_'):
+        if key.startswith('#'):
             continue
+        if not key.isidentifier():
+            raise LorisError(
+                f"key {key} is not an identifier; i.e. alphanumeric "
+                "and underscore characters only. The key needs to be "
+                "an identifier if it is used as a keyword during function "
+                "calling."
+            )
 
         auto_field = AutoscriptedField(
-            key, value, dictionary.get('_descriptions', {}).get(key, None)
+            key, value, folderpath
         )
 
         post_process_dict[key] = auto_field.post_process

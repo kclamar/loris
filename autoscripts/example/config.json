@@ -1,38 +1,58 @@
 {
-    "autoscript_inserts": false,
-    "scripts": {
-        "Run": [
-            "run.py", ["form_name", "form_name2"], true,
-            {
-                "configattr": "<Files:example_configuration>",
-                "outputfile": "output.json",
-                "outputattr": "<Data:example_output>"
-            }
-        ],
-        "Test": ["test.py", ["form_name"], false]
+    "buttons": {
+        "Run": {
+            "script": "run.py",
+            "validate": ["form_name", "form_name2"],
+            "insert": true,
+            "configattr": "<Files:example_configuration>",
+            "outputfile": "output.json",
+            "outputattr": "<Data:example_output>"
+        },
+        "Test": {
+            "script": "test.py",
+            "validate": ["form_name"]
+        }
     },
     "forms": {
         "form_name" : {
-            "a" : ["dict", {}],
-            "b" : ["list", null],
-            "c" : ["float", null],
+            "a" : {
+                "type": "dict",
+                "default": {},
+                "comment": "something"
+            },
+            "b" : {
+                "type": "list",
+                "iterate": true
+            },
+            "c" : {
+                "type": "float",
+                "default": null,
+                "iterate": true
+            },
             "d" : "int",
             "e" : "bool",
-            "gg": ["folder---/Users/matthias.christenson/wiki---file", null],
+            "gg": {
+                "loc": "some_folder",
+                "type": "file",
+                "default": null
+            },
             "i" : "str",
-            "j" : [["1234", "adf", "asdf"], null],
-            "_descriptions": {
-                "a" : "something"
+            "j" : {
+                "type" : ["1234", "adf", "asdf"],
+                "default": null
             }
         },
         "form_name2" : {
             "a": "dict",
             "b": {
-                "c": "int",
-                "_iterate": true,
-                "_descriptions": {
-                    "c": "haha"
-                }
+                "type": {
+                    "c": {
+                        "type": "int",
+                        "comment": "haha"
+                    }
+                },
+                "iterate": true,
+                "default": null
             }
         }
     }

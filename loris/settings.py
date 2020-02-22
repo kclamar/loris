@@ -591,6 +591,8 @@ class Config(dict):
         if table_name not in self['autoscriptforms']:
             self['autoscriptforms'][table_name] = {}
 
+        foldername = os.path.basename(autoscript_filepath)
+
         if autoscript_filepath in self['autoscriptforms'][table_name]:
             pass
         else:
@@ -598,15 +600,29 @@ class Config(dict):
                 autoscript_filepath, AUTOSCRIPT_CONFIG
             )
             with open(filepath, 'r') as f:
-                config = json.load(f)
+                try:
+                    config = json.load(f)
+                except Exception as e:
+                    raise LorisError(
+                        f"Json config file for autoscript"
+                        f" '{foldername}' badly "
+                        f"formatted: {e}"
+                    )
 
-            include_insert = not bool(config['autoscript_inserts'])
-            buttons = config['scripts']
+            if 'buttons' not in config:
+                raise LorisError(
+                    "In configuration file of autoscript "
+                    f"{foldername}, no 'button' key "
+                    "was provided."
+                )
+
+            buttons = config['buttons']
+            config_forms = config.get('forms', {})
 
             if not isinstance(buttons, dict):
                 raise LorisError(
                     f'In configuration file of autoscript '
-                    f'"{os.path.basename(autoscript_filepath)}", '
+                    f'"{foldername}", '
                     '"scripts" keyword is incorrectly '
                     'formatted.'
                 )
@@ -615,21 +631,21 @@ class Config(dict):
                 message = (
                     f'In configuration file of autoscript '
                     f'"{os.path.basename(autoscript_filepath)}", '
-                    '"scripts" keyword is incorrectly '
-                    f'formatted for button "{key}".'
+                    '"buttons" keyword is incorrectly '
+                    f'formatted for button "{key}": must be dictionary with '
+                    '"script" key and "validate", "insert", "configattr", '
+                    '"outputfile", and "outputattr" optionally defined.'
                 )
-                if len(button) < 3 or len(button) > 4:
-                    raise LorisError(message)
-                elif len(button) == 4 and not isinstance(button[-1], dict):
+                if not isinstance(button, dict):
                     raise LorisError(message)
                 elif not all([
-                    isinstance(button[0], str),
-                    isinstance(button[1], list),
-                    isinstance(button[2], bool)
+                    isinstance(button.get('script', None), str),
+                    isinstance(button.get('validate', []), list),
+                    isinstance(button.get('insert', False), bool)
                 ]):
                     raise LorisError(message)
 
-            if not isinstance(config['forms'], dict):
+            if not isinstance(config_forms, dict):
                 raise LorisError(
                     f'In configuration file of autoscript '
                     f'"{os.path.basename(autoscript_filepath)}", '
@@ -639,13 +655,15 @@ class Config(dict):
 
             forms = {}
             post_process_dict = {}
-            for key, value in config['forms'].items():
-                form, post_process = form_creator(value, **kwargs)
+            for key, value in config_forms.items():
+                form, post_process = form_creator(
+                    value, autoscript_filepath, **kwargs
+                )
                 forms[key] = form
                 post_process_dict[key] = post_process
 
             self['autoscriptforms'][table_name][autoscript_filepath] = (
-                forms, post_process_dict, buttons, include_insert
+                forms, post_process_dict, buttons
             )
 
         return self['autoscriptforms'][table_name][autoscript_filepath]
