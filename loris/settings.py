@@ -628,11 +628,14 @@ class Config(dict):
                 )
 
             for key, button in buttons.items():
-                message = (
+                base_message = (
                     f'In configuration file of autoscript '
-                    f'"{os.path.basename(autoscript_filepath)}", '
+                    f'"{foldername}", '
                     '"buttons" keyword is incorrectly '
-                    f'formatted for button "{key}": must be dictionary with '
+                    f'formatted for button "{key}":'
+                )
+                message = (
+                    f'{base_message} must be dictionary with '
                     '"script" key and "validate", "insert", "configattr", '
                     '"outputfile", and "outputattr" optionally defined.'
                 )
@@ -641,9 +644,17 @@ class Config(dict):
                 elif not all([
                     isinstance(button.get('script', None), str),
                     isinstance(button.get('validate', []), list),
-                    isinstance(button.get('insert', False), bool)
+                    isinstance(button.get('insert', False), bool),
+                    isinstance(button.get('configattr', ''), str),
+                    isinstance(button.get('outputfile', ''), str),
+                    isinstance(button.get('outputattr', ''), str),
                 ]):
                     raise LorisError(message)
+                elif not os.path.exists(os.path.join(autoscript_filepath, button['script'])):
+                    raise LorisError(
+                        f'{base_message} script "{button["script"]}" '
+                        'does not exist in autoscript folder.'
+                    )
 
             if not isinstance(config_forms, dict):
                 raise LorisError(
