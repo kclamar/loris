@@ -7,6 +7,8 @@ import datajoint as dj
 from loris.database.schema.base import COMMENTS, ManualLookup
 from loris.database.attributes import truebool
 from loris.database.attributes import lookupname
+from loris.database.attributes import email
+from loris.database.attributes import phone
 
 
 schema = dj.Schema('experimenters')
@@ -19,8 +21,8 @@ class Experimenter(dj.Manual):
     ---
     first_name : varchar(63)
     last_name : varchar(127)
-    email : varchar(255)
-    phone : varchar(16)
+    email : <email>
+    phone : <phone>
     date_joined : date
     active = 0 : <truebool> # active member of the lab
     """
@@ -31,8 +33,8 @@ class Experimenter(dj.Manual):
         contact_name : varchar(255)
         ---
         relation : varchar(63)
-        phone : varchar(16)
-        email = null : varchar(255)
+        phone : <phone>
+        email = null : <email>
         {COMMENTS}
         """
 

@@ -119,6 +119,40 @@ class Chromosome(dj.AttributeAdapter):
         return value
 
 
+class Email(dj.AttributeAdapter):
+
+    attribute_type = 'varchar(255)'
+
+    @staticmethod
+    def is_email(obj):
+
+        regex = r"^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$"
+        return re.fullmatch(regex, obj) is not None
+
+    def put(self, obj):
+        """perform checks before putting
+        """
+
+        if obj is None:
+            return
+
+        assert isinstance(obj, str), (
+            f"object is not of type string, "
+            f"but {type(obj)} for email attribute")
+
+        obj = obj.strip()
+
+        if not self.is_email(obj):
+            raise dj.DatajointError(
+                f"string {obj} is not a valid email for attribute {self}"
+            )
+
+        return obj
+
+    def get(self, value):
+        return value
+
+
 class Link(dj.AttributeAdapter):
 
     attribute_type = 'varchar(511)'
@@ -135,7 +169,7 @@ class Link(dj.AttributeAdapter):
             r'(?:/?|[/?]\S+)$', re.IGNORECASE
         )
 
-        return re.match(regex, obj) is not None
+        return re.fullmatch(regex, obj) is not None
 
     def put(self, obj):
         """perform checks before putting
@@ -175,6 +209,29 @@ class FlyIdentifier(dj.AttributeAdapter):
         assert isinstance(obj, str), (
             f"object is not of type string, "
             f"but {type(obj)} for fly identifier attribute")
+
+        obj = obj.strip()
+
+        return obj
+
+    def get(self, value):
+        return value
+
+
+class Phone(dj.AttributeAdapter):
+
+    attribute_type = 'varchar(16)'
+
+    def put(self, obj):
+        """perform checks before putting
+        """
+
+        if obj is None:
+            return
+
+        assert isinstance(obj, str), (
+            f"object is not of type string, "
+            f"but {type(obj)} for phone attribute")
 
         obj = obj.strip()
 
@@ -267,6 +324,8 @@ dictstring = DictString()
 attachprocess = AttachProcess()
 attachplaceholder = AttachPlaceholder()
 lookupname = LookupName()
+email = Email()
+phone = Phone()
 
 custom_attributes_dict = {
     'chr': chr,
@@ -280,5 +339,7 @@ custom_attributes_dict = {
     'tags': tags,
     'attachprocess': attachprocess,
     'attachplaceholder': attachplaceholder,
-    'lookupname': lookupname
+    'lookupname': lookupname,
+    'email': email,
+    'phone': phone
 }
