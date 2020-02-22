@@ -8,7 +8,40 @@ import datajoint as dj
 
 from loris import config
 from loris.app.forms.dynamic_form import DynamicForm
-from loris.app.utils import user_has_permission
+from loris.app.utils import user_has_permission, save_join, get_jsontable
+
+
+def joined_table_template(
+    table_names, name='Joined Table', redirect_url='#',
+    message='None'
+):
+    """template for joined tables
+    """
+
+    if redirect_url != '#':
+        redirect_url = url_for(redirect_url)
+
+    tables = []
+    for table_name in table_names:
+        if not isinstance(table_name, str):
+            tables.append(table_name)
+        else:
+            tables.append(config.get_table(table_name))
+
+    joined_table = save_join(tables)
+    df = joined_table.proj().fetch(format='frame').reset_index()
+    data = get_jsontable(
+        df, joined_table.heading.primary_key
+    )
+
+    return render_template(
+        'pages/joined_table.html',
+        name=name,
+        url=redirect_url,
+        data=data,
+        toggle_off_keys=[0],
+        message=message
+    )
 
 
 def form_template(

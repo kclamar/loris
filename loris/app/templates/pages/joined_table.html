@@ -1,0 +1,18 @@
+{% extends 'layouts/main.html' %}
+{% block title %}Join Tables{% endblock %}
+{% block content %}
+
+<div class="page-header">
+    <h2> <a href={{url}}>{{name}}</a> <h2>
+</div>
+{% if message and message != "None" %}
+<p>
+    {{message}}
+</p>
+{% endif %}
+
+{% with data=data, toggle_off_keys=toggle_off_keys%}
+    {% include 'macros/tables.html' %}
+{% endwith %}
+
+{% endblock %}

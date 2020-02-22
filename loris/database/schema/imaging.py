@@ -18,17 +18,11 @@ schema = dj.Schema('imaging')
 
 
 @schema
-class OpticalIndicator(ManualLookup, dj.Manual):
-    primary_comment = 'indicator - e.g. GCaMP6f'
-
-
-@schema
 class TwoPhotonRecording(dj.Manual):
     definition = f"""
     {NEURAL_RECORDING}
     -> [nullable] anatomy.NeuronSection
     -> [nullable] anatomy.BrainArea
-    -> [nullable] OpticalIndicator
     voltage_input = 0 : <truebool> # whether voltage input was recorded
     voltage_output = 0 : <truebool> # whether voltage output was recorded
     linescan = 0 : <truebool> # whether linescan was captured or not
@@ -40,9 +34,6 @@ class TwoPhotonRecording(dj.Manual):
         master_name = "TwoPhotonRecording"
 
     class Data(DataMixin, dj.Part):
-        master_name = "TwoPhotonRecording"
-
-    class Extensions(ExtensionMixin, dj.Part):
         master_name = "TwoPhotonRecording"
 
 

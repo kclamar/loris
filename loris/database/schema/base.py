@@ -8,6 +8,7 @@ TAGS = 'tags = null : <tags> # comma-separated tags'
 NEURAL_RECORDING = f"""
     recording_id : int auto_increment # integer id number
     ---
+    recording_file_id : varchar(63) # recording file identifier -- e.g. prairieview extension
     -> subjects.FlySubject
     -> recordings.RecordingType
     -> recordings.RecordingSolution

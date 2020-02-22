@@ -10,7 +10,7 @@ import pandas as pd
 
 from loris import config
 from loris.app.app import app
-from loris.app.templates import form_template
+from loris.app.templates import form_template, joined_table_template
 from loris.app.forms.dynamic_form import DynamicForm
 from loris.app.forms.fixed import (
     dynamic_jointablesform, dynamic_settingstableform, LoginForm,
@@ -85,6 +85,57 @@ def entersubject():
         joined_name='subjectgenotype'
     )
 
+
+@app.route('/stockgenotype', methods=['GET', 'POST'])
+@login_required
+def stockgenotype():
+    """join various tables in the database
+    """
+
+    return joined_table_template(
+        ['subjects.fly_genotype', 'subjects.fly_stock'],
+        'Stock + Genotype Table',
+        'stock',
+    )
+
+
+@app.route('/crossgenotype', methods=['GET', 'POST'])
+@login_required
+def crossgenotype():
+    """join various tables in the database
+    """
+
+    return joined_table_template(
+        ['subjects.fly_genotype', 'subjects.fly_cross'],
+        'Cross + Genotype Table',
+        'cross',
+    )
+
+
+@app.route('/subjectgenotype', methods=['GET', 'POST'])
+@login_required
+def subjectgenotype():
+    """join various tables in the database
+    """
+
+    return joined_table_template(
+        ['subjects.fly_genotype', 'subjects.fly_subject'],
+        'Subject + Genotype Table',
+        'entersubject',
+    )
+
+
+@app.route('/stockcrossgenotype', methods=['GET', 'POST'])
+@login_required
+def stockcrossgenotype():
+    """join various tables in the database
+    """
+
+    return joined_table_template(
+        ['subjects.fly_genotype', 'subjects.fly_stock', 'subjects.fly_cross'],
+        'Stock + Cross + Genotype Table',
+        '#',
+    )
 
 # TODO
 # joined tables (stock + genotype)

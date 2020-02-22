@@ -31,7 +31,7 @@ from loris.app.forms.formmixin import (
     ManualLookupForm, ParentFormField, DynamicFileField, DictField, ListField,
     ParentValidator, JsonSerializableValidator, AttachFileField,
     BlobFileField, Extension, TagListField, MetaHiddenField,
-    ParentInputRequired, Always
+    ParentInputRequired, Always, LookupNameValidator
 )
 
 
@@ -389,6 +389,8 @@ class DynamicField:
             kwargs['validators'].append(URL(False))
         elif attr_type_name == 'email':
             kwargs['validators'].append(Email())
+        elif attr_type_name == 'lookupname':
+            kwargs['validators'].append(LookupNameValidator())
 
         return self._create_field(attr_type, kwargs)
 

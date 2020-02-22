@@ -195,6 +195,29 @@ class FilePath:
             )
 
 
+class LookupNameValidator:
+
+    def __call__(self, form, field):
+
+        data = field.data
+
+        if data in NONES:
+            return
+
+        if isinstance(data, str):
+            data = data.strip().lower()
+            if not data.isidentifier():
+                raise ValidationError(
+                    f"lookup name '{data}' is not an identifier; "
+                    "it contains characters besides alphanumeric and/or "
+                    "an underscore."
+                )
+        else:
+            raise ValidationError(
+                'Lookup Name must be of string type.'
+            )
+
+
 class ParentInputRequired(Optional):
 
     def __call__(self, form, field):

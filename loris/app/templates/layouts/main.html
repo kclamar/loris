@@ -112,7 +112,12 @@
         <ul class="dropdown-menu", aria-labelledby="navbarDropdown4">
         <li><a class="dropdown-item" href="{{ url_for('genotype')}}">Enter Genotype</a></li>
         <li><a class="dropdown-item" href="{{ url_for('stock')}}">Enter Stock</a></li>
+        <li><a class="dropdown-item" href="{{ url_for('stockgenotype')}}">Stock + Genotype</a></li>
+        <li><a class="dropdown-item" href="{{ url_for('stockcrossgenotype')}}">Stock + Cross + Genotype</a></li>
         <li><a class="dropdown-item" href="{{ url_for('cross')}}">Enter Cross</a></li>
+        <li><a class="dropdown-item" href="{{ url_for('crossgenotype')}}">Cross + Genotype</a></li>
+        <li><a class="dropdown-item" href="{{ url_for('entersubject')}}">Enter Subject</a></li>
+        <li><a class="dropdown-item" href="{{ url_for('subjectgenotype')}}">Subject + Genotype</a></li>
         </ul>
       </li>
       {% endif %}
@@ -121,8 +126,12 @@
             Experiments
         </a>
         <ul class="dropdown-menu", aria-labelledby="navbarDropdown5">
+        {% if config['include_fly'] in [True, "True"] %}
         <li><a class="dropdown-item" href="{{ url_for('entersubject')}}">Enter Subject</a></li>
+        {% endif %}
         <li><a class="dropdown-item" href="{{ url_for('experiment')}}">Start Experiment</a></li>
+        <li><a class="dropdown-item" href="#">Monitor Experiment</a></li>
+        <li><a class="dropdown-item" href="#">Build Experiment</a></li>
         </ul>
       </li>
       <li class="nav-item dropdown">

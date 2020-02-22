@@ -85,6 +85,7 @@ class FlySubject(dj.Manual):
     definition = f"""
     subject_id : int auto_increment
     ---
+    subject_name = null : varchar(255) # custom subject name -- not necessarily unique
     -> FlyGenotype
     -> Experimenter
     -> [nullable] RearingMethod

@@ -26,6 +26,8 @@ class TrueBool(dj.AttributeAdapter):
 
 
 class LookupName(dj.AttributeAdapter):
+    """a string with stripped of
+    """
 
     attribute_type = 'varchar(127)'
 
@@ -34,7 +36,19 @@ class LookupName(dj.AttributeAdapter):
             return
 
         if isinstance(obj, str):
-            obj = obj.strip()
+            obj = obj.strip().lower()
+        else:
+            raise dj.DataJointError(
+                f"lookup name '{obj}' must be of type "
+                f"'str' and not '{type(obj)}'."
+            )
+
+        if not obj.isidentifier():
+            raise dj.DataJointError(
+                f"lookup name '{obj}' is not an identifier; "
+                "it containes characters besides alphanumeric and/or "
+                "an underscore."
+            )
 
         return obj
 
