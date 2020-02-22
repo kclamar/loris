@@ -8,6 +8,7 @@ from functools import wraps
 from flask_login import current_user, login_user, login_required, logout_user
 import datajoint as dj
 import pandas as pd
+from ast import literal_eval
 
 from loris import config
 from loris.app.app import app
@@ -28,7 +29,7 @@ from loris.database.users import grantuser, change_password
 @login_required
 def erd(schema):
 
-    only_essentials = eval(request.args.get('only_essentials', 'False'))
+    only_essentials = literal_eval(request.args.get('only_essentials', 'False'))
 
     filename = draw_helper(
         schema, type='schema', only_essentials=only_essentials

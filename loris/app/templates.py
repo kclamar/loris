@@ -5,6 +5,7 @@ from flask import render_template, request, flash, url_for, redirect, \
     send_from_directory, session
 from flask_login import current_user
 import datajoint as dj
+from ast import literal_eval
 
 from loris import config
 from loris.app.forms.dynamic_form import DynamicForm
@@ -64,7 +65,7 @@ def form_template(
     # showing
     enter_show = ['', 'false']
     # get id if it exists (will be restriction)
-    _id = eval(request.args.get('_id', "None"))
+    _id = literal_eval(request.args.get('_id', "None"))
     # get table and create dynamic form
     table_class = getattr(config['schemata'][schema], table)
     # get table name

@@ -1,3 +1,7 @@
 [submodule "datajoint-python"]
 	path = datajoint-python
 	url = https://github.com/gucky92/datajoint-python.git
+[submodule "mysql-docker"]
+	path = mysql-docker
+	url = https://github.com/gucky92/mysql-docker.git
+	branch = master

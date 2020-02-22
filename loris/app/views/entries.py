@@ -8,6 +8,7 @@ from functools import wraps
 from flask_login import current_user, login_user, login_required, logout_user
 import datajoint as dj
 import pandas as pd
+from ast import literal_eval
 
 from loris import config
 from loris.app.app import app
@@ -37,7 +38,7 @@ def delete(schema, table, subtable):
         )
     )
     # get id if it exists (will be restriction)
-    _id = eval(request.args.get('_id', "None"))
+    _id = literal_eval(request.args.get('_id', "None"))
     if (_id == 'None') or (_id is None):
         return redirect(redirect_url)
 
@@ -95,7 +96,7 @@ def delete(schema, table, subtable):
 
     # always cancel transaction
     conn.cancel_transaction()
-    
+
     if commit_transaction:
         return render_template(
             'pages/delete.html',
