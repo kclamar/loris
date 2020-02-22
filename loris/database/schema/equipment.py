@@ -14,17 +14,17 @@ schema = dj.Schema('equipment')
 
 @schema
 class PieceType(ManualLookup, dj.Manual):
-    primary_comment = 'type of piece - e.g. LED, dichroic'
+    primary_comment = 'type of piece - e.g. led, dichroic'
 
 
 @schema
 class Manufacturer(ManualLookup, dj.Manual):
-    primary_comment = 'name of manufacturer - e.g. ThorLabs, Semrock'
+    primary_comment = 'name of manufacturer - e.g. thorlabs, semrock'
 
 
 @schema
 class SystemType(ManualLookup, dj.Manual):
-    primary_comment = 'type of system - e.g. LED setup, ephys rig'
+    primary_comment = 'type of system - e.g. led_setup, ephys_rig'
 
 
 @schema

@@ -4,7 +4,7 @@
 
 import datajoint as dj
 
-from loris.database.schema.base import COMMENTS, ManualLookup
+from loris.database.schema.base import COMMENTS, ManualLookup, PRIMARY_NAME
 from loris.database.attributes import truebool
 from loris.database.attributes import lookupname
 from loris.database.attributes import email
@@ -17,7 +17,7 @@ schema = dj.Schema('experimenters')
 @schema
 class Experimenter(dj.Manual):
     definition = f"""
-    experimenter : varchar(31) # git user-name
+    {PRIMARY_NAME.format(name='experimenter', comment='lowercase git user-name')}
     ---
     first_name : varchar(63)
     last_name : varchar(127)

@@ -12,7 +12,8 @@ schema = dj.Schema('core')
 
 @schema
 class LookupName(ManualLookup, dj.Manual):
-    primary_comment = 'identifiable name - e.g. stimulus, xml-file, array'
+    primary_comment = 'identifiable name - e.g. stimulus, xml_file, array'
+
 
 @schema
 class ExtensionLookupName(ManualLookup, dj.Manual):
@@ -26,7 +27,7 @@ class DataLookupName(ManualLookup, dj.Manual):
 
 @schema
 class FileLookupName(ManualLookup, dj.Manual):
-    primary_comment = 'identifiable name - e.g. xml-file, settings'
+    primary_comment = 'identifiable name - e.g. xml_file, settings'
 
 
 @schema
