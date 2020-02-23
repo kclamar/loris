@@ -10,7 +10,7 @@ from wtforms.validators import InputRequired, Optional, NumberRange, \
     ValidationError, Length, UUID, URL, Email
 from flask_wtf import FlaskForm as Form
 from wtforms import Form as NoCsrfForm
-from werkzeug import secure_filename
+from werkzeug.utils import secure_filename
 import glob
 
 from loris import config
