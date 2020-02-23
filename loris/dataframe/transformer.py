@@ -9,12 +9,40 @@ RESERVED_COLUMNS = {'func_result', 'max_depth', 'dropna', 'transformer'}
 
 class Transformer:
     """class to transform wide dataframes pulled from datajoint
+
+    Parameters
+    ----------
+    df : pandas.DataFrame
+        A dataframe with columns defining datatypes and rows being different
+        entries. All column and index names must be identifier string types.
+        Individual cells in the dataframe may have arbitrary objects in them.
+    datacols : list-like
+        The columns in the dataframe that are considered "data"; i.e. for
+        example columns where each cell is a numpy.array, e.g. a timestamp
+        array. Defaults to None.
+    indexcols : list-like
+        The columns in the dataframe that are immutable types, e.g. strings or
+        integers. Defaults to None.
+    inplace : bool
+        If possible do not copy dataframe. Defaults to False.
+
+    Attributes
+    ----------
+    df : pandas.DataFrame
+        The dataframe passed during initialization
+
+    Methods
+    -------
+    tolong
+    applyfunc
+    mapfunc
+    drop
     """
 
     def __init__(
         self, df,
         datacols=None, indexcols=None,
-        inplace=True
+        inplace=False
     ):
         assert isinstance(df, pd.DataFrame), "df must be a pandas DataFrame."
 
@@ -42,7 +70,9 @@ class Transformer:
                 f'indexcols contains columns not in dataframe: {truth}.'
             )
             # keep original index for uniqueness
-            if inplace:
+            if not indexcols:
+                pass
+            elif inplace:
                 df.set_index(indexcols, append=True, inplace=True)
             else:
                 df = df.set_index(indexcols, append=True)
@@ -95,12 +125,38 @@ class Transformer:
         **shared_axes
     ):
         """
+        Transform the dataframe into a long format dataframe.
+
+        Parameters
+        ----------
+        transformer : callable
+            function called on each cell for each "data column" to create
+            a new pandas.Series. If the "data columns" only contain array-like
+            objects the default function <iter> is sufficient. If the
+            "data columns" also contain other objects such as dictionaries,
+            it may be necessary to provide a custom callable.
+        max_depth : int
+            Maximum depth of expanding each cell, before the algorithm stops
+            for each "data column". If we set the max_depth to 3, for example,
+            a "data column" consisting of 4-D numpy.arrays will result in a
+            long dataframe where the "data column" cells contain
+            1-D numpy.arrays. If the arrays were 3-D, it will result in a
+            long dataframe with floats/ints in each cell. Defaults to 3.
+        dropna : bool
+            Drop rows in long dataframe where all "data columns" are NaN.
+        **shared_axes : dict
+            Specify if two or more "data columns" share axes. The keyword
+            will correspond to what the column will be called in the long
+            dataframe. Each argument is a dictionary where the keys
+            correspond to the names of the "data columns", which share
+            an axis, and the value correspond to the depth/axis is shared
+            for each "data column".
         """
 
         truth = all(
             (
                 # key must be unique
-                all(not key.startswith(col) for col in self._df.columns)
+                all(not key.startswith(col+'_') for col in self._df.columns)
                 and key not in self._df.index.names
                 # must be dictionary
                 and isinstance(shared, dict)
@@ -170,24 +226,62 @@ class Transformer:
         return series
 
     def mapfunc(self, func, column, new_col_name=None, **kwargs):
+        """apply a function to a single column
+
+        Parameters
+        ----------
+        func : callable
+            Function to apply.
+        column : str
+            Name of column
+        new_col_name : str
+            Name of computed new column. If None, this will be set
+            to the name of the column; i.e. the name of the column will be
+            overwritter. Defaults to None.
+        **kwargs : dict
+            Keyword Arguments passed to the apply method of a pandas.Series,
+            and thus to the function.
+        """
+        # TODO handling index columns
         if new_col_name is None:
             new_col_name = column
         self._df[new_col_name] = self._df[column].apply(func, **kwargs)
         return self
 
-    def applyfunc(self, func, new_col_name, *args, **kwargs):
+    def applyfunc(self, func, new_col_name, *args, extra_kwargs={}, **kwargs):
+        """apply a function across columns by mapping args and kwargs
+        of func.
+
+        Parameters
+        ----------
+        func : callable
+            Function to apply.
+        new_col_name : str
+            Name of computed new col.
+        *args : tuple
+            Arguments passed to function. Each argument should be a column
+            in the dataframe. This value is passed instead of the string.
+        extra_kwargs : dict
+            Keyword arguments passed to function
+        **kwargs : dict
+            Same as *args just as keyword arguments.
+        """
+        # TODO handling index columns
         if new_col_name is None:
             new_col_name = 'func_result'
         self._df[new_col_name] = self._df.apply(
             lambda x: func(
                 *(x[arg] for arg in args),
-                **{key: x[arg] for key, arg in kwargs.items()}
+                **{key: x[arg] for key, arg in kwargs.items()},
+                **extra_kwargs
             ),
             axis=1, result_type='reduce'
         )
         return self
 
     def drop(self, *columns):
+        """drop columns
+        """
         self._df.drop(
             columns=columns,
             inplace=True
