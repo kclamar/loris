@@ -1,5 +1,7 @@
-"""DfManipulator class
+"""Transformer class
 """
+
+import re
 
 import pandas as pd
 import numpy as np
@@ -12,7 +14,7 @@ class Transformer:
 
     Parameters
     ----------
-    df : pandas.DataFrame
+    table : pandas.DataFrame
         A dataframe with columns defining datatypes and rows being different
         entries. All column and index names must be identifier string types.
         Individual cells in the dataframe may have arbitrary objects in them.
@@ -25,10 +27,17 @@ class Transformer:
         integers. Defaults to None.
     inplace : bool
         If possible do not copy dataframe. Defaults to False.
+    **shared_axes : dict
+        Specify if two or more "data columns" share axes. The keyword
+        will correspond to what the column will be called in the long
+        dataframe. Each argument is a dictionary where the keys
+        correspond to the names of the "data columns", which share
+        an axis, and the value correspond to the depth/axis is shared
+        for each "data column".
 
     Attributes
     ----------
-    df : pandas.DataFrame
+    table : pandas.DataFrame
         The dataframe passed during initialization
 
     Methods
@@ -40,13 +49,14 @@ class Transformer:
     """
 
     def __init__(
-        self, df,
+        self, table,
         datacols=None, indexcols=None,
-        inplace=False
+        inplace=False,
+        **shared_axes
     ):
-        assert isinstance(df, pd.DataFrame), "df must be a pandas DataFrame."
+        assert isinstance(table, pd.DataFrame), "table must be a pandas DataFrame."
 
-        truth = RESERVED_COLUMNS & set(df.columns)
+        truth = RESERVED_COLUMNS & set(table.columns)
         assert not truth, (
             f'dataframe has columns that are reserved: {truth}.'
         )
@@ -56,16 +66,16 @@ class Transformer:
             pass
         else:
             if indexcols is None:
-                indexcols = list(set(df.columns) - set(datacols))
+                indexcols = list(set(table.columns) - set(datacols))
             elif datacols is None:
-                datacols = list(set(df.columns) - set(indexcols))
+                datacols = list(set(table.columns) - set(indexcols))
 
             # no columns given that are not in dataframe
-            truth = set(datacols) - set(df.columns)
+            truth = set(datacols) - set(table.columns)
             assert not truth, (
                 f'datacols contains columns not in dataframe: {truth}.'
             )
-            truth = set(indexcols) - set(df.columns)
+            truth = set(indexcols) - set(table.columns)
             assert not truth, (
                 f'indexcols contains columns not in dataframe: {truth}.'
             )
@@ -73,56 +83,66 @@ class Transformer:
             if not indexcols:
                 pass
             elif inplace:
-                df.set_index(indexcols, append=True, inplace=True)
+                table.set_index(indexcols, append=True, inplace=True)
             else:
-                df = df.set_index(indexcols, append=True)
+                table = table.set_index(indexcols, append=True)
 
             # if only a few columns were selected
-            if set(df.columns) - set(datacols):
-                df = df[datacols]
+            if set(table.columns) - set(datacols):
+                table = table[datacols]
 
-        assert isinstance(df.index, pd.MultiIndex), (
-            "df index must be multiindex"
+        assert isinstance(table.index, pd.MultiIndex), (
+            "table index must be multiindex"
         )
         truth = all(
-            str(col).isidentifier() for col in df.columns
+            str(col).isidentifier() for col in table.columns
         ) + all(
-            str(name).isidentifier() for name in df.index.names
+            str(name).isidentifier() for name in table.index.names
         )
         assert truth, (
             "all index names and column names must be string identifiers."
         )
         truth = any(
             str(name).startswith(str(col))
-            for name in df.index.names
-            for col in df.columns
+            for name in table.index.names
+            for col in table.columns
         )
         assert not truth, (
             "not any index names can startwith the same name as column names."
         )
 
         if inplace:
-            self._df = df
+            self._table = table
         else:
-            self._df = df.copy()
+            self._table = table.copy()
 
         # stringify everything
-        self._df.rename(
-            columns={col: str(col) for col in self._df.columns},
+        self.table.rename(
+            columns={col: str(col) for col in self.table.columns},
             inplace=True
         )
-        self._df.index.set_names(
-            [str(name) for name in self._df.index.names],
+        self.table.index.set_names(
+            [str(name) for name in self.table.index.names],
             inplace=True
         )
+
+        # attributes assigned on the go
+        self._shared_axes = shared_axes
+        self._df = None
 
     @property
     def df(self):
+        if self._df is None:
+            self.tolong(set_df=True)
         return self._df
+
+    @property
+    def table(self):
+        return self._table
 
     def tolong(
         self, transformer=iter, max_depth=3, dropna=True,
-        **shared_axes
+        set_df=False, **shared_axes
     ):
         """
         Transform the dataframe into a long format dataframe.
@@ -144,6 +164,9 @@ class Transformer:
             long dataframe with floats/ints in each cell. Defaults to 3.
         dropna : bool
             Drop rows in long dataframe where all "data columns" are NaN.
+        set_df : bool
+            Whether to set the df attribute to the resulting
+            long dataframe.
         **shared_axes : dict
             Specify if two or more "data columns" share axes. The keyword
             will correspond to what the column will be called in the long
@@ -153,15 +176,19 @@ class Transformer:
             for each "data column".
         """
 
+        # update with default
+        shared_axes = {**self._shared_axes, **shared_axes}
+
         truth = all(
             (
                 # key must be unique
-                all(not key.startswith(col+'_') for col in self._df.columns)
-                and key not in self._df.index.names
+                all((re.match(f'{col}[_]?[1-9]*$', key) is None)
+                    for col in self.table.columns)
+                and key not in self.table.index.names
                 # must be dictionary
                 and isinstance(shared, dict)
                 # keys must be in columns
-                and not (set(shared) - set(self._df.columns))
+                and not (set(shared) - set(self.table.columns))
             )
             for key, shared in shared_axes.items()
         )
@@ -175,7 +202,7 @@ class Transformer:
         )
 
         # iterate of each data column
-        for m, (label, series) in enumerate(self._df.items()):
+        for m, (label, series) in enumerate(self.table.items()):
             # set first depth
             n = 0
             # if series already not object skip
@@ -197,7 +224,11 @@ class Transformer:
                 on = list(names & set(df.columns))
                 df = pd.merge(df, _df, on=on, how='outer')
 
-        return df
+        if set_df:
+            self._df = df
+            return
+        else:
+            return df
 
     @staticmethod
     def _get_col_name(label, n, shared_axes):
@@ -214,18 +245,18 @@ class Transformer:
         # series.index is already assumed to be multi index
         # transform into dataframe
         # this should automatically infer types
-        df = series.apply(
+        table = series.apply(
             lambda x: pd.Series(transformer(x)),
             convert_dtype=True
         )
         # give columns index a name
-        df.columns.name = col_name
+        table.columns.name = col_name
         # stack dataframe
-        series = df.stack(dropna=dropna)
+        series = table.stack(dropna=dropna)
         series.name = label
         return series
 
-    def mapfunc(self, func, column, new_col_name=None, **kwargs):
+    def mapfunc(self, func, col, new_col_name=None, **kwargs):
         """apply a function to a single column
 
         Parameters
@@ -242,10 +273,11 @@ class Transformer:
             Keyword Arguments passed to the apply method of a pandas.Series,
             and thus to the function.
         """
-        # TODO handling index columns
         if new_col_name is None:
-            new_col_name = column
-        self._df[new_col_name] = self._df[column].apply(func, **kwargs)
+            new_col_name = col
+        self.table[new_col_name] = self._select_frame(
+            self.table, col
+        ).apply(func, **kwargs)
         return self
 
     def applyfunc(self, func, new_col_name, *args, extra_kwargs={}, **kwargs):
@@ -266,10 +298,9 @@ class Transformer:
         **kwargs : dict
             Same as *args just as keyword arguments.
         """
-        # TODO handling index columns
         if new_col_name is None:
             new_col_name = 'func_result'
-        self._df[new_col_name] = self._df.apply(
+        self.table[new_col_name] = self.table.reset_index().apply(
             lambda x: func(
                 *(x[arg] for arg in args),
                 **{key: x[arg] for key, arg in kwargs.items()},
@@ -279,10 +310,17 @@ class Transformer:
         )
         return self
 
+    @staticmethod
+    def _select_frame(table, col):
+        if col in table.columns:
+            return table[col]
+        else:
+            table.index.to_frame(False)[col]
+
     def drop(self, *columns):
         """drop columns
         """
-        self._df.drop(
+        self.table.drop(
             columns=columns,
             inplace=True
         )
