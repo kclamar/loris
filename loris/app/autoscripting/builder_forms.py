@@ -62,4 +62,5 @@ def dynamic_scriptform(folderpath):
 
 
 class FormConfig(NoCsrfForm, FormMixin):
-    forms = FieldList(DictTextArea())
+    name = StringField()
+    fields = FieldList(DictTextArea())
