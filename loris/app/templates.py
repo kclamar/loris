@@ -138,7 +138,7 @@ def form_template(
                 try:
                     _id = dynamicform.insert(
                         form,
-                        (_id if overwrite == 'False' else None),
+                        _id,
                         **kwargs)
                 except dj.DataJointError as e:
                     flash(f"{e}", 'error')

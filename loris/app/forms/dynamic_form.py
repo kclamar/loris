@@ -253,8 +253,14 @@ class DynamicForm:
             raise LorisError(f'form is incorrect type (={type(form)}); '
                              'form must be dict or be a subclass of FormMixin')
 
-        def helper():
+        # check if replace in kwargs affects order of main and part helper
+        replace = kwargs.get('replace', False)
+
+        def main_helper():
             primary_dict = self._insert(formatted_dict, _id, **kwargs)
+            return primary_dict
+
+        def part_helper(primary_dict):
             for part_name, part_form in self.part_fields.items():
                 f_dicts = formatted_dict[part_name]
                 if f_dicts is None:
@@ -274,20 +280,34 @@ class DynamicForm:
                         }
                         _part_id = {**_id, **_part_primary}
                     # insert into part table
-                    part_form._insert(f_dict, _part_id, primary_dict, **kwargs)
-            return primary_dict
+                    part_form._insert(
+                        f_dict, _part_id, primary_dict,
+                        override_update_truth=True,
+                        **kwargs
+                    )
 
         if self.table.connection.in_transaction:
-            primary_dict = helper()
+            if replace and _id is not None:
+                part_helper(_id)
+                primary_dict = main_helper()
+            else:
+                primary_dict = main_helper()
+                part_helper(primary_dict)
         else:
             # perform operations within a transaction
             with self.table.connection.transaction:
-                primary_dict = helper()
+                if replace and _id is not None:
+                    part_helper(_id)
+                    primary_dict = main_helper()
+                else:
+                    primary_dict = main_helper()
+                    part_helper(primary_dict)
         return primary_dict
 
     def _insert(
         self, formatted_dict, _id=None,
         primary_dict=None, check_reserved=True,
+        override_update_truth=False,
         **kwargs
     ):
         """insert helper function
@@ -299,15 +319,19 @@ class DynamicForm:
             if key in self.fields:
                 insert_dict[key] = self.fields[key].format_value(value)
 
-        if _id is None:
+        if _id is None or kwargs.get('replace', False):
             truth = True
         else:
             restricted_table = self.table & _id
             if len(restricted_table) == 0:
-                raise dj.DataJointError(
-                    f'Entry {_id} does not exist; cannot update.'
-                )
-            truth = False
+                if override_update_truth:
+                    truth = True
+                else:
+                    raise dj.DataJointError(
+                        f'Entry {_id} does not exist; cannot update.'
+                    )
+            else:
+                truth = False
 
         if primary_dict is not None:
             insert_dict = {**primary_dict, **insert_dict}
