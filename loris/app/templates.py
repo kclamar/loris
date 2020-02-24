@@ -30,7 +30,9 @@ def joined_table_template(
             tables.append(config.get_table(table_name))
 
     joined_table = save_join(tables)
-    df = joined_table.proj().fetch(format='frame').reset_index()
+    df = joined_table.proj(
+        *joined_table.heading.non_blobs
+    ).fetch(format='frame').reset_index()
     data = get_jsontable(
         df, joined_table.heading.primary_key
     )
