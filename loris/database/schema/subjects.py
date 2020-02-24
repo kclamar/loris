@@ -31,17 +31,10 @@ class FlyGenotype(dj.Manual):
     chr3 : <chr>
     chr4 = null : <chr>
     -> [nullable] CellType
+    public_ids = null : <tags>
     {TAGS}
     {COMMENTS}
     """
-
-    class PublicIdentifier(dj.Part):
-        definition = """
-        -> FlyGenotype
-        identifier : <flyidentifier> # public identifier
-        ---
-        link = null : <link>
-        """
 
 
 @schema

@@ -75,13 +75,3 @@ class User(UserMixin):
             success = False
         config.conn(reset=True)
         return success
-
-    def get_user_config(self, password):
-        """create user specific config file
-        """
-
-        user_config = Config.load()
-        user_config['database.user'] = self.user_name
-        user_config['database.password'] = password
-        user_config.conn(reset=True)
-        return user_config

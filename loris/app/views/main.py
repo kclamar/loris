@@ -85,8 +85,6 @@ def change():
             flash('New and old password match', 'error')
         else:
             change_password(current_user.user_name, form.new_password.data)
-            # user_configs.pop(current_user.user_name, None)
-            # user_configs.get_user_config(form.password.data)
             flash('Successfully changed password and logged in')
             login_user(user)
 
