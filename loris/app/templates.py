@@ -14,7 +14,7 @@ from loris.app.utils import user_has_permission, save_join, get_jsontable
 
 def joined_table_template(
     table_names, name='Joined Table', redirect_url='#',
-    message='None'
+    message='None', **kwargs
 ):
     """template for joined tables
     """
@@ -34,7 +34,8 @@ def joined_table_template(
         *joined_table.heading.non_blobs
     ).fetch(format='frame').reset_index()
     data = get_jsontable(
-        df, joined_table.heading.primary_key
+        df, joined_table.heading.primary_key,
+        **kwargs
     )
 
     return render_template(
