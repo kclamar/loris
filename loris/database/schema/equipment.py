@@ -27,6 +27,21 @@ class SystemType(ManualLookup, dj.Manual):
     primary_comment = 'type of system - e.g. led_setup, ephys_rig'
 
 
+class Piece(dj.Manual):
+    definition = f"""
+    {PRIMARY_NAME.format(name='piece', comment='name of piece')}
+    ---
+    -> PieceType
+    -> Manufacturer
+    model_name : varchar(255) # standard model name by manufacturer
+    link = null : <link>
+    piece_data = null : blob@datastore # python objects for the piece
+    piece_file = null : attach@attachstore # file(s) related to piece
+    {DESCRIPTION}
+    {COMMENTS}
+    """
+
+
 @schema
 class System(dj.Manual):
     definition = f"""
@@ -47,12 +62,5 @@ class System(dj.Manual):
         -> System
         piece_id = 1 : int # piece identification (integer)
         ---
-        -> PieceType
-        -> Manufacturer
-        model_name : varchar(255) # standard model name by manufacturer
-        link = null : <link>
-        piece_data = null : blob@datastore # python objects for the piece
-        piece_file = null : attach@attachstore # file(s) related to piece
-        {DESCRIPTION}
-        {COMMENTS}
+        -> Piece
         """
