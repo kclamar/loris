@@ -256,8 +256,12 @@ class DynamicForm:
         # check if replace in kwargs affects order of main and part helper
         replace = kwargs.get('replace', False)
 
-        def main_helper():
-            primary_dict = self._insert(formatted_dict, _id, **kwargs)
+        def main_helper(override_update_truth=False):
+            primary_dict = self._insert(
+                formatted_dict, _id,
+                override_update_truth=override_update_truth,
+                **kwargs
+            )
             return primary_dict
 
         def part_helper(primary_dict):
@@ -289,7 +293,8 @@ class DynamicForm:
         if self.table.connection.in_transaction:
             if replace and _id is not None:
                 part_helper(_id)
-                primary_dict = main_helper()
+                kwargs.pop('replace')
+                primary_dict = main_helper(True)
             else:
                 primary_dict = main_helper()
                 part_helper(primary_dict)
@@ -298,7 +303,8 @@ class DynamicForm:
             with self.table.connection.transaction:
                 if replace and _id is not None:
                     part_helper(_id)
-                    primary_dict = main_helper()
+                    kwargs.pop('replace')
+                    primary_dict = main_helper(True)
                 else:
                     primary_dict = main_helper()
                     part_helper(primary_dict)
