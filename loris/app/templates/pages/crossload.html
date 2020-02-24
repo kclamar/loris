@@ -1,0 +1,14 @@
+{% extends 'layouts/main.html' %}
+{% block title %}Cross{% endblock %}
+{% block content %}
+
+<div class="page-header">
+    {% from 'macros/render_form.html' import render_form %}
+    <h2>Cross for id {{cross_id}}<h2>
+</div>
+<p>{{message}}</p>
+{% if image != "None" and image is not None %}
+<img src="{{image}}" width=100%>
+{% endif %}
+
+{% endblock %}

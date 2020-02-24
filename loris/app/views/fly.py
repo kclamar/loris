@@ -1,9 +1,11 @@
 """fly specific views
 """
 
+import os
 from flask import render_template, request, flash, url_for, redirect, \
     send_from_directory, session
 from functools import wraps
+from ast import literal_eval
 from flask_login import current_user, login_user, login_required, logout_user
 import datajoint as dj
 import pandas as pd
@@ -62,11 +64,55 @@ def cross():
     subtable = None
     edit_url = url_for('cross')
     overwrite_url = url_for('cross')
+    load_url = url_for('crossload')
 
     return form_template(
         schema, table, subtable, edit_url, overwrite_url, page='cross',
         join_tables=[getattr(config['schemata'][schema], 'FlyGenotype')],
-        joined_name='crossgenotype'
+        joined_name='crossgenotype',
+        load_url=load_url
+    )
+
+
+@app.route('/crossload', methods=['GET', 'POST'])
+@login_required
+def crossload():
+
+    _id = literal_eval(request.args.get('_id', "None"))
+    if _id is None or not isinstance(_id, dict) or 'cross_id' not in _id:
+        flash('No cross_id was given for loading FlyCross', 'error')
+        return redirect(url_for('cross'))
+
+    # combine tables
+    cross_table = getattr(config['schemata']['subjects'], 'FlyCross')
+    genotype_table = getattr(config['schemata']['subjects'], 'FlyGenotype')
+
+    # fetch data
+    joined_table = save_join([cross_table, genotype_table])
+    data = (joined_table & _id).fetch1()
+
+    message = f"""
+    <h5>Experimenter</h5>
+    <br>
+    {data['experimenter']}
+    <br>
+    <h5>Target Fly Genotype</h5>
+    <br>
+    {data['chr1']} {data['chr2']} {data['chr3']}
+    <br>
+    <h5>Comments</h5>
+    <br>
+    {data['comments']}
+    """.strip()
+
+    image = os.path.abspath(data['cross_schema'])
+    # TODO copy to templates folder?
+
+    return render_template(
+        'pages/crossload.html',
+        cross_id=_id['cross_id'],
+        image=image,
+        message=message
     )
 
 

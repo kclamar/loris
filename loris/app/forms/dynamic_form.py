@@ -216,7 +216,8 @@ class DynamicForm:
     def get_jsontable(
         self, edit_url=None, delete_url=None, overwrite_url=None,
         join_tables=None,
-        joined_name=None
+        joined_name=None,
+        load_url=None
     ):
 
         if join_tables is not None:
@@ -230,7 +231,8 @@ class DynamicForm:
         return get_jsontable(
             table, primary_key,
             edit_url=edit_url, delete_url=delete_url,
-            overwrite_url=overwrite_url, name=self.table.name
+            overwrite_url=overwrite_url, name=self.table.name,
+            load_url=load_url
         )
 
     def insert(self, form, _id=None, **kwargs):

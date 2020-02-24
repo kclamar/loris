@@ -51,7 +51,7 @@ def joined_table_template(
 def form_template(
     schema, table, subtable, edit_url, overwrite_url, page='table',
     join_tables=None, joined_name=None, redirect_page=None,
-    override_permissions=False, **kwargs
+    override_permissions=False, load_url=None, **kwargs
 ):
     """template for rendering tables with forms
     """
@@ -113,7 +113,8 @@ def form_template(
     # load/notload table
     data = dynamicform.get_jsontable(
         edit_url, delete_url, overwrite_url,
-        join_tables, joined_name
+        join_tables, joined_name,
+        load_url=load_url
     )
 
     toggle_off_keys = [0]
