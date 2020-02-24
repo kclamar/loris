@@ -27,6 +27,7 @@ class SystemType(ManualLookup, dj.Manual):
     primary_comment = 'type of system - e.g. led_setup, ephys_rig'
 
 
+@schema
 class Piece(dj.Manual):
     definition = f"""
     {PRIMARY_NAME.format(name='piece', comment='name of piece')}
