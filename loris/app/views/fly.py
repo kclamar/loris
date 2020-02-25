@@ -91,28 +91,17 @@ def crossload():
     joined_table = save_join([cross_table, genotype_table])
     data = (joined_table & _id).fetch1()
 
-    message = f"""
-    <h5>Experimenter</h5>
-    <br>
-    {data['experimenter']}
-    <br>
-    <h5>Target Fly Genotype</h5>
-    <br>
-    {data['chr1']} {data['chr2']} {data['chr3']}
-    <br>
-    <h5>Comments</h5>
-    <br>
-    {data['comments']}
-    """.strip()
-
-    image = os.path.abspath(data['cross_schema'])
-    # TODO copy to templates folder?
+    image = data['cross_schema']
+    if image is not None:
+        image = os.path.abspath(image)
 
     return render_template(
         'pages/crossload.html',
         cross_id=_id['cross_id'],
         image=image,
-        message=message
+        experimenter=data['experimenter'], 
+        chromosome=f"{data['chr1']}; {data['chr2']}; {data['chr3']}", 
+        comments=data['comments']
     )
 
 
@@ -137,11 +126,15 @@ def entersubject():
 def stockgenotype():
     """join various tables in the database
     """
+    delete_url = url_for(
+        'delete', schema='subjects', table='FlyStock', subtable=None)
 
     return joined_table_template(
         ['subjects.fly_genotype', 'subjects.fly_stock'],
         'Stock + Genotype Table',
         'stock',
+        edit_url=url_for('stock'),
+        delete_url=delete_url
     )
 
 
@@ -150,11 +143,16 @@ def stockgenotype():
 def crossgenotype():
     """join various tables in the database
     """
+    delete_url = url_for(
+        'delete', schema='subjects', table='FlyCross', subtable=None)
 
     return joined_table_template(
         ['subjects.fly_genotype', 'subjects.fly_cross'],
         'Cross + Genotype Table',
         'cross',
+        edit_url=url_for('cross'),
+        load_url=url_for('crossload'), 
+        delete_url=delete_url
     )
 
 
@@ -163,11 +161,15 @@ def crossgenotype():
 def subjectgenotype():
     """join various tables in the database
     """
+    delete_url = url_for(
+        'delete', schema='subjects', table='FlySubject', subtable=None)
 
     return joined_table_template(
         ['subjects.fly_genotype', 'subjects.fly_subject'],
         'Subject + Genotype Table',
         'entersubject',
+        edit_url=url_for('entersubject'),
+        delete_url=delete_url
     )
 
 
@@ -182,9 +184,3 @@ def stockcrossgenotype():
         'Stock + Cross + Genotype Table',
         '#',
     )
-
-# TODO
-# joined tables (stock + genotype)
-# joined tables (cross + genotype)
-# joined tables (stock + cross + genotype) ?
-# joined tables (subject + genotype)

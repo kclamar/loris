@@ -8,5 +8,7 @@ conn()
 from loris.app.app import app
 
 app.run(
-    port=1234, debug=False,
+    port=1235, debug=True,
+    host='0.0.0.0', 
+    ssl_context='adhoc'
     )
