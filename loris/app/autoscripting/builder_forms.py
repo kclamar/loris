@@ -9,6 +9,7 @@ import numpy as np
 import pickle
 import json
 import uuid
+import glob
 
 import datajoint as dj
 from datajoint.declare import match_type
@@ -53,14 +54,84 @@ class AutomaticFolderForm(Form, FormMixin):
 
 def dynamic_scriptform(folderpath):
     class ScriptForm(NoCsrfForm, FormMixin):
-        script = SelectField()
-        validate = TagListField()
-        insert = BooleanField()
-        configattr = StringField()
-        outputfile = StringField()
-        outputattr = StringField()
+        button = StringField(
+            'button',
+            description='button name to display',
+            validators=[InputRequired()]
+        )
+        script = SelectField(
+            'script',
+            description='script to run when clicking the button',
+            validators=[InputRequired()],
+            choices=[
+                filename
+                for filename in glob.glob(os.path.join(folderpath, '*'))
+                if filename.endswith('.py')
+            ]
+        )
+        validate = TagListField(
+            'validate',
+            description='names of forms to validate upon pressing button',
+            validators=[Optional()]
+        )
+        insert = BooleanField(
+            'insert',
+            description=(
+                'whether to insert into database '
+                'after running the script'
+            ),
+            validators=[Optional()]
+        )
+        configattr = StringField(
+            'configattr',
+            description=(
+                'column name in experiment form '
+                'to save the configuration file'
+            ),
+            validators=[Optional()]
+        )
+        outputfile = StringField(
+            'outputfile',
+            description=(
+                'name of the output file from the autoscript'
+            ),
+            validators=[Optional()]
+        )
+        outputattr = StringField(
+            'outputattr',
+            description=(
+                'column name in experiment form '
+                'to save the output file'
+            ),
+            validators=[Optional()]
+        )
+
+    return ScriptForm
 
 
 class FormConfig(NoCsrfForm, FormMixin):
-    name = StringField()
-    fields = FieldList(DictTextArea())
+    name = StringField(
+        'name',
+        description=(
+            'name of the additional form'
+        ),
+        validators=[InputRequired()]
+    )
+    form_config = DictTextArea(
+        'form configuration',
+        description=(
+            'dictionary configuration of additional form'
+        ),
+        validators=[InputRequired(), JsonSerializableValidator(dict)]
+    )
+
+
+def dynamic_formbuilder(folderpath):
+
+    class FormBuilder(Form, FormMixin):
+        buttons = FieldList(
+            FormField(dynamic_scriptform(folderpath))
+        )
+        forms = FieldList(
+            FormField(FormConfig)
+        )
