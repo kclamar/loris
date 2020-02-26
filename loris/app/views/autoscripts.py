@@ -67,7 +67,7 @@ def experiment(table_name, autoscript_folder):
 
             return redirect(url_for(
                 'experiment',
-                autoscript_folder=os.path.split(autoscript_filepath)[-1],
+                autoscript_folder=os.path.basename(autoscript_filepath),
                 table_name=table_name))
 
         elif submit == 'Abort':

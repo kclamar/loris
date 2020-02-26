@@ -184,12 +184,43 @@ class AutoscriptedField:
             loc = secure_filename(loc)
             locpath = os.path.join(folderpath, loc)
             if not os.path.exists(locpath):
-                raise LorisError(
-                    f'Folder "{loc}" does not exist in '
-                    f'autoscript folder "{os.path.basename(folderpath)}".'
-                )
+                # try main autoscript folder
+                locpath = os.path.join(os.path.dirname(folderpath), loc)
+                if not os.path.exists(locpath):
+                    raise LorisError(
+                        f'Folder "{loc}" does not exist in '
+                        f'autoscript folder "{os.path.basename(folderpath)}" '
+                        f'and also not in the main autoscript folder.'
+                    )
             # get all files from folder
             files = glob.glob(os.path.join(locpath, '*'))
+            # only match certain extensions
+            if (value == 'pandas.DataFrame') or (value == 'numpy.recarray'):
+                files = [
+                    ifile for ifile in files
+                    if (
+                        ifile.endswith('.pkl')
+                        or ifile.endswith('.npy')
+                        or ifile.endswith('.csv')
+                        or ifile.endswith('.json')
+                    )
+                ]
+            elif value == 'numpy.array':
+                files = [
+                    ifile for ifile in files
+                    if (
+                        ifile.endswith('.pkl')
+                        or ifile.endswith('.npy')
+                        or ifile.endswith('.csv')
+                    )
+                ]
+            elif (value == 'json') or (value == 'pandas.Series'):
+                files = [ifile for ifile in files if ifile.endswith('.json')]
+            else:
+                # skip file that start with two underscores e.g. __init__.py
+                files = [
+                    ifile for ifile in files if not ifile.startswith('__')
+                ]
             # setup as choices
             choices = [
                 (str(ele), os.path.split(ele)[-1])

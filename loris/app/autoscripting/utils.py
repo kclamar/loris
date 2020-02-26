@@ -49,6 +49,8 @@ def frame_reader(value):
     elif value.endswith('pkl'):
         with open(value, 'rb') as f:
             value = pickle.load(f)
+    elif value.endswith('npy'):
+        value = pd.DataFrame(np.load(value))
     elif value.endswith('json'):
         value = pd.DataFrame(json_reader(value))
 
@@ -72,7 +74,7 @@ class ListReader:
     def __call__(self, value):
 
         if value is None:
-            return 
+            return
 
         return [self.func(val) for val in value]
 

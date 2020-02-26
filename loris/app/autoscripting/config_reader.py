@@ -106,6 +106,8 @@ class ConfigReader:
             )
 
         self.ultra_form = UltraForm()
+        # necessary currently to update experiment form in ultra form
+        self.dynamicform.update_fields(self.ultra_form.experiment_form)
 
     def append_hidden_entries(self):
 
@@ -292,7 +294,20 @@ class ConfigReader:
             raise LorisError(f'entry id {_id} not in existing configurations.')
 
         settings_dict = selected_entries.iloc[0].to_dict()
+
+        for name, field in self.dynamicform.fields.items():
+            if field.is_integer:
+                settings_dict['experiment_form'].pop(name, None)
+            elif field.foreign_is_manuallookup:
+                fk_field = settings_dict['experiment_form'].get(name, None)
+                if fk_field is not None:
+                    if fk_field['existing_entries'] == '<new>':
+                        fk_value = fk_field.pop(name, None)
+                        settings_dict['experiment_form'][name]['existing_entries'] = str(fk_value)
+
         self.ultra_form.populate_form(settings_dict)
+
+        # TODO if auto-increment and foreign_key
 
     def get_jsontable_settings(
         self, page='experiment', deletepage='deleteconfig'

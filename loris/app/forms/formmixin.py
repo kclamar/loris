@@ -482,7 +482,7 @@ class FormMixin:
 
             else:
                 formatted_dict[key] = self.get_field_data(field)
-
+        print(formatted_dict)
         return formatted_dict
 
 

@@ -57,7 +57,16 @@ class DynamicField:
         self._ignore_foreign_fields = ignore_foreign_fields
 
         # set default values
-        self.is_uuid = False
+        self.foreign_fields = {}
+
+    @property
+    def is_integer(self):
+        # won't work with adapted types
+        return match_type(self.attr.type) == 'INTEGER'
+
+    @property
+    def is_uuid(self):
+        return match_type(self.attr.type) == 'UUID'
 
     @property
     def ignore_foreign_fields(self):
@@ -261,15 +270,21 @@ class DynamicField:
 
     def integer_field(self, kwargs):
         # auto increment integer primary keys
+        kwargs['default'] = self._get_integer_default()
+        return IntegerField(**kwargs)
+
+    def _get_integer_default(self):
+        # auto increment integer primary keys
+        default = None
         if self.ignore_foreign_fields and self.attr.in_key:
             pass
         elif len(self.table()) == 0:
-            kwargs['default'] = 1
+            default = 1
         elif self.attr.in_key and len(self.table.heading.primary_key) == 1:
-            kwargs['default'] = np.max(
+            default = np.max(
                 self.table.proj().fetch()[self.attr.name]
             ) + 1
-        return IntegerField(**kwargs)
+        return default
 
     def float_field(self, kwargs):
         return FloatField(**kwargs)
@@ -357,7 +372,6 @@ class DynamicField:
         return
 
     def uuid_field(self, kwargs):
-        self.is_uuid = True
         kwargs['validators'].append(Length(36, 36))
         kwargs['validators'].append(UUID())
         kwargs['default'] = str(uuid.uuid4())
@@ -408,13 +422,17 @@ class DynamicField:
             existing_entries = self.create_dropdown_field(kwargs)
 
         for name, attr in self.foreign_table.heading.attributes.items():
-            field = DynamicField(self.foreign_table, attr, True).create_field()
+            dynamicfield = DynamicField(self.foreign_table, attr, True)
+            # create field
+            field = dynamicfield.create_field()
             if field is not None:
                 setattr(
                     FkForm,
                     name,
                     field
                 )
+                # keep track of dynamic fields
+                self.foreign_fields[name] = dynamicfield
 
         return ParentFormField(FkForm)
 
@@ -499,6 +517,7 @@ class DynamicField:
 
         if self.attr.is_blob and value is not None:
             # create filepath
+            # TODO - not functional atm
             filepath = os.path.join(
                 config['tmp_folder'],
                 str(uuid.uuid4()) + '.pkl'
@@ -512,9 +531,13 @@ class DynamicField:
 
     def update_field(self, form):
 
-        if self.foreign_is_manuallookup:
+        if self.foreign_is_manuallookup and not self.ignore_foreign_fields:
             formfield = getattr(form, self.name)
             formfield.existing_entries.choices = self.get_foreign_choices()
+
+            # update fields in parent form
+            for name, foreign_dynamicfield in self.foreign_fields.items():
+                foreign_dynamicfield.update_field(formfield)
 
             # update field if necessary
             self._update_field(formfield)
@@ -531,3 +554,6 @@ class DynamicField:
         if self.is_uuid:
             field = getattr(form, self.name)
             field.default = str(uuid.uuid4())
+        if self.is_integer:
+            field = getattr(form, self.name)
+            field.default = self._get_integer_default()
