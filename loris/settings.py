@@ -103,11 +103,14 @@ class Config(dict):
                 if param.name in self:
                     kwargs[param.name] = self[param.name]
 
+            kwargs.pop('ssh_address')
             print('parameters for ssh tunneling:')
             print(kwargs)
 
             # initialize server
-            server = SSHTunnelForwarder(**kwargs)
+            server = SSHTunnelForwarder(
+                tuple(self['ssh_address'].split(':')), **kwargs
+            )
             self['server'] = server
 
             # start server
