@@ -107,9 +107,14 @@ class Config(dict):
             print('parameters for ssh tunneling:')
             print(kwargs)
 
+            address = self['ssh_address'].split(':')
+            address[1] = int(address[1])
+            address = tuple(address)
+            print(address)
+
             # initialize server
             server = SSHTunnelForwarder(
-                tuple(self['ssh_address'].split(':')), **kwargs
+                address, **kwargs
             )
             self['server'] = server
 
