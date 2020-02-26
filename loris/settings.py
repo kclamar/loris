@@ -103,7 +103,7 @@ class Config(dict):
                 if param.name in self:
                     kwargs[param.name] = self[param.name]
 
-            kwargs.pop('ssh_address')
+            kwargs.pop('ssh_address', None)
             print('parameters for ssh tunneling:')
             print(kwargs)
 
