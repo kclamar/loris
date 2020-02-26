@@ -3,6 +3,7 @@
 
 import json
 import os
+import sys
 import shutil
 import inspect
 import multiprocessing as mp
@@ -201,6 +202,9 @@ class Config(dict):
             if path in self:
                 self[path] = os.path.expanduser(self[path])
 
+        if sys.platform in ['win32', 'cygwin']:
+            # enforce if on Windows
+            self['tmp_folder'] = '/tmp'
         if not os.path.exists(self['tmp_folder']):
             os.makedirs(self['tmp_folder'])
 
