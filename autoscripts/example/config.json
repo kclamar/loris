@@ -7,10 +7,6 @@
             "configattr": "<Files:example_configuration>",
             "outputfile": "output.json",
             "outputattr": "<Data:example_output>"
-        },
-        "Test": {
-            "script": "test.py",
-            "validate": ["form_name"]
         }
     },
     "forms": {
