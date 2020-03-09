@@ -1,8 +1,8 @@
 {
     "_datajoint_comment": "datajoint-specific keys",
     "database.host": "127.0.0.1",
-    "database.user": "root",
-    "database.password": "simple",
+    "database.user": "YOUR_USERNAME",
+    "database.password": "YOUR_PASSWORD",
     "database.port": 3306,
     "connection.charset": "utf8",
     "filestores": {
