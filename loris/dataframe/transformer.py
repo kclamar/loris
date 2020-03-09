@@ -141,7 +141,7 @@ class Transformer:
         return self._table
 
     def tolong(
-        self, transformer=iter, max_depth=3, dropna=True,
+        self, *, transformer=iter, max_depth=3, dropna=True,
         set_df=False, **shared_axes
     ):
         """
@@ -255,6 +255,38 @@ class Transformer:
         series = table.stack(dropna=dropna)
         series.name = label
         return series
+
+    def __getitem__(self, key):
+        # if it is a dataframe return new instance of transformer
+        selected_table = self.table[key]
+
+        if isinstance(selected_table, pd.DataFrame):
+            # TODO shared axes
+            return self.__class__(selected_table)
+        else:
+            return selected_table
+
+    def cols_tolong(self, *cols, **kwargs):
+        """Same as tolong but only applied to specific columns
+        """
+        return self[list(cols)].tolong(**kwargs)
+
+    def expand_col(self, col, reset_index=True):
+        """
+        Expand a column that contains long dataframes and return
+        a single long dataframe.
+        """
+
+        series = self[col]
+        long_df = pd.concat(
+            list(series), keys=series.index, names=series.index.names,
+            sort=False
+        )
+
+        if reset_index:
+            return long_df.reset_index()
+        else:
+            return long_df
 
     def mapfunc(self, func, col, new_col_name=None, **kwargs):
         """apply a function to a single column

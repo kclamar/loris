@@ -14,6 +14,14 @@ from wtforms import Form as NoCsrfForm
 from flask_wtf import FlaskForm as Form
 from wtforms import FormField
 
+# use cloudpickle if installed
+try:
+    import cloudpickle
+    pickle.dump = cloudpickle.dump
+    pickle.dumps = cloudpickle.dumps
+except ImportError:
+    pass
+
 from loris import config
 from loris.app.utils import get_jsontable
 from loris.app.forms.dynamic_form import DynamicForm
@@ -29,6 +37,17 @@ SAVED_SETTINGS = "_saved_settings_{table_name}.json"
 INSERT_SCRIPT = (
     f"{os.path.join(os.path.split(__file__)[0], 'run_insert_script.py')}"
 )
+
+
+# TODO move somewhere more accessible?
+def load_config(directory=None):
+    if directory is None:
+        filepath = CURRENT_CONFIG
+    else:
+        filepath = os.path.join(directory, CURRENT_CONFIG)
+    with open(filepath, 'rb') as f:
+        config = pickle.load(f)
+    return config
 
 
 class ConfigDynamicForm(DynamicForm):

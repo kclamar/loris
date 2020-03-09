@@ -55,7 +55,9 @@ class AutoscriptedField:
             self.value = value.get('type')
             self.description = value.get('comment', None)
             self.default = value.get('default', None)
-            self.required = 'default' not in value
+            self.required = (
+                'default' not in value 
+                or value.get('default', None) is not None)
             self.loc = value.get('loc', None)
             self.iterate = value.get('iterate', False)
         else:
@@ -183,15 +185,21 @@ class AutoscriptedField:
         elif loc is not None and isinstance(value, str):
             loc = secure_filename(loc)
             locpath = os.path.join(folderpath, loc)
+            # try up to two base directories down
             if not os.path.exists(locpath):
                 # try main autoscript folder
                 locpath = os.path.join(os.path.dirname(folderpath), loc)
                 if not os.path.exists(locpath):
-                    raise LorisError(
-                        f'Folder "{loc}" does not exist in '
-                        f'autoscript folder "{os.path.basename(folderpath)}" '
-                        f'and also not in the main autoscript folder.'
+                    locpath = os.path.join(
+                        os.path.dirname(os.path.dirname(folderpath)), loc
                     )
+                    if not os.path.exists(locpath):
+                        raise LorisError(
+                            f'Folder "{loc}" does not exist in '
+                            f'autoscript folder '
+                            f'"{os.path.basename(folderpath)}" '
+                            f'and also not in the main autoscript folder.'
+                        )
             # get all files from folder
             files = glob.glob(os.path.join(locpath, '*'))
             # only match certain extensions
