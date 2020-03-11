@@ -200,7 +200,8 @@ class ConfigReader:
         data = {}
         for key in keys:
             idata = getattr(self.ultra_form, key).form.get_formatted()
-            idata = self.post_process_dict[key](idata)
+            if idata is not None:
+                idata = self.post_process_dict[key](idata)
             data[key] = idata
 
         # add experiment_form
