@@ -228,7 +228,7 @@ class AutoscriptedField:
                 # skip file that start with two underscores e.g. __init__.py
                 files = [
                     ifile
-                    for ifile in files 
+                    for ifile in files
                     if not os.path.basename(ifile).startswith('__')
                 ]
             # setup as choices
@@ -244,7 +244,7 @@ class AutoscriptedField:
             field = SelectField(**kwargs)
         elif isinstance(value, dict):
             form, post_process = dynamic_autoscripted_form(
-                value, NoCsrfForm
+                value, folderpath, NoCsrfForm
             )
             field = FormField(form)
         # TODO set number of fieldlists (startswith numeric)
