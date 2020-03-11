@@ -10,6 +10,8 @@ import pandas as pd
 def json_reader(value):
     """read json file fields
     """
+    if value is None:
+        return
 
     with open(value, 'r') as f:
         value = json.load(f)
@@ -20,6 +22,8 @@ def json_reader(value):
 def array_reader(value):
     """read array file fields
     """
+    if value is None:
+        return
 
     if value.endswith('npy'):
         value = np.load(value)
@@ -36,6 +40,8 @@ def array_reader(value):
 def recarray_reader(value):
     """read recarray file fields
     """
+    if value is None:
+        return
 
     return frame_reader(value).to_records(False)
 
@@ -43,6 +49,9 @@ def recarray_reader(value):
 def frame_reader(value):
     """read pandas dataframes file fields
     """
+
+    if value is None:
+        return
 
     if value.endswith('csv'):
         value = pd.read_csv(value)
@@ -90,7 +99,12 @@ class TupleReader:
         if value is None:
             return
 
-        return (self.func(val) for val in value)
+        return (
+            None
+            if val is None
+            else self.func(val)
+            for val in value
+        )
 
 
 class DictReader:
@@ -104,7 +118,10 @@ class DictReader:
             return
 
         for key, func in self.func_dict.items():
-            value[key] = func(value[key])
+            if value[key] is None:
+                pass
+            else:
+                value[key] = func(value[key])
 
         return value
 
