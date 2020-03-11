@@ -56,7 +56,7 @@ class AutoscriptedField:
             self.description = value.get('comment', None)
             self.default = value.get('default', None)
             self.required = (
-                'default' not in value 
+                'default' not in value
                 or value.get('default', None) is not None)
             self.loc = value.get('loc', None)
             self.iterate = value.get('iterate', False)
@@ -227,7 +227,9 @@ class AutoscriptedField:
             else:
                 # skip file that start with two underscores e.g. __init__.py
                 files = [
-                    ifile for ifile in files if not ifile.startswith('__')
+                    ifile
+                    for ifile in files 
+                    if not os.path.basename(ifile).startswith('__')
                 ]
             # setup as choices
             choices = [
