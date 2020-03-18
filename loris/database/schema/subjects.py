@@ -65,6 +65,7 @@ class FlyStock(dj.Manual):
     -> Experimenter
     date_modified : date
     status = null : enum('dead', 'missing', 'instock', 'inpersonal', 'quarantine', 'recovery')
+    priority = null : enum('1', '2')
     -> [nullable] FlyOrigin
     -> [nullable] FlyCross
     {COMMENTS}
