@@ -10,7 +10,7 @@ import pandas as pd
 
 from loris import config
 from loris.app.app import app
-from loris.app.templates import form_template
+from loris.app.templates import form_template, joined_table_template
 from loris.app.forms.dynamic_form import DynamicForm
 from loris.app.forms.fixed import (
     dynamic_jointablesform, dynamic_settingstableform, LoginForm,
@@ -176,6 +176,57 @@ def register():
         form=form,
         data=data,
         toggle_off_keys=[0]
+    )
+
+
+@app.route('/registeredusers', methods=['GET', 'POST'])
+@login_required
+def registeredusers():
+    """registeredusers
+    """
+    delete_url = url_for(
+        'delete',
+        schema=config['user_schema'],
+        table=config['user_table'],
+        subtable=None)
+
+    return joined_table_template(
+        [config.user_table],
+        'Registered Users',
+        edit_url=url_for(
+            'table',
+            schema=config['user_schema'],
+            table=config['user_table'],
+            subtable=None
+        ),
+        delete_url=delete_url
+    )
+
+
+@app.route('/emergencycontacts', methods=['GET', 'POST'])
+@login_required
+def emergencycontacts():
+    """emergencycontacts
+    """
+    if not hasattr(config.user_table, 'EmergencyContact'):
+        return redirect(url_for('registeredusers'))
+
+    delete_url = url_for(
+        'delete',
+        schema=config['user_schema'],
+        table=config['user_table'],
+        subtable=None)
+
+    return joined_table_template(
+        [config.user_table, config.user_table.EmergencyContact],
+        'Emergency Contacts',
+        edit_url=url_for(
+            'table',
+            schema=config['user_schema'],
+            table=config['user_table'],
+            subtable=None
+        ),
+        delete_url=delete_url
     )
 
 
