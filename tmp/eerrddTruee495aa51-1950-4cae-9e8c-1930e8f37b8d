@@ -1,0 +1,103 @@
+digraph {
+	graph [fontname=helvetica rankdir=LR size="12, 12" splines=ortho]
+	node [align=center fontname=helvetica fontsize=10 height=0.1 penwidth=1.5 ranksep=0.1 shape=record style="filled, rounded"]
+	edge [arrowsize=0.7 headclip=true penwidth=1.5]
+	subgraph cluster_equipment {
+		graph [URL="/erd/equipment" color=black label=<<B>equipment</B>> penwidth=3 style=rounded target=_top]
+		node [color=darkgreen fillcolor=darkgreen fontcolor=white fontsize=10]
+		"equipment.System" [label=System URL="/table/equipment/System" color=darkgreen fillcolor=darkgreen fontcolor=white fontsize=10 target=_top]
+	}
+	subgraph cluster_imaging {
+		graph [URL="/erd/imaging" color=black label=<<B>imaging</B>> penwidth=3 style=rounded target=_top]
+		node [color=navy fillcolor=navy fontcolor=white fontsize=10]
+		"imaging.RawTwoPhotonData" [label=RawTwoPhotonData URL="/table/imaging/RawTwoPhotonData" color=navy fillcolor=navy fontcolor=white fontsize=10 target=_top]
+	}
+	subgraph cluster_imaging {
+		graph [URL="/erd/imaging" color=black label=<<B>imaging</B>> penwidth=3 style=rounded target=_top]
+		node [color=darkorchid4 fillcolor=darkorchid4 fontcolor=white fontsize=10]
+		"imaging.MotionCorrectedData" [label=MotionCorrectedData URL="/table/imaging/MotionCorrectedData" color=darkorchid4 fillcolor=darkorchid4 fontcolor=white fontsize=10 target=_top]
+	}
+	"imaging.RawTwoPhotonData" -> "imaging.MotionCorrectedData" [color=navy]
+	subgraph cluster_imaging {
+		graph [URL="/erd/imaging" color=black label=<<B>imaging</B>> penwidth=3 style=rounded target=_top]
+		node [color=darkorchid4 fillcolor=darkorchid4 fontcolor=white fontsize=10]
+		"imaging.ExtractedData" [label=ExtractedData URL="/table/imaging/ExtractedData" color=darkorchid4 fillcolor=darkorchid4 fontcolor=white fontsize=10 target=_top]
+	}
+	subgraph cluster_imaging {
+		graph [URL="/erd/imaging" color=black label=<<B>imaging</B>> penwidth=3 style=rounded target=_top]
+		node [color=darkorchid4 fillcolor=darkorchid4 fontcolor=white fontsize=10]
+		"imaging.MotionCorrectedData" [label=MotionCorrectedData URL="/table/imaging/MotionCorrectedData" color=darkorchid4 fillcolor=darkorchid4 fontcolor=white fontsize=10 target=_top]
+	}
+	subgraph cluster_imaging {
+		graph [URL="/erd/imaging" color=black label=<<B>imaging</B>> penwidth=3 style=rounded target=_top]
+		node [color=darkorchid4 fillcolor=darkorchid4 fontcolor=white fontsize=10]
+		"imaging.ExtractedData" [label=ExtractedData URL="/table/imaging/ExtractedData" color=darkorchid4 fillcolor=darkorchid4 fontcolor=white fontsize=10 target=_top]
+	}
+	"imaging.MotionCorrectedData" -> "imaging.ExtractedData" [color=darkorchid4]
+	subgraph cluster_imaging {
+		graph [URL="/erd/imaging" color=black label=<<B>imaging</B>> penwidth=3 style=rounded target=_top]
+		node [color=darkgreen fillcolor=darkgreen fontcolor=white fontsize=10]
+		"imaging.TwoPhotonRecording" [label=TwoPhotonRecording URL="/table/imaging/TwoPhotonRecording" color=darkgreen fillcolor=darkgreen fontcolor=white fontsize=10 target=_top]
+	}
+	subgraph cluster_imaging {
+		graph [URL="/erd/imaging" color=black label=<<B>imaging</B>> penwidth=3 style=rounded target=_top]
+		node [color=navy fillcolor=navy fontcolor=white fontsize=10]
+		"imaging.RawTwoPhotonData" [label=RawTwoPhotonData URL="/table/imaging/RawTwoPhotonData" color=navy fillcolor=navy fontcolor=white fontsize=10 target=_top]
+	}
+	"imaging.TwoPhotonRecording" -> "imaging.RawTwoPhotonData" [color=darkgreen]
+	subgraph cluster_subjects {
+		graph [URL="/erd/subjects" color=black label=<<B>subjects</B>> penwidth=3 style=rounded target=_top]
+		node [color=darkgreen fillcolor=darkgreen fontcolor=white fontsize=10]
+		"subjects.FlyCross" [label=FlyCross URL="/table/subjects/FlyCross" color=darkgreen fillcolor=darkgreen fontcolor=white fontsize=10 target=_top]
+	}
+	subgraph cluster_subjects {
+		graph [URL="/erd/subjects" color=black label=<<B>subjects</B>> penwidth=3 style=rounded target=_top]
+		node [color=darkgreen fillcolor=darkgreen fontcolor=white fontsize=10]
+		"subjects.FlyStock" [label=FlyStock URL="/table/subjects/FlyStock" color=darkgreen fillcolor=darkgreen fontcolor=white fontsize=10 target=_top]
+	}
+	"subjects.FlyCross" -> "subjects.FlyStock" [color=darkgreen]
+	subgraph cluster_subjects {
+		graph [URL="/erd/subjects" color=black label=<<B>subjects</B>> penwidth=3 style=rounded target=_top]
+		node [color=darkgreen fillcolor=darkgreen fontcolor=white fontsize=10]
+		"subjects.FlyGenotype" [label=FlyGenotype URL="/table/subjects/FlyGenotype" color=darkgreen fillcolor=darkgreen fontcolor=white fontsize=10 target=_top]
+	}
+	subgraph cluster_subjects {
+		graph [URL="/erd/subjects" color=black label=<<B>subjects</B>> penwidth=3 style=rounded target=_top]
+		node [color=darkgreen fillcolor=darkgreen fontcolor=white fontsize=10]
+		"subjects.FlyCross" [label=FlyCross URL="/table/subjects/FlyCross" color=darkgreen fillcolor=darkgreen fontcolor=white fontsize=10 target=_top]
+	}
+	"subjects.FlyGenotype" -> "subjects.FlyCross" [color=darkgreen]
+	subgraph cluster_subjects {
+		graph [URL="/erd/subjects" color=black label=<<B>subjects</B>> penwidth=3 style=rounded target=_top]
+		node [color=darkgreen fillcolor=darkgreen fontcolor=white fontsize=10]
+		"subjects.FlyStock" [label=FlyStock URL="/table/subjects/FlyStock" color=darkgreen fillcolor=darkgreen fontcolor=white fontsize=10 target=_top]
+	}
+	"subjects.FlyGenotype" -> "subjects.FlyStock" [color=darkgreen]
+	subgraph cluster_subjects {
+		graph [URL="/erd/subjects" color=black label=<<B>subjects</B>> penwidth=3 style=rounded target=_top]
+		node [color=darkgreen fillcolor=darkgreen fontcolor=white fontsize=10]
+		"subjects.FlySubject" [label=FlySubject URL="/table/subjects/FlySubject" color=darkgreen fillcolor=darkgreen fontcolor=white fontsize=10 target=_top]
+	}
+	"subjects.FlyGenotype" -> "subjects.FlySubject" [color=darkgreen]
+	subgraph cluster_subjects {
+		graph [URL="/erd/subjects" color=black label=<<B>subjects</B>> penwidth=3 style=rounded target=_top]
+		node [color=darkgreen fillcolor=darkgreen fontcolor=white fontsize=10]
+		"subjects.FlyStock" [label=FlyStock URL="/table/subjects/FlyStock" color=darkgreen fillcolor=darkgreen fontcolor=white fontsize=10 target=_top]
+	}
+	subgraph cluster_subjects {
+		graph [URL="/erd/subjects" color=black label=<<B>subjects</B>> penwidth=3 style=rounded target=_top]
+		node [color=darkgreen fillcolor=darkgreen fontcolor=white fontsize=10]
+		"subjects.FlySubject" [label=FlySubject URL="/table/subjects/FlySubject" color=darkgreen fillcolor=darkgreen fontcolor=white fontsize=10 target=_top]
+	}
+	subgraph cluster_imaging {
+		graph [URL="/erd/imaging" color=black label=<<B>imaging</B>> penwidth=3 style=rounded target=_top]
+		node [color=darkgreen fillcolor=darkgreen fontcolor=white fontsize=10]
+		"imaging.TwoPhotonRecording" [label=TwoPhotonRecording URL="/table/imaging/TwoPhotonRecording" color=darkgreen fillcolor=darkgreen fontcolor=white fontsize=10 target=_top]
+	}
+	"subjects.FlySubject" -> "imaging.TwoPhotonRecording" [color=darkgreen]
+	subgraph cluster_university6 {
+		graph [URL="/erd/university6" color=black label=<<B>university6</B>> penwidth=3 style=rounded target=_top]
+		node [color=darkgreen fillcolor=darkgreen fontcolor=white fontsize=10]
+		"university6.Student" [label=Student URL="/table/university6/Student" color=darkgreen fillcolor=darkgreen fontcolor=white fontsize=10 target=_top]
+	}
+}

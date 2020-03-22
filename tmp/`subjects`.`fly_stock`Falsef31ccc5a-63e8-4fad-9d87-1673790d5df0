@@ -1,0 +1,34 @@
+digraph {
+	graph [fontname=helvetica rankdir=LR size="12, 12" splines=ortho]
+	node [align=center fontname=helvetica fontsize=10 height=0.1 penwidth=1.5 ranksep=0.1 shape=record style="filled, rounded"]
+	edge [arrowsize=0.7 headclip=true penwidth=1.5]
+	subgraph cluster_subjects {
+		graph [URL="/erd/subjects" color=black label=<<B>subjects</B>> penwidth=3 style=rounded target=_top]
+		node [color=darkgreen fillcolor=darkgreen fontcolor=white fontsize=10]
+		"subjects.FlyStock" [label=FlyStock URL="/table/subjects/FlyStock" color=darkgreen fillcolor=darkgreen fontcolor=white fontsize=10 target=_top]
+	}
+	subgraph cluster_subjects {
+		graph [URL="/erd/subjects" color=black label=<<B>subjects</B>> penwidth=3 style=rounded target=_top]
+		node [color=darkgreen fillcolor=darkgreen fontcolor=white fontsize=10]
+		"subjects.FlyGenotype" [label=FlyGenotype URL="/table/subjects/FlyGenotype" color=darkgreen fillcolor=darkgreen fontcolor=white fontsize=10 target=_top]
+	}
+	"subjects.FlyGenotype" -> "subjects.FlyStock" [color=darkgreen]
+	subgraph cluster_experimenters {
+		graph [URL="/erd/experimenters" color=black label=<<B>experimenters</B>> penwidth=3 style=rounded target=_top]
+		node [color=darkgreen fillcolor=darkgreen fontcolor=white fontsize=10]
+		"experimenters.Experimenter" [label=Experimenter URL="/table/experimenters/Experimenter" color=darkgreen fillcolor=darkgreen fontcolor=white fontsize=10 target=_top]
+	}
+	"experimenters.Experimenter" -> "subjects.FlyStock" [color=darkgreen]
+	subgraph cluster_subjects {
+		graph [URL="/erd/subjects" color=black label=<<B>subjects</B>> penwidth=3 style=rounded target=_top]
+		node [color=darkgreen fillcolor=darkgreen fontcolor=white fontsize=10]
+		"subjects.FlyOrigin" [label=FlyOrigin URL="/table/subjects/FlyOrigin" color=darkgreen fillcolor=darkgreen fontcolor=white fontsize=10 target=_top]
+	}
+	"subjects.FlyOrigin" -> "subjects.FlyStock" [color=darkgreen]
+	subgraph cluster_subjects {
+		graph [URL="/erd/subjects" color=black label=<<B>subjects</B>> penwidth=3 style=rounded target=_top]
+		node [color=darkgreen fillcolor=darkgreen fontcolor=white fontsize=10]
+		"subjects.FlyCross" [label=FlyCross URL="/table/subjects/FlyCross" color=darkgreen fillcolor=darkgreen fontcolor=white fontsize=10 target=_top]
+	}
+	"subjects.FlyCross" -> "subjects.FlyStock" [color=darkgreen]
+}

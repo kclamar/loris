@@ -33,3 +33,18 @@ If you do not have a running MySQL database yet, you can install a running SQL d
 cd mysql-docker/slim
 sudo docker-compose up -d
 ```
+
+## Docker Image installation (Skip everything above)
+###### Stop all docker processes (specially datajoint), prune all volumes and delete all docker images. Make sure nothng is running on ports 1234 and 3366
+
+```
+cd loris
+sudo docker-compose up
+```
+You might an error something like in the logs
+## **IGNORE IT**
+
+##### pymysql.err.OperationalError: (2003, "Can't connect to MySQL server on 'mysql' ([Errno 111] Connection refused)")
+### Final working app
+![](images/get_result.png)
+![](images/get_result2.png)

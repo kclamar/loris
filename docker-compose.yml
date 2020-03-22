@@ -1,0 +1,17 @@
+version: '2'
+services:
+  web:
+    build: .
+    ports:
+      - "1234:1234"
+    depends_on:
+      - "mysql"
+    restart: always
+  mysql:
+    image: datajoint/mysql
+    ports:
+      - "3306:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=simple
+      - MYSQL_USER=root
+    restart: always
