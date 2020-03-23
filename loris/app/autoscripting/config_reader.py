@@ -311,7 +311,8 @@ class ConfigReader:
             self.existing_settings['_id'] == _id]
 
         if len(selected_entries) != 1:
-            raise LorisError(f'entry id {_id} not in existing configurations.')
+            flash(f'entry id {_id} not in existing configurations.', 'error')
+            return
 
         settings_dict = selected_entries.iloc[0].to_dict()
 

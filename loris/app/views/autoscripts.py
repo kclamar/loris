@@ -26,6 +26,13 @@ from loris.app.autoscripting.config_reader import ConfigReader
 from loris.app.subprocess import Run
 
 
+@app.route("/experimentprogress")
+def experimentprogress():
+    """get lastline of ouput
+    """
+    return config.get('subprocess', Run()).lastline
+
+
 @app.route("/experiment",
            defaults={'table_name': None, 'autoscript_folder': None},
            methods=['GET', 'POST'])

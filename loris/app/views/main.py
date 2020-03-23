@@ -218,7 +218,7 @@ def emergencycontacts():
         subtable=None)
 
     return joined_table_template(
-        [config.user_table, config.user_table.EmergencyContact],
+        [config.user_table.EmergencyContact],
         'Emergency Contacts',
         edit_url=url_for(
             'table',
