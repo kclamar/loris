@@ -2,8 +2,8 @@
 """
 
 import datajoint as dj
-from loris.database.schema.base import ManualLookup
-from loris.database.attributes import lookupname
+from loris.database.schema.base import ManualLookup, PRIMARY_NAME, COMMENTS
+from loris.database.attributes import lookupname, tags
 
 schema = dj.Schema('anatomy')
 
@@ -19,5 +19,30 @@ class BrainArea(ManualLookup, dj.Manual):
 
 
 @schema
-class CellType(ManualLookup, dj.Manual):
-    primary_comment = 'standard cell type name - e.g. dm8'
+class CellType(dj.Manual):
+    definition = f"""
+    {PRIMARY_NAME.format(name='cell_type', comment='standard cell type name - e.g. dm8')}
+    ---
+    neurotransmitters = null : <tags> # neurotransmitter of cell
+    receptors = null : <tags> # receptors expressed by cell
+    {COMMENTS}
+    """
+
+
+@schema
+class ColumnId(ManualLookup, dj.Manual):
+    primary_comment = 'column id - e.g. A, B, or Home'
+
+
+@schema
+class SynapticCounts(dj.Manual):
+    definition = f"""
+    -> CellType.proj(postsynaptic='cell_type')
+    -> ColumnId.proj(postsynaptic_column='column_id')
+    -> CellType.proj(presynaptic='cell_type')
+    -> ColumnId.proj(presynaptic_column='column_id')
+    ---
+    synaptic_count       : int unsigned
+    count_percent = null   : double  # percent in terms of postsynaptic target
+    {COMMENTS}
+    """
