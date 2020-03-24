@@ -422,7 +422,11 @@ class DynamicField:
         """
 
         kwargs['id'] = 'existing_entries'
-        kwargs['validators'].insert(0, ParentValidator(self.name))
+        if self.aliased is None:
+            kwargs['validators'].insert(0, ParentValidator(self.name))
+        else:
+            kwargs['validators'].insert(
+                0, ParentValidator(self.aliased[self.name]))
 
         # dynamically create form
         class FkForm(ManualLookupForm):
