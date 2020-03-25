@@ -67,7 +67,7 @@ def grantuser(
     schema = dj.Schema(username)
 
     privileges = {
-        '*.*': "DELETE, SELECT, INSERT, UPDATE, REFERENCES",
+        '*.*': "DELETE, SELECT, INSERT, UPDATE, REFERENCES, CREATE",
         f'{username}.*': "ALL PRIVILEGES"
     }
 
