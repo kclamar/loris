@@ -9,7 +9,7 @@ Documentation for the different features will be added soon.
 * Anaconda
 * Docker
 
-## Installation
+## Pulling the source code
 
 Pull the recent version of Loris:
 ```
@@ -17,7 +17,7 @@ git pull https://github.com/gucky92/dreye.git
 git submodule update --init --recursive
 ```
 
-Create your own `config.json` file. There is a template file called `_config.json`.
+## Installation of API
 
 Create a new conda environment using the yml file provided and install all submodules:
 ```
@@ -28,23 +28,40 @@ pip install -e datajoint-python/.
 pip install -e .
 ```
 
+## Method 1: Running App through API Installation
+
+Create your own `config.json` file. There is a template file called `_config.json`.
+
 If you do not have a running MySQL database yet, you can install a running SQL database using the docker-compose submodule provided by Loris:
 ```
 cd mysql-docker/slim
 sudo docker-compose up -d
 ```
 
-## Docker Image installation (Skip everything above)
-###### Stop all docker processes (specially datajoint), prune all volumes and delete all docker images. Make sure nothng is running on ports 1234 and 3366
+To run the Loris app (in the main loris directory):
+```
+conda activate loris  # activate the environment if you haven't done so
+python run.py
+```
+The app should now be running on port 1234.
+
+## Method 2: Running App through Docker Image
+Another form of installation can
+**Make sure nothing is running on ports 1234 and 3306**.
 
 ```
 cd loris
 sudo docker-compose up
+OR
+sudo docker-compose up -d   # runs the docker in the background
 ```
-You might an error something like in the logs
-## **IGNORE IT**
+You might encounter the following error/warning that you can *ignore* safely:
+```
+pymysql.err.OperationalError: (2003, "Can't connect to MySQL server on 'mysql' ([Errno 111] Connection refused)")
+```
 
-##### pymysql.err.OperationalError: (2003, "Can't connect to MySQL server on 'mysql' ([Errno 111] Connection refused)")
-### Final working app
+You can initially login with as *administrator* with password *fruitfly*.
+
+### Final working app when installing with docker
 ![](images/get_result.png)
 ![](images/get_result2.png)

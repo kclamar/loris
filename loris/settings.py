@@ -48,6 +48,7 @@ defaults = dict(
     include_fly=True
 )
 AUTOSCRIPT_CONFIG = 'config.json'
+DOCKER_CONFIG = 'docker_config.json'
 EXPANDUSER_FIELDS = (
     'tmp_folder',
     'wiki_folder',
@@ -65,6 +66,9 @@ class Config(dict):
 
         root_dir = os.path.split(os.path.split(__file__)[0])[0]
         config_file = os.path.join(root_dir, 'config.json')
+
+        if not os.path.exists(config_file):
+            config_file = os.path.join(root_dir, DOCKER_CONFIG)
 
         with open(config_file, 'r') as f:
             config = json.load(f)
