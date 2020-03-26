@@ -17,7 +17,7 @@
     "init_database": true,
     "include_fly": true,
     "secret_key": "myprecious",
-    "tmp_folder": "tmp",
+    "tmp_folder": "/tmp",
     "skip_schemas": ["mysql", "sys", "performance_schema", "tutorial"],
     "user_schema": "experimenters",
     "user_table": "Experimenter",

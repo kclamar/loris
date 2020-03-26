@@ -69,7 +69,7 @@ You can initially login with as *administrator* with password *fruitfly*.
 
 ### Troubleshooting
 
-Make sure to prune all your images, if the app did not run the first time around:
+Make sure to prune all your images, if the app did not run the first time around, and remove the database folder in loris (if it exists):
 
 ```
 docker stop $(docker ps -aq)

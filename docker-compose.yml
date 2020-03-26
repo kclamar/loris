@@ -8,13 +8,14 @@ services:
       - "mysql"
     restart: always
   mysql:
-    image: datajoint/mysql
+    image: datajoint/mysql:5.7
     volumes:
       - ./my.cnf:/etc/my.cnf
     ports:
       - "3306:3306"
     environment:
       - MYSQL_ROOT_PASSWORD=simple
-      - MYSQL_USER=root
+    volumes:
+      - ./database:/var/lib/mysql
     command: --character-set-server=utf8
     restart: always
