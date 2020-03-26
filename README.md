@@ -28,7 +28,7 @@ pip install -e datajoint-python/.
 pip install -e .
 ```
 
-## Method 1: Running App through API Installation
+## Method 1: Running App after API Installation
 
 Create your own `config.json` file. There is a template file called `_config.json`.
 
@@ -45,8 +45,9 @@ python run.py
 ```
 The app should now be running on port 1234.
 
-## Method 2: Running App through Docker Image
-Another form of installation can
+## Method 2: Running app through a Docker image
+Another form of running the app without having to install the package manually is to run our docker image. Make sure you have pulled the code as in the
+*Pulling the source code* heading.
 **Make sure nothing is running on ports 1234 and 3306**.
 
 ```
@@ -65,3 +66,14 @@ You can initially login with as *administrator* with password *fruitfly*.
 ### Final working app when installing with docker
 ![](images/get_result.png)
 ![](images/get_result2.png)
+
+### Troubleshooting
+
+Make sure to prune all your images, if the app did not run the first time around:
+
+```
+docker stop $(docker ps -aq)
+docker rm $(docker ps -aq)
+docker rmi $(docker images -q)
+docker system prune -a
+```
