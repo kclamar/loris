@@ -16,7 +16,5 @@ services:
     environment:
       - MYSQL_ROOT_PASSWORD=simple
       - MYSQL_USER=root
-    volumes:
-      - ./data:/var/lib/mysql
     command: --character-set-server=utf8
     restart: always
