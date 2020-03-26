@@ -13,7 +13,8 @@ Documentation for the different features will be added soon.
 
 Pull the recent version of Loris:
 ```
-git pull https://github.com/gucky92/dreye.git
+git pull https://github.com/gucky92/loris.git
+cd loris
 git submodule update --init --recursive
 ```
 

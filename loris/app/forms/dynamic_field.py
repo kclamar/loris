@@ -53,7 +53,7 @@ class DynamicField:
 
         self._table = table
         self._attribute = attribute
-        self._foreign_table = self.get_foreign_table()
+        self._foreign_table, self._aliased = self.get_foreign_table()
         self._ignore_foreign_fields = ignore_foreign_fields
 
         # set default values
@@ -71,6 +71,10 @@ class DynamicField:
     @property
     def ignore_foreign_fields(self):
         return self._ignore_foreign_fields
+
+    @property
+    def aliased(self):
+        return self._aliased
 
     @property
     def table(self):
@@ -107,6 +111,7 @@ class DynamicField:
     def get_foreign_table(self):
         """
         """
+        aliased = None
         parents = self.dependencies.parents(self.table.full_table_name)
         for table_name, table_info in parents.items():
             if self.name in table_info['attr_map']:
@@ -115,11 +120,12 @@ class DynamicField:
                     aliased_parents = self.dependencies.parents(table_name)
                     # aliased parent should only be one
                     table_name = list(aliased_parents)[0]
+                    aliased = table_info['attr_map']
                 break
         else:
-            return None
+            return None, aliased
 
-        return config.get_table(table_name)
+        return config.get_table(table_name), aliased
 
     @property
     def foreign_table(self):
@@ -127,7 +133,10 @@ class DynamicField:
 
     @property
     def foreign_data(self):
-        return self.foreign_table.proj(self.name).fetch()[self.name]
+        if self.aliased is None:
+            return self.foreign_table.proj(self.name).fetch()[self.name]
+        else:
+            return self.foreign_table.proj(**self.aliased).fetch()[self.name]
 
     @property
     def foreign_is_manuallookup(self):
@@ -413,8 +422,11 @@ class DynamicField:
         """
 
         kwargs['id'] = 'existing_entries'
-        # TODO work with aliased foreign keys
-        kwargs['validators'].insert(0, ParentValidator(self.name))
+        if self.aliased is None:
+            kwargs['validators'].insert(0, ParentValidator(self.name))
+        else:
+            kwargs['validators'].insert(
+                0, ParentValidator(self.aliased[self.name]))
 
         # dynamically create form
         class FkForm(ManualLookupForm):
@@ -477,7 +489,10 @@ class DynamicField:
                         "An error occured while inserting into parent table"
                         f" {self.foreign_table.full_table_name}: {e}"
                     )
-                value = value[self.name]
+                if self.aliased is None:
+                    value = value[self.name]
+                else:
+                    value = value[self.aliased[self.name]]
             else:
                 value = value['existing_entries']
 

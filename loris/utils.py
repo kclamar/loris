@@ -24,3 +24,20 @@ def is_manuallookup(table, ):
         )
 
     return truth
+
+
+def save_join(tables):
+    """savely join tables ignoring dependent attributes that match.
+    """
+
+    for n, table in enumerate(tables):
+
+        if n == 0:
+            joined_table = table
+        else:
+            dep1 = joined_table.heading.secondary_attributes
+            dep2 = table.heading.secondary_attributes
+            proj = list(set(dep2) - set(dep1))
+            joined_table = joined_table * table.proj(*proj)
+
+    return joined_table

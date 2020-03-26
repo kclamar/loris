@@ -16,7 +16,6 @@ conn = config.conn
 
 import loris.dataframe as df
 
-
 __all__ = [
     'db',
     'config',
@@ -26,3 +25,14 @@ __all__ = [
     'LorisError',
     'df'
 ]
+
+if config['init_database']:
+    from loris.database.schema import (
+        anatomy, equipment, experimenters,
+        imaging, recordings, subjects, core
+    )
+
+    __all__ += [
+        'anatomy', 'equipment', 'experimenters',
+        'imaging', 'recordings', 'subjects', 'core'
+    ]

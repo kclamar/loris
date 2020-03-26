@@ -18,7 +18,8 @@ from loris.errors import LorisError
 from loris import config
 from loris.app.forms.dynamic_field import DynamicField
 from loris.app.forms.formmixin import FormMixin, ParentFormField
-from loris.app.utils import draw_helper, get_jsontable, save_join
+from loris.app.utils import draw_helper, get_jsontable
+from loris.utils import save_join
 
 
 class DynamicForm:

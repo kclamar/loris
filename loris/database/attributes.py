@@ -9,7 +9,7 @@ import json
 import numpy as np
 import datajoint as dj
 
-from loris.database.utils import Placeholder, ProcessMixin
+from loris.database.mixin import Placeholder, ProcessMixin
 
 
 class TrueBool(dj.AttributeAdapter):

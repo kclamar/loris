@@ -18,8 +18,8 @@ from loris.app.forms.fixed import (
     dynamic_jointablesform, dynamic_settingstableform, LoginForm,
     PasswordForm, dynamic_tablecreationform
 )
-from loris.app.utils import (
-    draw_helper, get_jsontable, save_join, user_has_permission)
+from loris.app.utils import draw_helper, get_jsontable, user_has_permission
+from loris.utils import save_join
 from loris.app.login import User
 from loris.database.users import grantuser, change_password
 
@@ -99,8 +99,8 @@ def crossload():
         'pages/crossload.html',
         cross_id=_id['cross_id'],
         image=image,
-        experimenter=data['experimenter'], 
-        chromosome=f"{data['chr1']}; {data['chr2']}; {data['chr3']}", 
+        experimenter=data['experimenter'],
+        chromosome=f"{data['chr1']}; {data['chr2']}; {data['chr3']}",
         comments=data['comments']
     )
 
@@ -151,7 +151,7 @@ def crossgenotype():
         'Cross + Genotype Table',
         'cross',
         edit_url=url_for('cross'),
-        load_url=url_for('crossload'), 
+        load_url=url_for('crossload'),
         delete_url=delete_url
     )
 

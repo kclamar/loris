@@ -59,6 +59,15 @@ class Run:
     def stdout(self):
         return ''.join(self.lines)
 
+    @property
+    def lastline(self):
+        if self.stderr:
+            return self.stderr
+        elif self.lines:
+            return self.lines[-1]
+        else:
+            return ''
+
     def check(self):
         """check on subprocess and flash messages
         """
