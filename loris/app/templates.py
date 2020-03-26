@@ -9,7 +9,8 @@ from ast import literal_eval
 
 from loris import config
 from loris.app.forms.dynamic_form import DynamicForm
-from loris.app.utils import user_has_permission, save_join, get_jsontable
+from loris.app.utils import user_has_permission, get_jsontable
+from loris.utils import save_join
 
 
 def joined_table_template(

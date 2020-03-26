@@ -39,7 +39,6 @@ INSERT_SCRIPT = (
 )
 
 
-# TODO move somewhere more accessible?
 def load_config(directory=None):
     if directory is None:
         filepath = CURRENT_CONFIG

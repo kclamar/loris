@@ -185,7 +185,7 @@ class AutoscriptedField:
         elif loc is not None and isinstance(value, str):
             loc = secure_filename(loc)
             locpath = os.path.join(folderpath, loc)
-            # try up to two base directories down
+            # try up to three base directories down
             if not os.path.exists(locpath):
                 # try main autoscript folder
                 locpath = os.path.join(os.path.dirname(folderpath), loc)

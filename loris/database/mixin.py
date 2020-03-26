@@ -47,7 +47,7 @@ class ProcessMixin:
 
     def put_process(obj):
         if obj is None:
-            return 
+            return
         return obj
 
     def get_process(value):

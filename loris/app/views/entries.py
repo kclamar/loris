@@ -18,8 +18,8 @@ from loris.app.forms.fixed import (
     dynamic_jointablesform, dynamic_settingstableform, LoginForm,
     PasswordForm, dynamic_tablecreationform
 )
-from loris.app.utils import (
-    draw_helper, get_jsontable, save_join, user_has_permission)
+from loris.app.utils import draw_helper, get_jsontable, user_has_permission
+from loris.utils import save_join
 from loris.app.login import User
 from loris.database.users import grantuser, change_password
 

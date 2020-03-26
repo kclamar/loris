@@ -598,20 +598,13 @@ class Config(dict):
     def get_autoscriptforms(
         self, autoscript_filepath, table_name, form_creator, **kwargs
     ):
-
-        # if 'autoscriptforms' not in self:
-        #     self['autoscriptforms'] = {}
-        # if table_name not in self['autoscriptforms']:
-        #     self['autoscriptforms'][table_name] = {}
-
+        """get autoscript form and process_dict and buttons params
+        """
         foldername = os.path.basename(autoscript_filepath)
-
-        # if autoscript_filepath in self['autoscriptforms'][table_name]:
-        #     pass
-        # else:
         filepath = os.path.join(
             autoscript_filepath, AUTOSCRIPT_CONFIG
         )
+
         with open(filepath, 'r') as f:
             try:
                 config = json.load(f)
@@ -674,8 +667,6 @@ class Config(dict):
             if 'outputfile' in button:
                 button['outputfile'] = secure_filename(button['outputfile'])
 
-        print(buttons)
-
         if not isinstance(config_forms, dict):
             raise LorisError(
                 f'In configuration file of autoscript '
@@ -694,9 +685,3 @@ class Config(dict):
             post_process_dict[key] = post_process
 
         return forms, post_process_dict, buttons
-
-        # self['autoscriptforms'][table_name][autoscript_filepath] = (
-        #     forms, post_process_dict, buttons
-        # )
-        #
-        # return self['autoscriptforms'][table_name][autoscript_filepath]
