@@ -79,6 +79,7 @@ class Config(dict):
         config['_empty'] = []  # list of files in tmp to delete on refresh
         config['_autopopulate'] = {}  # dictionary of subprocesses
         config.perform_checks()
+        config.datajoint_configuration()
 
         return config
 

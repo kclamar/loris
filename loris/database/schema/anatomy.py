@@ -35,14 +35,20 @@ class ColumnId(ManualLookup, dj.Manual):
 
 
 @schema
+class SourceName(ManualLookup, dj.Manual):
+    primary_comment = 'source of data - e.g. fruitflybrain'
+
+
+@schema
 class SynapticCounts(dj.Manual):
     definition = f"""
-    -> CellType.proj(postsynaptic='cell_type')
+    -> CellType.proj(postsynaptic='cell_type')  # neuron receiving input - i.e. output cell
     -> ColumnId.proj(postsynaptic_column='column_id')
-    -> CellType.proj(presynaptic='cell_type')
+    -> CellType.proj(presynaptic='cell_type')  # neuron connecting to output cell - i.e. input cell
     -> ColumnId.proj(presynaptic_column='column_id')
     ---
     synaptic_count       : int unsigned
     count_percent = null   : double  # percent in terms of postsynaptic target
+    -> [nullable] SourceName
     {COMMENTS}
     """
