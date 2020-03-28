@@ -3,6 +3,12 @@ autoscripts/*
 wiki/*
 config.json
 *.icloud
+attachstore/*
+datastore/*
+data/*
+database/*
+tmp/*
+.DS_Store
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

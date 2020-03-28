@@ -1,0 +1,51 @@
+{
+    "_datajoint_comment": "datajoint-specific keys",
+    "database.host": "mysql",
+    "database.user": "root",
+    "database.password": "simple",
+    "database.port": 3306,
+    "connection.charset": "utf8",
+    "filestores": {
+        "attachstore": "attachstore",
+        "datastore": "datastore"
+    },
+    "enable_python_native_blobs": true,
+    "enable_python_pickle_blobs": true,
+    "enable_automakers": true,
+
+    "_app_comment": "app-specific keys",
+    "init_database": true,
+    "include_fly": true,
+    "secret_key": "myprecious",
+    "tmp_folder": "/tmp",
+    "skip_schemas": ["mysql", "sys", "performance_schema", "tutorial"],
+    "user_schema": "experimenters",
+    "user_table": "Experimenter",
+    "user_name": "experimenter",
+    "user_active": "active",
+    "group_schema": "experimenters",
+    "group_table": "ExperimentalProject",
+    "group_name": "experimental_project",
+    "assignedgroup_schema": "experimenters",
+    "assignedgroup_table": "AssignedExperimentalProject",
+    "standard_password": "fruitfly",
+    "administrator_info" : {
+        "experimenter": "administrator",
+        "first_name": "FIRSTNAME",
+        "last_name": "LASTNAME",
+        "email": "administrator@mail.com",
+        "phone": "000-000-0000",
+        "date_joined": "2020-01-01",
+        "active": true
+    },
+    "administrators": ["administrator"],
+    "wiki_folder": "wiki",
+    "autoscript_folder": "autoscripts",
+    "autoscript_tables": ["imaging.TwoPhotonRecording"],
+    "external_wiki": "#",
+
+    "_ssh_comment": "keys for SSH tunneling of MySQL database. See: https://sshtunnel.readthedocs.io/en/latest/",
+    "ssh_address": null,
+    "ssh_username": "administrator",
+    "ssh_pkey": "id_rsa"
+}
