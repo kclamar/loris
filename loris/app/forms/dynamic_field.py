@@ -134,9 +134,13 @@ class DynamicField:
     @property
     def foreign_data(self):
         if self.aliased is None:
-            return self.foreign_table.proj(self.name).fetch()[self.name]
+            data = self.foreign_table.proj(self.name).fetch()[self.name]
         else:
-            return self.foreign_table.proj(**self.aliased).fetch()[self.name]
+            data = self.foreign_table.proj(**self.aliased).fetch()[self.name]
+        # sort values if integer
+        if match_type(self.attr.type) == "INTEGER":
+            data = np.sort(data)
+        return data
 
     @property
     def foreign_is_manuallookup(self):
