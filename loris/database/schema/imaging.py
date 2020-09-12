@@ -4,7 +4,7 @@
 import datajoint as dj
 
 from loris.database.schema import (
-    subjects, anatomy, equipment, core
+    subjects, anatomy, core
 )
 from loris.database.attributes import truebool, attachplaceholder, tags
 from loris.database.attributes import lookupname
