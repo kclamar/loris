@@ -21,7 +21,6 @@ schema = dj.Schema('imaging')
 class TwoPhotonRecording(dj.Manual):
     definition = f"""
     {NEURAL_RECORDING}
-    -> [nullable] anatomy.NeuronSection
     -> [nullable] anatomy.BrainArea
     voltage_input = 0 : <truebool> # whether voltage input was recorded
     voltage_output = 0 : <truebool> # whether voltage output was recorded
