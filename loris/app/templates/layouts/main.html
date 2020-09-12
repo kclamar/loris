@@ -78,34 +78,6 @@
         </li>
         </ul>
       </li>
-      <li class="nav-item dropdown">
-        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown2" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-          Schema
-        </a>
-        <ul class="dropdown-menu border-0 shadow", aria-labelledby="navbarDropdown2">
-        {% for schema in config['schemata'] %}
-        {% if 'tables' in config %}
-        {% if config['tables'][schema] %}
-        <li class="dropdown-submenu">
-        <div class="btn-group dropright">
-            <a href="{{ url_for('erd', schema=schema) }}" class="dropdown-item">
-                {{ schema }}
-            </a>
-            <a id="subdrop1" href="#" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" class="dropdown-item dropdown-toggle dropdown-toggle-split">
-                 <span class="sr-only"></span>
-            </a>
-                <ul aria-labelledby="subdrop1" class="dropdown-menu border-0 shadow">
-                    {% for table in config['tables'][schema] %}
-                    <li><a href="{{ url_for('table', schema=schema, table=table) }}" class="dropdown-item">{{table}}</a></li>
-                    {% endfor %}
-                </ul>
-        </div>
-        </li>
-        {% endif %}
-        {% endif %}
-        {% endfor %}
-        </ul>
-      </li>
       {% if config['include_fish'] in [True, "True"] %}
       <li class="nav-item dropdown">
         <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown4" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -150,22 +122,6 @@
         {% endfor %}
         </ul>
       </li>
-      <li class="nav-item dropdown">
-        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown7" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-          Wiki
-        </a>
-        <ul class="dropdown-menu", aria-labelledby="navbarDropdown7">
-            {% if config['external_wiki'] not in [None, "None"]%}
-            <li><a class="dropdown-item" href="{{ config['external_wiki'] }}" target="_blank">External Wiki</a></li>
-            {% endif %}
-            <li><a class="dropdown-item" href="{{ url_for('wikihome') }}">Home</a></li>
-            <li><a class="dropdown-item" href="{{ url_for('wikiindex') }}">Index</a></li>
-            <li><a class="dropdown-item" href="{{ url_for('wikitags') }}">Tags</a></li>
-            <li><a class="dropdown-item" href="{{ url_for('wikisearch') }}">Search</a></li>
-            <li><a class="dropdown-item" href="{{ url_for('wikicreate') }}">New Page</a></li>
-        </ul>
-      </li>
-      <a class="nav-item nav-link" href="{{ url_for('about')}}">About</a>
     </ul>
     <form class="form-inline my-2 my-lg-0">
       <a class="btn btn-outline-secondary my-2 my-sm-0"
