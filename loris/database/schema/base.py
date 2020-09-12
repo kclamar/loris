@@ -9,7 +9,7 @@ NEURAL_RECORDING = f"""
     recording_id : int auto_increment # integer id number
     ---
     recording_file_id : varchar(63) # recording file identifier -- e.g. prairieview extension
-    -> subjects.FlySubject
+    -> subjects.FishSubject
     -> recordings.RecordingType
     -> recordings.RecordingSolution
     recording_temperature = null : float # recording temperature in Celsius

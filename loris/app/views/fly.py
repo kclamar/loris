@@ -1,4 +1,4 @@
-"""fly specific views
+"""fish specific views
 """
 
 import os
@@ -28,7 +28,7 @@ from loris.database.users import grantuser, change_password
 @login_required
 def genotype():
     schema = 'subjects'
-    table = 'FlyGenotype'
+    table = 'FishGenotype'
     subtable = None
     edit_url = url_for('genotype')
     overwrite_url = url_for('genotype')
@@ -43,14 +43,14 @@ def genotype():
 @login_required
 def stock():
     schema = 'subjects'
-    table = 'FlyStock'
+    table = 'FishStock'
     subtable = None
     edit_url = url_for('stock')
     overwrite_url = url_for('stock')
 
     return form_template(
         schema, table, subtable, edit_url, overwrite_url, page='stock',
-        join_tables=[getattr(config['schemata'][schema], 'FlyGenotype')],
+        join_tables=[getattr(config['schemata'][schema], 'FishGenotype')],
         joined_name='stockgenotype',
         override_permissions=True,
     )
@@ -60,7 +60,7 @@ def stock():
 @login_required
 def cross():
     schema = 'subjects'
-    table = 'FlyCross'
+    table = 'FishCross'
     subtable = None
     edit_url = url_for('cross')
     overwrite_url = url_for('cross')
@@ -68,7 +68,7 @@ def cross():
 
     return form_template(
         schema, table, subtable, edit_url, overwrite_url, page='cross',
-        join_tables=[getattr(config['schemata'][schema], 'FlyGenotype')],
+        join_tables=[getattr(config['schemata'][schema], 'FishGenotype')],
         joined_name='crossgenotype',
         load_url=load_url
     )
@@ -80,12 +80,12 @@ def crossload():
 
     _id = literal_eval(request.args.get('_id', "None"))
     if _id is None or not isinstance(_id, dict) or 'cross_id' not in _id:
-        flash('No cross_id was given for loading FlyCross', 'error')
+        flash('No cross_id was given for loading FishCross', 'error')
         return redirect(url_for('cross'))
 
     # combine tables
-    cross_table = getattr(config['schemata']['subjects'], 'FlyCross')
-    genotype_table = getattr(config['schemata']['subjects'], 'FlyGenotype')
+    cross_table = getattr(config['schemata']['subjects'], 'FishCross')
+    genotype_table = getattr(config['schemata']['subjects'], 'FishGenotype')
 
     # fetch data
     joined_table = save_join([cross_table, genotype_table])
@@ -109,14 +109,14 @@ def crossload():
 @login_required
 def entersubject():
     schema = 'subjects'
-    table = 'FlySubject'
+    table = 'FishSubject'
     subtable = None
     edit_url = url_for('entersubject')
     overwrite_url = url_for('entersubject')
 
     return form_template(
         schema, table, subtable, edit_url, overwrite_url, page='entersubject',
-        join_tables=[getattr(config['schemata'][schema], 'FlyGenotype')],
+        join_tables=[getattr(config['schemata'][schema], 'FishGenotype')],
         joined_name='subjectgenotype'
     )
 
@@ -127,10 +127,10 @@ def stockgenotype():
     """join various tables in the database
     """
     delete_url = url_for(
-        'delete', schema='subjects', table='FlyStock', subtable=None)
+        'delete', schema='subjects', table='FishStock', subtable=None)
 
     return joined_table_template(
-        ['subjects.fly_genotype', 'subjects.fly_stock'],
+        ['subjects.fish_genotype', 'subjects.fish_stock'],
         'Stock + Genotype Table',
         'stock',
         edit_url=url_for('stock'),
@@ -144,10 +144,10 @@ def crossgenotype():
     """join various tables in the database
     """
     delete_url = url_for(
-        'delete', schema='subjects', table='FlyCross', subtable=None)
+        'delete', schema='subjects', table='FishCross', subtable=None)
 
     return joined_table_template(
-        ['subjects.fly_genotype', 'subjects.fly_cross'],
+        ['subjects.fish_genotype', 'subjects.fish_cross'],
         'Cross + Genotype Table',
         'cross',
         edit_url=url_for('cross'),
@@ -162,10 +162,10 @@ def subjectgenotype():
     """join various tables in the database
     """
     delete_url = url_for(
-        'delete', schema='subjects', table='FlySubject', subtable=None)
+        'delete', schema='subjects', table='FishSubject', subtable=None)
 
     return joined_table_template(
-        ['subjects.fly_genotype', 'subjects.fly_subject'],
+        ['subjects.fish_genotype', 'subjects.fish_subject'],
         'Subject + Genotype Table',
         'entersubject',
         edit_url=url_for('entersubject'),
@@ -180,7 +180,7 @@ def stockcrossgenotype():
     """
 
     return joined_table_template(
-        ['subjects.fly_genotype', 'subjects.fly_stock', 'subjects.fly_cross'],
+        ['subjects.fish_genotype', 'subjects.fish_stock', 'subjects.fish_cross'],
         'Stock + Cross + Genotype Table',
         '#',
     )

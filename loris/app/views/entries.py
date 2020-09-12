@@ -142,7 +142,7 @@ def table(schema, table, subtable):
     ):
         return redirect(url_for('assigngroup'))
 
-    if (schema, table) == ('subjects', 'FlyStock'):
+    if (schema, table) == ('subjects', 'FishStock'):
         override_permissions = True
     else:
         override_permissions = False

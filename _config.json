@@ -15,7 +15,7 @@
 
     "_app_comment": "app-specific keys",
     "init_database": true,
-    "include_fly": true,
+    "include_fish": true,
     "secret_key": "myprecious",
     "tmp_folder": "~/tmp",
     "skip_schemas": ["mysql", "sys", "performance_schema", "tutorial"],
@@ -28,7 +28,7 @@
     "group_name": "experimental_project",
     "assignedgroup_schema": "experimenters",
     "assignedgroup_table": "AssignedExperimentalProject",
-    "standard_password": "fruitfly",
+    "standard_password": "fruitfish",
     "administrator_info" : {
         "experimenter": "gucky92",
         "first_name": "Matthias",

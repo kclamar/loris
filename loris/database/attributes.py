@@ -195,7 +195,7 @@ class Link(dj.AttributeAdapter):
         return value
 
 
-class FlyIdentifier(dj.AttributeAdapter):
+class FishIdentifier(dj.AttributeAdapter):
 
     attribute_type = 'varchar(255)'
 
@@ -208,7 +208,7 @@ class FlyIdentifier(dj.AttributeAdapter):
 
         assert isinstance(obj, str), (
             f"object is not of type string, "
-            f"but {type(obj)} for fly identifier attribute")
+            f"but {type(obj)} for fish identifier attribute")
 
         obj = obj.strip()
 
@@ -314,7 +314,7 @@ class AttachPlaceholder(dj.AttributeAdapter, ProcessMixin):
 
 chr = Chromosome()
 link = Link()
-flyidentifier = FlyIdentifier()
+fishidentifier = FishIdentifier()
 crossschema = CrossSchema()
 truebool = TrueBool()
 tarfolder = TarFolder()
@@ -330,7 +330,7 @@ phone = Phone()
 custom_attributes_dict = {
     'chr': chr,
     'link': link,
-    'flyidentifier': flyidentifier,
+    'fishidentifier': fishidentifier,
     'crossschema': crossschema,
     'truebool': truebool,
     'tarfolder': tarfolder,

@@ -45,7 +45,7 @@ defaults = dict(
     assignedgroup_table="AssignedExperimentalProject",
     max_cpu=None,
     init_database=False,
-    include_fly=True
+    include_fish=True
 )
 AUTOSCRIPT_CONFIG = 'config.json'
 DOCKER_CONFIG = 'docker_config.json'

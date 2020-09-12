@@ -62,7 +62,7 @@ You might encounter the following error/warning that you can *ignore* safely:
 pymysql.err.OperationalError: (2003, "Can't connect to MySQL server on 'mysql' ([Errno 111] Connection refused)")
 ```
 
-You can initially login with as *administrator* with password *fruitfly*.
+You can initially login with as *administrator* with password *fruitfish*.
 
 ### Final working app when installing with docker
 ![](images/get_result.png)

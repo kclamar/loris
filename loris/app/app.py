@@ -13,7 +13,7 @@ from loris.app.login import User
 if config['init_database']:
     from loris.database.schema import (
         anatomy, equipment, experimenters,
-        imaging, recordings, subjects, core
+        imaging, subjects, core
     )
 
 
@@ -30,7 +30,7 @@ class LorisApp(Flask):
 
 app = LorisApp(__name__)
 app.secret_key = config['secret_key']
-app.config['include_fly'] = config['include_fly']
+app.config['include_fish'] = config['include_fish']
 app.config['external_wiki'] = config['external_wiki']
 app.config['schemata'] = list(config['schemata'].keys())
 app.config['tables'], app.config['autotables'] = config.tables_to_list()
