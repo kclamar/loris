@@ -10,8 +10,6 @@ NEURAL_RECORDING = f"""
     ---
     recording_file_id : varchar(63) # recording file identifier -- e.g. prairieview extension
     -> subjects.FishSubject
-    -> recordings.RecordingType
-    -> recordings.RecordingSolution
     recording_temperature = null : float # recording temperature in Celsius
     recording_time = CURRENT_TIMESTAMP : timestamp # time of recording
     completed = 0 : <truebool> # was the recording completed as intended
