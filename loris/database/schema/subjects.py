@@ -7,7 +7,7 @@ from loris.database.schema.experimenters import Experimenter
 from loris.database.schema.base import (
     ManualLookup, COMMENTS, PRIMARY_NAME, TAGS
 )
-from loris.database.attributes import chr, link, fishidentifier, crossschema
+from loris.database.attributes import chr, link, fishidentifier
 from loris.database.attributes import lookupname, tags
 
 

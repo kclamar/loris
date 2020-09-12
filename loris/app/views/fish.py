@@ -39,72 +39,6 @@ def genotype():
     )
 
 
-@app.route('/stock', methods=['GET', 'POST'])
-@login_required
-def stock():
-    schema = 'subjects'
-    table = 'FishStock'
-    subtable = None
-    edit_url = url_for('stock')
-    overwrite_url = url_for('stock')
-
-    return form_template(
-        schema, table, subtable, edit_url, overwrite_url, page='stock',
-        join_tables=[getattr(config['schemata'][schema], 'FishGenotype')],
-        joined_name='stockgenotype',
-        override_permissions=True,
-    )
-
-
-@app.route('/cross', methods=['GET', 'POST'])
-@login_required
-def cross():
-    schema = 'subjects'
-    table = 'FishCross'
-    subtable = None
-    edit_url = url_for('cross')
-    overwrite_url = url_for('cross')
-    load_url = url_for('crossload')
-
-    return form_template(
-        schema, table, subtable, edit_url, overwrite_url, page='cross',
-        join_tables=[getattr(config['schemata'][schema], 'FishGenotype')],
-        joined_name='crossgenotype',
-        load_url=load_url
-    )
-
-
-@app.route('/crossload', methods=['GET', 'POST'])
-@login_required
-def crossload():
-
-    _id = literal_eval(request.args.get('_id', "None"))
-    if _id is None or not isinstance(_id, dict) or 'cross_id' not in _id:
-        flash('No cross_id was given for loading FishCross', 'error')
-        return redirect(url_for('cross'))
-
-    # combine tables
-    cross_table = getattr(config['schemata']['subjects'], 'FishCross')
-    genotype_table = getattr(config['schemata']['subjects'], 'FishGenotype')
-
-    # fetch data
-    joined_table = save_join([cross_table, genotype_table])
-    data = (joined_table & _id).fetch1()
-
-    image = data['cross_schema']
-    if image is not None:
-        image = os.path.abspath(image)
-
-    return render_template(
-        'pages/crossload.html',
-        cross_id=_id['cross_id'],
-        image=image,
-        experimenter=data['experimenter'],
-        chromosome=f"{data['chr1']}; {data['chr2']}; {data['chr3']}",
-        comments=data['comments']
-    )
-
-
 @app.route('/entersubject', methods=['GET', 'POST'])
 @login_required
 def entersubject():
@@ -118,41 +52,6 @@ def entersubject():
         schema, table, subtable, edit_url, overwrite_url, page='entersubject',
         join_tables=[getattr(config['schemata'][schema], 'FishGenotype')],
         joined_name='subjectgenotype'
-    )
-
-
-@app.route('/stockgenotype', methods=['GET', 'POST'])
-@login_required
-def stockgenotype():
-    """join various tables in the database
-    """
-    delete_url = url_for(
-        'delete', schema='subjects', table='FishStock', subtable=None)
-
-    return joined_table_template(
-        ['subjects.fish_genotype', 'subjects.fish_stock'],
-        'Stock + Genotype Table',
-        'stock',
-        edit_url=url_for('stock'),
-        delete_url=delete_url
-    )
-
-
-@app.route('/crossgenotype', methods=['GET', 'POST'])
-@login_required
-def crossgenotype():
-    """join various tables in the database
-    """
-    delete_url = url_for(
-        'delete', schema='subjects', table='FishCross', subtable=None)
-
-    return joined_table_template(
-        ['subjects.fish_genotype', 'subjects.fish_cross'],
-        'Cross + Genotype Table',
-        'cross',
-        edit_url=url_for('cross'),
-        load_url=url_for('crossload'),
-        delete_url=delete_url
     )
 
 
@@ -170,17 +69,4 @@ def subjectgenotype():
         'entersubject',
         edit_url=url_for('entersubject'),
         delete_url=delete_url
-    )
-
-
-@app.route('/stockcrossgenotype', methods=['GET', 'POST'])
-@login_required
-def stockcrossgenotype():
-    """join various tables in the database
-    """
-
-    return joined_table_template(
-        ['subjects.fish_genotype', 'subjects.fish_stock', 'subjects.fish_cross'],
-        'Stock + Cross + Genotype Table',
-        '#',
     )
